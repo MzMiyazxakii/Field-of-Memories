@@ -40,6 +40,10 @@ public final class MemoryDiscClient {
 
     private MemoryDiscClient() {}
 
+    public static boolean isReading() {
+        return reading;
+    }
+
     public static boolean shouldDarkenScreen() {
         return reading && (discId == 6 || discId == 7);
     }
@@ -65,7 +69,7 @@ public final class MemoryDiscClient {
             discId = -1;
             fragmentIndex = -1;
             warningTicks = 0;
-            postReadCooldownTicks = 12;
+            postReadCooldownTicks = 52;
         }
     }
 
@@ -159,7 +163,7 @@ public final class MemoryDiscClient {
         int centerX = width / 2;
         int baseY = height - 48;
         if (fragmentIndex < 0) {
-            gui.drawCenteredString(mc.font, WARNING_LINE_1, centerX, baseY, 0xFF55FF55);
+            gui.drawCenteredString(mc.font, WARNING_LINE_1, centerX, baseY, 0xFFFFD36A);
             gui.drawCenteredString(mc.font, WARNING_LINE_2, centerX, baseY + 12, 0xFF55FF55);
             return;
         }
