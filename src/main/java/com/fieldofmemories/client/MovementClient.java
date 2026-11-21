@@ -13,6 +13,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.client.event.MovementInputUpdateEvent;
 import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -292,6 +294,17 @@ public final class MovementClient {
         float phase = player.tickCount * 0.85F;
         event.setRoll(event.getRoll() + (float) Math.sin(phase) * 0.42F);
         event.setPitch(event.getPitch() + (float) Math.sin(phase * 2.0F) * 0.19F);
+    }
+
+    @SubscribeEvent
+    public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Pre event) {
+        // During the initial spawn/get-up sequence, keep the vanilla hotbar
+        // and crosshair hidden until the player presses Space.
+        if (prone && waitingForSpace
+                && (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type()
+                || event.getOverlay() == VanillaGuiOverlay.CROSSHAIR.type())) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
