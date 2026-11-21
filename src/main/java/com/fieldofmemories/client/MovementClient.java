@@ -25,13 +25,18 @@ import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, value = Dist.CLIENT)
 public final class MovementClient {
-    private static final float MAX_STAMINA = 100.0F;
+    private static float maxStamina = 100.0F;
+    private static float staminaRecovery = 0.38F;
+    private static float sprintSpeedBoost = 0.16F;
+    private static float jumpDistanceMultiplier = 1.20F;
+    private static int sprintJumpCooldownLength = 12;
+    private static int sprintJumpCooldown = 0;
     private static final float SPRINT_UNLOCK_STAMINA = 20.0F;
     private static final UUID RUN_SPEED_MODIFIER = UUID.fromString("7d51a5d1-5f3b-4b2e-9b7b-1c2f7d8a9e31");
-    private static final AttributeModifier RUN_SPEED_BOOST =
-            new AttributeModifier(RUN_SPEED_MODIFIER, "Field of Memories running speed", 0.16D,
+    private static AttributeModifier RUN_SPEED_BOOST =
+            new AttributeModifier(RUN_SPEED_MODIFIER, "Field of Memories running speed", sprintSpeedBoost,
                     AttributeModifier.Operation.MULTIPLY_TOTAL);
-    private static float stamina = MAX_STAMINA;
+    private static float stamina = maxStamina;
     private static int recoveryDelay = 0;
     private static int sprintTicks = 0;
     private static int runParticleTicks = 0;
@@ -98,6 +103,7 @@ public final class MovementClient {
             player.setSprinting(false);
             return;
         }
+        if (player.isSprinting() && sprintJumpCooldown > 0) event.getInput().jumping = false;
         if (stamina <= 0.0F || (exhausted && stamina < SPRINT_UNLOCK_STAMINA)) {
             player.setSprinting(false);
             removeRunBoost(player);
@@ -132,6 +138,7 @@ public final class MovementClient {
             return;
         }
 
+        if (sprintJumpCooldown > 0) sprintJumpCooldown--;
         boolean sprintKeyDown = mc.options.keySprint.isDown();
         emptySprintAttempt = exhausted && stamina < SPRINT_UNLOCK_STAMINA
                 && sprintKeyDown && (player.zza > 0.0F || mc.options.keyUp.isDown());
@@ -158,9 +165,10 @@ public final class MovementClient {
 
         if (jumping && !wasJumping) {
             pendingLowJump = stamina < 7.0F;
-            if (player.isSprinting() && stamina >= 7.0F) {
+            if (player.isSprinting() && stamina >= 7.0F && sprintJumpCooldown <= 0) {
+                sprintJumpCooldown = sprintJumpCooldownLength;
                 var motion = player.getDeltaMovement();
-                player.setDeltaMovement(motion.x * 1.20D, motion.y, motion.z * 1.20D);
+                player.setDeltaMovement(motion.x * jumpDistanceMultiplier, motion.y, motion.z * jumpDistanceMultiplier);
             }
             stamina = Math.max(0, stamina - 7.0F);
             recoveryDelay = stamina <= 0 ? 60 : 20;
@@ -176,7 +184,7 @@ public final class MovementClient {
 
         if (recoveryDelay > 0) recoveryDelay--;
         else if (!sprinting && !jumping) {
-            stamina = Math.min(MAX_STAMINA, stamina + 0.38F);
+            stamina = Math.min(maxStamina, stamina + staminaRecovery);
             if (exhausted && stamina >= SPRINT_UNLOCK_STAMINA) exhausted = false;
         }
 
@@ -217,6 +225,34 @@ public final class MovementClient {
         removeRunBoost(player);
     }
 
+
+    public static float getAdminMaxStamina() { return maxStamina; }
+    public static float getAdminRecovery() { return staminaRecovery; }
+    public static float getAdminSpeed() { return sprintSpeedBoost; }
+    public static float getAdminJump() { return jumpDistanceMultiplier; }
+    public static int getAdminJumpCooldown() { return sprintJumpCooldownLength; }
+    public static void setAdminMaxStamina(float value) {
+        maxStamina = Math.max(20.0F, Math.min(300.0F, value));
+        stamina = Math.min(stamina, maxStamina);
+    }
+    public static void setAdminRecovery(float value) { staminaRecovery = Math.max(0.05F, Math.min(2.0F, value)); }
+    public static void setAdminSpeed(float value) {
+        sprintSpeedBoost = Math.max(0.0F, Math.min(0.6F, value));
+        RUN_SPEED_BOOST = new AttributeModifier(RUN_SPEED_MODIFIER, "Field of Memories running speed",
+                sprintSpeedBoost, AttributeModifier.Operation.MULTIPLY_TOTAL);
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player != null && player.isSprinting()) {
+            removeRunBoost(player);
+            addRunBoost(player);
+        }
+    }
+    public static void setAdminJump(float value) { jumpDistanceMultiplier = Math.max(1.0F, Math.min(2.0F, value)); }
+    public static void setAdminJumpCooldown(int value) { sprintJumpCooldownLength = Math.max(0, Math.min(40, value)); }
+    public static void adminForceFall() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player != null && !prone) startFall(player);
+    }
+
     private static void addRunBoost(LocalPlayer player) {
         var attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
         if (attribute != null && attribute.getModifier(RUN_SPEED_MODIFIER) == null) {
@@ -234,8 +270,8 @@ public final class MovementClient {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !player.isSprinting() || !player.onGround() || player.zza <= 0.0F) return;
         float phase = player.tickCount * 0.85F;
-        event.setRoll(event.getRoll() + (float) Math.sin(phase) * 0.32F);
-        event.setPitch(event.getPitch() + (float) Math.sin(phase * 2.0F) * 0.14F);
+        event.setRoll(event.getRoll() + (float) Math.sin(phase) * 0.42F);
+        event.setPitch(event.getPitch() + (float) Math.sin(phase * 2.0F) * 0.19F);
     }
 
     @SubscribeEvent
@@ -262,7 +298,7 @@ public final class MovementClient {
             x += Math.round((float) Math.sin(shakeTicks * 1.7D) * 2.0F);
         }
         gui.fill(x - 1, y - 1, x + width + 1, y + height + 1, 0xCC101010);
-        int filled = Math.round(width * (stamina / MAX_STAMINA));
+        int filled = Math.round(width * (stamina / maxStamina));
         int color = 0xFFFF8A24;
         gui.fill(x, y, x + filled, y + height, color);
         gui.fill(x + filled, y, x + width, y + height, 0xAA292929);

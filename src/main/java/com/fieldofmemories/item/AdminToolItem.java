@@ -1,0 +1,24 @@
+package com.fieldofmemories.item;
+
+import com.fieldofmemories.client.AdminToolItemClient;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
+
+public class AdminToolItem extends Item {
+    public AdminToolItem(Properties properties) { super(properties.stacksTo(1)); }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (player.hasPermissions(2)) {
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> AdminToolItemClient.open());
+        }
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+    }
+}
