@@ -30,7 +30,7 @@ public final class NetworkHandler {
                 .encoder((packet, buffer) -> buffer.writeBoolean(packet.prone()))
                 .decoder(buffer -> new ProneStatePacket(buffer.readBoolean()))
                 .consumerMainThread((packet, context) -> {
-                    ServerPlayer player = context.getSender();
+                    ServerPlayer player = context.get().getSender();
                     if (player != null) {
                         if (packet.prone()) {
                             PRONE_PLAYERS.add(player.getUUID());
@@ -40,7 +40,7 @@ public final class NetworkHandler {
                             player.setPose(Pose.STANDING);
                         }
                     }
-                    context.setPacketHandled(true);
+                    context.get().setPacketHandled(true);
                 })
                 .add();
     }
