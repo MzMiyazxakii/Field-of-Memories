@@ -13,7 +13,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.api.distmarker.Dist;
@@ -59,6 +58,7 @@ public final class MovementClient {
     private static boolean wasJumping = false;
     private static boolean pendingLowJump = false;
     private static boolean jumpHeld = false;
+    private static boolean longJumpInputSuppressed = false;
     private static boolean emptySprintAttempt = false;
     private static int shakeTicks = 0;
     private static float savedLeftArmX, savedLeftArmY, savedLeftArmZ;
@@ -107,6 +107,7 @@ public final class MovementClient {
     @SubscribeEvent
     public static void onInput(MovementInputUpdateEvent event) {
         LocalPlayer player = (LocalPlayer) event.getEntity();
+        longJumpInputSuppressed = false;
         if (prone) {
             event.getInput().forwardImpulse = 0;
             event.getInput().leftImpulse = 0;
@@ -119,7 +120,10 @@ public final class MovementClient {
         // Shift+Space is handled manually below so vanilla cannot launch a
         // normal jump before the long-jump impulse is applied.
         if (player.onGround() && Minecraft.getInstance().options.keyShift.isDown()
-                && stamina >= longJumpStaminaCost) event.getInput().jumping = false;
+                && stamina >= longJumpStaminaCost) {
+            event.getInput().jumping = false;
+            longJumpInputSuppressed = true;
+        }
         if (stamina <= 0.0F || (exhausted && stamina < SPRINT_UNLOCK_STAMINA)) {
             player.setSprinting(false);
             removeRunBoost(player);
@@ -177,7 +181,8 @@ public final class MovementClient {
         }
 
         if (jumping && !wasJumping) {
-            boolean crouchJump = mc.options.keyShift.isDown() && stamina >= longJumpStaminaCost;
+            boolean crouchJump = longJumpInputSuppressed && mc.options.keyShift.isDown();
+            longJumpInputSuppressed = false;
             pendingLowJump = !crouchJump && stamina < 7.0F;
             if (crouchJump) {
                 // Trigger the base jump here (vanilla input was suppressed),
@@ -338,7 +343,7 @@ public final class MovementClient {
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer == null || event.getEntity() != localPlayer
                 || !Minecraft.getInstance().options.keyShift.isDown()
-                || !localPlayer.onGround() || prone || stamina <= 0.0F) return;
+                || !localPlayer.onGround() || prone) return;
 
         float readiness = Math.min(1.0F, stamina / Math.max(1.0F, longJumpStaminaCost));
         PoseStack poseStack = event.getPoseStack();
