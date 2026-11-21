@@ -432,11 +432,29 @@ public final class MovementClient {
             event.setRoll(0.0F);
             return;
         }
-        if (player == null || prone || !player.isSprinting()
-                || !player.onGround() || player.zza <= 0.0F) return;
-        float phase = player.tickCount * 0.85F;
-        event.setRoll(event.getRoll() + (float) Math.sin(phase) * 0.52F);
-        event.setPitch(event.getPitch() + (float) Math.sin(phase * 2.0F) * 0.23F);
+        if (player == null || prone || !player.onGround() || player.zza <= 0.0F) return;
+
+        double horizontalSpeedSqr = player.getDeltaMovement().horizontalDistanceSqr();
+        if (horizontalSpeedSqr < 0.0025D) return;
+
+        float phase;
+        float rollAmount;
+        float pitchAmount;
+        if (player.isSprinting()) {
+            // Running has a more pronounced, heavier camera sway.
+            phase = player.tickCount * 0.85F;
+            rollAmount = 0.65F;
+            pitchAmount = 0.29F;
+        } else {
+            // A light step rhythm while walking; faster movement increases
+            // both the rhythm and the sway slightly without reaching run intensity.
+            boolean fastSteps = horizontalSpeedSqr > 0.012D;
+            phase = player.tickCount * (fastSteps ? 0.72F : 0.52F);
+            rollAmount = fastSteps ? 0.28F : 0.16F;
+            pitchAmount = fastSteps ? 0.11F : 0.07F;
+        }
+        event.setRoll(event.getRoll() + (float) Math.sin(phase) * rollAmount);
+        event.setPitch(event.getPitch() + (float) Math.sin(phase * 2.0F) * pitchAmount);
     }
 
     @SubscribeEvent
