@@ -152,7 +152,6 @@ public final class MovementClient {
         climbTargetProgress = 1.0D;
         climbForwardDistance = 0.0D;
         player.setPose(Pose.SWIMMING);
-        player.setNoGravity(true);
         player.setDeltaMovement(0.0D, 0.0D, 0.0D);
         player.setSprinting(false);
         climbTapCount = 0;
@@ -197,7 +196,6 @@ public final class MovementClient {
                 (player.getX() - climbStartX) * (player.getX() - climbStartX)
                 + (player.getZ() - climbStartZ) * (player.getZ() - climbStartZ));
         if (climbForwardDistance >= 0.85D) {
-            player.setNoGravity(false);
             player.setPose(Pose.STANDING);
             player.setDeltaMovement(climbDirection.getStepX() * 0.08D, 0.0D,
                     climbDirection.getStepZ() * 0.08D);
