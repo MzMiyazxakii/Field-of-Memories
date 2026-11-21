@@ -36,7 +36,6 @@ public final class MovementClient {
     private static float longJumpDistance = 1.12F;
     private static float longJumpHeight = 0.30F;
     private static float longJumpStaminaCost = 32.0F;
-    private static boolean jumpedDuringHold = false;
     private static int sprintJumpCooldown = 0;
     private static final float SPRINT_UNLOCK_STAMINA = 20.0F;
     private static final UUID RUN_SPEED_MODIFIER = UUID.fromString("7d51a5d1-5f3b-4b2e-9b7b-1c2f7d8a9e31");
@@ -151,8 +150,6 @@ public final class MovementClient {
         if (!sprintAllowed) player.setSprinting(false);
 
         boolean sprinting = sprintAllowed && player.isSprinting() && player.zza > 0.0F;
-        boolean jumpHeld = mc.options.keyJump.isDown();
-        if (!jumpHeld) jumpedDuringHold = false;
         boolean jumping = jumpHeld && player.onGround()
                 && (!player.isSprinting() || sprintJumpCooldown <= 0);
         if (sprinting) {
@@ -169,7 +166,7 @@ public final class MovementClient {
 
         if (jumping && !wasJumping) {
             boolean crouchJump = mc.options.keyShift.isDown() && stamina >= longJumpStaminaCost;
-            pendingLowJump = !crouchJump && jumpedDuringHold && stamina < 7.0F;
+            pendingLowJump = !crouchJump && stamina < 7.0F;
             if (crouchJump) {
                 // Long jump: add a strong horizontal impulse in the direction
                 // the player is facing, while preserving normal jump height.
@@ -186,20 +183,18 @@ public final class MovementClient {
                 stamina = Math.max(0, stamina - longJumpStaminaCost);
                 recoveryDelay = 45;
             } else {
-                if (jumpedDuringHold) {
-                    stamina = Math.max(0, stamina - 7.0F);
-                    recoveryDelay = stamina <= 0 ? 60 : 20;
-                }
-                if (player.isSprinting() && stamina >= 7.0F && sprintJumpCooldown <= 0) {
+                // Every normal jump costs stamina, including the first jump
+                // after landing. If less than the full cost remains, the jump
+                // is shortened and the remaining stamina is consumed.
+                float staminaBeforeJump = stamina;
+                stamina = Math.max(0.0F, stamina - 7.0F);
+                recoveryDelay = stamina <= 0 ? 60 : 20;
+                if (player.isSprinting() && staminaBeforeJump >= 7.0F && sprintJumpCooldown <= 0) {
                     sprintJumpCooldown = sprintJumpCooldownLength;
                     var motion = player.getDeltaMovement();
                     player.setDeltaMovement(motion.x * jumpDistanceMultiplier, motion.y, motion.z * jumpDistanceMultiplier);
                 }
-                if (!jumpedDuringHold) {
-                    // The first jump in a continuous hold is free.
-                }
             }
-            jumpedDuringHold = true;
             if (stamina <= 0) exhausted = true;
         }
         wasJumping = jumping;
