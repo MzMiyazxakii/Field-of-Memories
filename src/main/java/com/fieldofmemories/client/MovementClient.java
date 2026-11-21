@@ -67,6 +67,7 @@ public final class MovementClient {
     private static double climbStartZ = 0.0D;
     private static int climbTargetY = 0;
     private static Direction climbDirection = Direction.NORTH;
+    private static double climbForwardDistance = 0.0D;
     private static float savedRightArmX, savedRightArmY, savedRightArmZ;
     private static float savedLeftArmX, savedLeftArmY, savedLeftArmZ;
 
@@ -148,8 +149,10 @@ public final class MovementClient {
         climbStartZ = player.getZ();
         climbTargetY = base.getY() + 2;
         climbProgress = 0.0D;
-        climbTargetProgress = 0.0D;
+        climbTargetProgress = 1.0D;
+        climbForwardDistance = 0.0D;
         player.setPose(Pose.SWIMMING);
+        player.setNoGravity(true);
         player.setDeltaMovement(0.0D, 0.0D, 0.0D);
         player.setSprinting(false);
         climbTapCount = 0;
@@ -162,22 +165,42 @@ public final class MovementClient {
     }
 
     private static void tickClimb(LocalPlayer player) {
-        double difference = climbTargetProgress - climbProgress;
-        if (Math.abs(difference) > 0.0005D) {
-            climbProgress += difference * 0.16D;
-            if (Math.abs(climbTargetProgress - climbProgress) < 0.006D) climbProgress = climbTargetProgress;
-        }
-        double eased = climbProgress * climbProgress * (3.0D - 2.0D * climbProgress);
-        double targetY = climbStartY + (climbTargetY - climbStartY) * eased;
-        double forward = 0.65D * eased;
-        player.setPos(climbStartX + climbDirection.getStepX() * forward, targetY,
-                climbStartZ + climbDirection.getStepZ() * forward);
-        player.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        // Do not teleport/setPos every tick: drive the normal entity movement
+        // so collision handling and vanilla position packets stay in sync.
+        player.setPose(Pose.SWIMMING);
         player.setSprinting(false);
-        if (climbTargetProgress >= 1.0D && climbProgress >= 0.999D) {
-            player.setPos(climbStartX + climbDirection.getStepX() * 0.65D, climbTargetY + 0.02D,
-                    climbStartZ + climbDirection.getStepZ() * 0.65D);
+        player.setDeltaMovement(0.0D, 0.0D, 0.0D);
+
+        if (climbProgress < climbTargetProgress) {
+            climbProgress = Math.min(climbTargetProgress, climbProgress + 0.035D);
+            // Pull the player upward alongside the wall. Collision resolution
+            // naturally prevents pushing through the block.
+            player.setDeltaMovement(
+                    climbDirection.getStepX() * 0.025D,
+                    0.115D,
+                    climbDirection.getStepZ() * 0.025D);
+            return;
+        }
+
+        // Once the torso is above the ledge, crawl forward over its top.
+        double targetY = climbStartY + (climbTargetY - climbStartY);
+        if (player.getY() < targetY - 0.08D) {
+            player.setDeltaMovement(0.0D, 0.075D, 0.0D);
+            return;
+        }
+
+        player.setDeltaMovement(
+                climbDirection.getStepX() * 0.12D,
+                0.015D,
+                climbDirection.getStepZ() * 0.12D);
+        climbForwardDistance = Math.sqrt(
+                (player.getX() - climbStartX) * (player.getX() - climbStartX)
+                + (player.getZ() - climbStartZ) * (player.getZ() - climbStartZ));
+        if (climbForwardDistance >= 0.85D) {
+            player.setNoGravity(false);
             player.setPose(Pose.STANDING);
+            player.setDeltaMovement(climbDirection.getStepX() * 0.08D, 0.0D,
+                    climbDirection.getStepZ() * 0.08D);
             climbing = false;
             climbProgress = 0.0D;
             climbTargetProgress = 0.0D;
@@ -394,12 +417,12 @@ public final class MovementClient {
         savedLeftArmX = model.leftArm.xRot;
         savedLeftArmY = model.leftArm.yRot;
         savedLeftArmZ = model.leftArm.zRot;
-        model.rightArm.xRot = -2.85F;
-        model.leftArm.xRot = -2.85F;
-        model.rightArm.yRot = 0.0F;
-        model.leftArm.yRot = 0.0F;
-        model.rightArm.zRot = 0.18F;
-        model.leftArm.zRot = -0.18F;
+        model.rightArm.xRot = -1.65F;
+        model.leftArm.xRot = -1.65F;
+        model.rightArm.yRot = -0.12F;
+        model.leftArm.yRot = 0.12F;
+        model.rightArm.zRot = 0.22F;
+        model.leftArm.zRot = -0.22F;
     }
 
     @SubscribeEvent
