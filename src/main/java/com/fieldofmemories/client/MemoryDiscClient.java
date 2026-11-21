@@ -171,7 +171,7 @@ public final class MemoryDiscClient {
         int baseY = height - 48;
         if (fragmentIndex < 0) {
             gui.drawCenteredString(mc.font, WARNING_LINE_1, centerX, baseY, 0xFFFFD36A);
-            gui.drawCenteredString(mc.font, WARNING_LINE_2, centerX, baseY + 12, 0xFF55FF55);
+            gui.drawCenteredString(mc.font, WARNING_LINE_2, centerX, baseY + 12, 0xFFFFD36A);
             return;
         }
 
