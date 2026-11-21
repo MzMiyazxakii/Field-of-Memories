@@ -520,6 +520,11 @@ public final class MovementClient {
             int screenWidth = gui.guiWidth();
             int screenHeight = gui.guiHeight();
             gui.fill(0, 0, screenWidth, screenHeight, 0x12000000);
+            // Keep the exact same CRT elements during a fall, but darken the
+            // entire image underneath them so the interference remains visible.
+            if (prone) {
+                gui.fill(0, 0, screenWidth, screenHeight, 0x40000000);
+            }
             for (int lineY = 0; lineY < screenHeight; lineY += 2) {
                 gui.fill(0, lineY, screenWidth, Math.min(screenHeight, lineY + 1), 0x1B000000);
             }
