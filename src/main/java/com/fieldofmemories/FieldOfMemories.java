@@ -41,6 +41,10 @@ public class FieldOfMemories {
             "death_screen",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "death_screen"))
     );
+    public static final RegistryObject<SoundEvent> MEMORY_DISC_SOUND = SOUND_EVENTS.register(
+            "diskmemorysound",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "diskmemorysound"))
+    );
 
     public FieldOfMemories() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
