@@ -547,6 +547,11 @@ public final class MovementClient {
         if (MemoryDiscClient.shouldDarkenScreen()) {
             gui.fill(0, 0, gui.guiWidth(), gui.guiHeight(), 0xEA000000);
         }
+        // A restrained crimson tint while any memory disc is being read.
+        // Draw it before the CRT pass so scanlines and interference stay crisp.
+        if (MemoryDiscClient.isReading()) {
+            gui.fill(0, 0, gui.guiWidth(), gui.guiHeight(), 0x16A00020);
+        }
 
         // Alternate, slightly darker CRT look: dense scanlines, a drifting
         // interference band and sparse static streaks. The vignette is drawn
