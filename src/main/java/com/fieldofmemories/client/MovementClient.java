@@ -13,6 +13,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.MovementInputUpdateEvent;
+import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -27,7 +28,7 @@ public final class MovementClient {
     private static final float SPRINT_UNLOCK_STAMINA = 20.0F;
     private static final UUID RUN_SPEED_MODIFIER = UUID.fromString("7d51a5d1-5f3b-4b2e-9b7b-1c2f7d8a9e31");
     private static final AttributeModifier RUN_SPEED_BOOST =
-            new AttributeModifier(RUN_SPEED_MODIFIER, "Field of Memories running speed", 0.12D,
+            new AttributeModifier(RUN_SPEED_MODIFIER, "Field of Memories running speed", 0.16D,
                     AttributeModifier.Operation.MULTIPLY_TOTAL);
     private static float stamina = MAX_STAMINA;
     private static int recoveryDelay = 0;
@@ -156,6 +157,10 @@ public final class MovementClient {
 
         if (jumping && !wasJumping) {
             pendingLowJump = stamina < 7.0F;
+            if (player.isSprinting() && stamina >= 7.0F) {
+                var motion = player.getDeltaMovement();
+                player.setDeltaMovement(motion.x * 1.14D, motion.y, motion.z * 1.14D);
+            }
             stamina = Math.max(0, stamina - 7.0F);
             recoveryDelay = stamina <= 0 ? 60 : 20;
             if (stamina <= 0) exhausted = true;
@@ -164,7 +169,7 @@ public final class MovementClient {
 
         if (pendingLowJump && !player.onGround() && player.getDeltaMovement().y > 0.0D) {
             player.setDeltaMovement(player.getDeltaMovement().x,
-                    player.getDeltaMovement().y * 0.80D, player.getDeltaMovement().z);
+                    player.getDeltaMovement().y * 0.35D, player.getDeltaMovement().z);
             pendingLowJump = false;
         }
 
@@ -176,12 +181,16 @@ public final class MovementClient {
 
         if (sprinting && stamina > 0.0F && !exhausted && player.onGround() && player.getDeltaMovement().horizontalDistanceSqr() > 0.0025D) {
             addRunBoost(player);
-            if (++runParticleTicks >= 4) {
+            if (++runParticleTicks >= 2) {
                 runParticleTicks = 0;
-                double side = (mc.level.random.nextDouble() - 0.5D) * 0.35D;
-                mc.level.addParticle(ParticleTypes.CLOUD,
-                        player.getX() + side, player.getY() + 0.08D, player.getZ() + side,
-                        0.0D, 0.015D, 0.0D);
+                double side = (mc.level.random.nextDouble() - 0.5D) * 0.55D;
+                for (int i = 0; i < 2; i++) {
+                    double offsetX = (mc.level.random.nextDouble() - 0.5D) * 0.5D;
+                    double offsetZ = (mc.level.random.nextDouble() - 0.5D) * 0.5D;
+                    mc.level.addParticle(ParticleTypes.CLOUD,
+                            player.getX() + offsetX, player.getY() + 0.08D, player.getZ() + offsetZ,
+                            side * 0.08D, 0.025D, side * 0.08D);
+                }
             }
         } else {
             removeRunBoost(player);
@@ -216,6 +225,15 @@ public final class MovementClient {
     private static void removeRunBoost(LocalPlayer player) {
         var attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
         if (attribute != null) attribute.removeModifier(RUN_SPEED_MODIFIER);
+    }
+
+    @SubscribeEvent
+    public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null || !player.isSprinting() || !player.onGround() || player.zza <= 0.0F) return;
+        float phase = player.tickCount * 0.85F;
+        event.setRoll(event.getRoll() + (float) Math.sin(phase) * 0.32F);
+        event.setPitch(event.getPitch() + (float) Math.sin(phase * 2.0F) * 0.14F);
     }
 
     @SubscribeEvent
