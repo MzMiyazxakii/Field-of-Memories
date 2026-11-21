@@ -77,17 +77,23 @@ public class AdminToolScreen extends Screen {
         renderBackground(gui);
         gui.drawCenteredString(font, Component.literal("АДМИН-ПАНЕЛЬ"), width / 2, height / 2 - 94, 0xFFFF9A38);
         gui.drawCenteredString(font, Component.literal(pageName()), width / 2, height / 2 - 81, 0xFFE0E0E0);
-        if (page.equals("movement")) gui.drawCenteredString(font, Component.literal(String.format("Бонус скорости: %.2f", MovementClient.getAdminSpeed())), width / 2, height / 2 + 12, 0xFFFFFFFF);
+        if (page.equals("movement")) drawRightInfo(gui, String.format("Бонус скорости: %.2f", MovementClient.getAdminSpeed()), height / 2 + 12);
         if (page.equals("stamina")) {
-            gui.drawCenteredString(font, Component.literal("Максимум: " + (int) MovementClient.getAdminMaxStamina()), width / 2, height / 2 + 2, 0xFFFFFFFF);
-            gui.drawCenteredString(font, Component.literal(String.format("Восстановление: %.2f / тик", MovementClient.getAdminRecovery())), width / 2, height / 2 + 14, 0xFFFFFFFF);
+            drawRightInfo(gui, "Максимум: " + (int) MovementClient.getAdminMaxStamina(), height / 2 + 2);
+            drawRightInfo(gui, String.format("Восстановление: %.2f / тик", MovementClient.getAdminRecovery()), height / 2 + 14);
         }
         if (page.equals("jumps")) {
-            gui.drawCenteredString(font, Component.literal(String.format("Дальность: %.2f | Откат: %d", MovementClient.getAdminJump(), MovementClient.getAdminJumpCooldown())), width / 2, height / 2 - 64, 0xFFFFFFFF);
-            gui.drawCenteredString(font, Component.literal(String.format("Длинный прыжок: %.2f | Высота: %.2f", MovementClient.getAdminLongJumpDistance(), MovementClient.getAdminLongJumpHeight())), width / 2, height / 2 - 52, 0xFFFFFFFF);
-            gui.drawCenteredString(font, Component.literal(String.format("Цена выносливости: %.0f", MovementClient.getAdminLongJumpCost())), width / 2, height / 2 - 40, 0xFFFFFFFF);
+            drawRightInfo(gui, String.format("Дальность: %.2f | Откат: %d", MovementClient.getAdminJump(), MovementClient.getAdminJumpCooldown()), height / 2 - 64);
+            drawRightInfo(gui, String.format("Длинный прыжок: %.2f | Высота: %.2f", MovementClient.getAdminLongJumpDistance(), MovementClient.getAdminLongJumpHeight()), height / 2 - 52);
+            drawRightInfo(gui, String.format("Цена выносливости: %.0f", MovementClient.getAdminLongJumpCost()), height / 2 - 40);
         }
         super.render(gui, mouseX, mouseY, partialTick);
+    }
+
+    private void drawRightInfo(GuiGraphics gui, String value, int y) {
+        Component text = Component.literal(value);
+        int x = Math.max(width / 2 + 96, width - 12 - font.width(text));
+        gui.drawString(font, text, x, y, 0xFFFFFFFF, false);
     }
 
     private String pageName() {

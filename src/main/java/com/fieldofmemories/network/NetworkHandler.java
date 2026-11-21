@@ -92,6 +92,9 @@ public final class NetworkHandler {
             Integer ticks = PRONE_PLAYERS.get(event.player.getUUID());
             if (ticks != null) {
                 event.player.setPose(Pose.SWIMMING);
+                // Keep server movement locked as well as client input; otherwise
+                // residual velocity can make the prone player crawl on the ground.
+                event.player.setDeltaMovement(0.0D, 0.0D, 0.0D);
                 if (ticks > 0) {
                     if (ticks == 1) {
                         PRONE_PLAYERS.remove(event.player.getUUID());

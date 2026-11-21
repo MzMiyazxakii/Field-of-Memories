@@ -7,6 +7,8 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
@@ -45,6 +47,10 @@ public final class MovementClient {
     private static int sprintJumpCooldown = 0;
     private static final float SPRINT_UNLOCK_STAMINA = 20.0F;
     private static final UUID RUN_SPEED_MODIFIER = UUID.fromString("7d51a5d1-5f3b-4b2e-9b7b-1c2f7d8a9e31");
+    private static final UUID EXHAUSTED_STEP_MODIFIER = UUID.fromString("9c1d7b2e-6a4f-4d3b-8f2a-1e5c7b9d0a42");
+    private static final AttributeModifier EXHAUSTED_STEP_BOOST = new AttributeModifier(
+            EXHAUSTED_STEP_MODIFIER, "Field of Memories exhausted step height", 0.4D,
+            AttributeModifier.Operation.ADDITION);
     private static AttributeModifier RUN_SPEED_BOOST =
             new AttributeModifier(RUN_SPEED_MODIFIER, "Field of Memories running speed", sprintSpeedBoost,
                     AttributeModifier.Operation.MULTIPLY_TOTAL);
@@ -63,6 +69,9 @@ public final class MovementClient {
     private static boolean longJumpInputSuppressed = false;
     private static boolean emptySprintAttempt = false;
     private static int shakeTicks = 0;
+    private static int fallNoticeTicks = 0;
+    private static float spawnLockedYaw = 0.0F;
+    private static float spawnLockedPitch = 0.0F;
     private static float savedLeftArmX, savedLeftArmY, savedLeftArmZ;
 
     private MovementClient() {}
@@ -77,9 +86,14 @@ public final class MovementClient {
         prone = true;
         waitingForSpace = true;
         fallRecoveryTicks = 0;
+        fallNoticeTicks = 0;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null) {
+            spawnLockedYaw = player.getYRot();
+            spawnLockedPitch = player.getXRot();
             player.setPose(Pose.SWIMMING);
+            player.setSprinting(false);
+            removeRunBoost(player);
         }
         NetworkHandler.sendProneState(true);
     }
@@ -94,8 +108,10 @@ public final class MovementClient {
             removeRunBoost(keyPlayer);
             return;
         }
-        if (event.getKey() != GLFW.GLFW_KEY_SPACE || event.getAction() != GLFW.GLFW_PRESS) return;
-        LocalPlayer player = Minecraft.getInstance().player;
+        Minecraft mc = Minecraft.getInstance();
+        if (event.getAction() != GLFW.GLFW_PRESS
+                || !mc.options.keyJump.matches(event.getKey(), event.getScanCode())) return;
+        LocalPlayer player = mc.player;
         if (player == null) return;
         if (prone && waitingForSpace) {
             prone = false;
@@ -103,7 +119,7 @@ public final class MovementClient {
             player.setPose(Pose.STANDING);
             NetworkHandler.sendProneState(false);
             player.setDeltaMovement(0, 0, 0);
-            // The Space press used to get up must not also count as a jump.
+            // The jump binding used to get up must not also count as a jump.
             jumpInputWasDown = true;
         }
     }
@@ -154,6 +170,13 @@ public final class MovementClient {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null || mc.level == null) return;
+        if (fallNoticeTicks > 0) fallNoticeTicks--;
+        if (waitingForSpace) {
+            player.setYRot(spawnLockedYaw);
+            player.setXRot(spawnLockedPitch);
+            player.yRotO = spawnLockedYaw;
+            player.xRotO = spawnLockedPitch;
+        }
         if (prone) {
             if (!waitingForSpace && --fallRecoveryTicks <= 0) {
                 prone = false;
@@ -168,6 +191,11 @@ public final class MovementClient {
             // Do not rewrite position or velocity here: that would create a
             // separate client/server correction loop.
             player.setPose(Pose.SWIMMING);
+            // A prone player is stationary: do not let residual velocity or
+            // swimming travel move the player across the ground.
+            player.setDeltaMovement(0.0D, 0.0D, 0.0D);
+            player.zza = 0.0F;
+            player.xxa = 0.0F;
             player.setSprinting(false);
             removeRunBoost(player);
             return;
@@ -243,6 +271,7 @@ public final class MovementClient {
             stamina = Math.min(maxStamina, stamina + staminaRecovery);
             if (exhausted && stamina >= SPRINT_UNLOCK_STAMINA) exhausted = false;
         }
+        updateExhaustedStepHeight(player);
 
         if (sprinting && stamina > 0.0F && !exhausted && player.onGround() && player.getDeltaMovement().horizontalDistanceSqr() > 0.0025D) {
             addRunBoost(player);
@@ -282,10 +311,11 @@ public final class MovementClient {
     }
 
     private static void startFall(LocalPlayer player, boolean notifyServer) {
-        // Use the client level's local sound path; LocalPlayer.playSound can
-        // be silent for client-only effects depending on the call context.
-        player.level().playLocalSound(player.blockPosition(), SoundEvents.PLAYER_SMALL_FALL,
-                SoundSource.PLAYERS, 0.7F, 0.85F, false);
+        // Play directly through the client sound manager so the stumble cue
+        // is not dependent on positional attenuation or server sound packets.
+        Minecraft.getInstance().getSoundManager().play(
+                SimpleSoundInstance.forLocalAmbience(SoundEvents.PLAYER_SMALL_FALL, 0.85F, 0.7F));
+        fallNoticeTicks = 40;
         // A short, subtle dust puff at the feet when the sprint stumble begins.
         for (int i = 0; i < 7; i++) {
             double angle = (Math.PI * 2.0D * i) / 7.0D;
@@ -350,6 +380,18 @@ public final class MovementClient {
         if (player != null && !prone) startFall(player);
     }
 
+    private static void updateExhaustedStepHeight(LocalPlayer player) {
+        var attribute = player.getAttribute(ForgeMod.STEP_HEIGHT_ADDITION.get());
+        if (attribute == null) return;
+        if (stamina <= 0.0F) {
+            if (attribute.getModifier(EXHAUSTED_STEP_MODIFIER) == null) {
+                attribute.addTransientModifier(EXHAUSTED_STEP_BOOST);
+            }
+        } else {
+            attribute.removeModifier(EXHAUSTED_STEP_MODIFIER);
+        }
+    }
+
     private static void addRunBoost(LocalPlayer player) {
         var attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
         if (attribute != null && attribute.getModifier(RUN_SPEED_MODIFIER) == null) {
@@ -365,11 +407,38 @@ public final class MovementClient {
     @SubscribeEvent
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || prone || waitingForSpace || !player.isSprinting()
+        if (waitingForSpace) {
+            event.setYaw(spawnLockedYaw);
+            event.setPitch(spawnLockedPitch);
+            event.setRoll(0.0F);
+            return;
+        }
+        if (player == null || prone || !player.isSprinting()
                 || !player.onGround() || player.zza <= 0.0F) return;
         float phase = player.tickCount * 0.85F;
         event.setRoll(event.getRoll() + (float) Math.sin(phase) * 0.52F);
         event.setPitch(event.getPitch() + (float) Math.sin(phase * 2.0F) * 0.23F);
+    }
+
+    @SubscribeEvent
+    public static void onRenderPronePlayer(RenderPlayerEvent.Pre event) {
+        LocalPlayer localPlayer = Minecraft.getInstance().player;
+        if (!prone || localPlayer == null || event.getEntity() != localPlayer) return;
+        var model = event.getRenderer().getModel();
+        // Pose.SWIMMING supplies the horizontal prone silhouette, but its
+        // vanilla swim cycle paddles the limbs. Freeze the limbs in one pose.
+        model.leftArm.xRot = -0.18F;
+        model.rightArm.xRot = -0.18F;
+        model.leftArm.yRot = 0.0F;
+        model.rightArm.yRot = 0.0F;
+        model.leftArm.zRot = 0.0F;
+        model.rightArm.zRot = 0.0F;
+        model.leftLeg.xRot = 0.08F;
+        model.rightLeg.xRot = 0.08F;
+        model.leftLeg.yRot = 0.0F;
+        model.rightLeg.yRot = 0.0F;
+        model.leftLeg.zRot = 0.0F;
+        model.rightLeg.zRot = 0.0F;
     }
 
     @SubscribeEvent
@@ -452,15 +521,13 @@ public final class MovementClient {
         }
         if (prone && !waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
-            int fadeTicks = Math.min(fallRecoveryTicks, 40);
-            int alpha = Math.min(72, Math.max(0, Math.round(72.0F * fadeTicks / 40.0F)));
+            int alpha = Math.min(72, Math.max(0, Math.round(72.0F * fallRecoveryTicks / 40.0F)));
             if (alpha > 0) gui.fill(0, 0, w, h, (alpha << 24));
-            int textAlpha = Math.min(255, Math.round(255.0F * fadeTicks / 40.0F));
-            if (textAlpha > 0) {
-                int textY = h - 58;
-                gui.drawCenteredString(mc.font, Component.literal("Вы упали"), w / 2, textY,
-                        (textAlpha << 24) | 0x00E6E6E6);
-            }
+        }
+        if (fallNoticeTicks > 0) {
+            int textAlpha = Math.min(255, Math.round(255.0F * fallNoticeTicks / 40.0F));
+            gui.drawCenteredString(mc.font, Component.literal("Вы упали"), gui.guiWidth() / 2,
+                    gui.guiHeight() - 58, (textAlpha << 24) | 0x00E6E6E6);
         }
         int width = 104, height = 6;
         int x = 10;
@@ -478,12 +545,14 @@ public final class MovementClient {
             gui.fill(0, 0, w, h, 0xAA000000);
             gui.drawCenteredString(mc.font, Component.literal("Нажмите ПРОБЕЛ, чтобы встать"), w / 2, h / 2, 0xFFE6E6E6);
         }
-        // Persistent vignette: draw after prone/spawn overlays so it cannot be covered.
-        int screenWidth = gui.guiWidth();
-        int screenHeight = gui.guiHeight();
-        gui.fill(0, 0, 12, screenHeight, 0x28000000);
-        gui.fill(Math.max(0, screenWidth - 12), 0, screenWidth, screenHeight, 0x28000000);
-        gui.fill(0, 0, screenWidth, 3, 0x28000000);
-        gui.fill(0, Math.max(0, screenHeight - 3), screenWidth, screenHeight, 0x28000000);
+        // Keep the vignette hidden during the spawn lock and prone recovery.
+        if (!prone && !waitingForSpace) {
+            int screenWidth = gui.guiWidth();
+            int screenHeight = gui.guiHeight();
+            gui.fill(0, 0, 12, screenHeight, 0x28000000);
+            gui.fill(Math.max(0, screenWidth - 12), 0, screenWidth, screenHeight, 0x28000000);
+            gui.fill(0, 0, screenWidth, 3, 0x28000000);
+            gui.fill(0, Math.max(0, screenHeight - 3), screenWidth, screenHeight, 0x28000000);
+        }
     }
 }
