@@ -39,6 +39,10 @@ public final class MemoryDiscClient {
 
     private MemoryDiscClient() {}
 
+    public static boolean shouldDarkenScreen() {
+        return reading && (discId == 6 || discId == 7);
+    }
+
     public static void handleServerState(int state, int receivedDiscId, int receivedFragmentIndex) {
         Minecraft mc = Minecraft.getInstance();
         if (state == 0) {

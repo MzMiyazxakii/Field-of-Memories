@@ -1,6 +1,7 @@
 package com.fieldofmemories.client;
 
 import com.fieldofmemories.FieldOfMemories;
+import com.fieldofmemories.client.MemoryDiscClient;
 import com.fieldofmemories.network.NetworkHandler;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -29,6 +30,7 @@ import net.minecraftforge.client.event.MovementInputUpdateEvent;
 import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
@@ -533,11 +535,18 @@ public final class MovementClient {
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onRenderGui(RenderGuiEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         GuiGraphics gui = event.getGuiGraphics();
+
+        // Darken the complete frame for the two atmospheric discs first.
+        // The CRT pass below is deliberately drawn afterward so its scanlines,
+        // interference band and static remain visible over the darkness.
+        if (MemoryDiscClient.shouldDarkenScreen()) {
+            gui.fill(0, 0, gui.guiWidth(), gui.guiHeight(), 0xEA000000);
+        }
 
         // Alternate, slightly darker CRT look: dense scanlines, a drifting
         // interference band and sparse static streaks. The vignette is drawn

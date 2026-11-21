@@ -41,12 +41,21 @@ public class MemoryDiscItem extends Item {
                 int split = remaining.lastIndexOf(' ', 68);
                 if (split < 20) split = remaining.indexOf(' ', 68);
                 if (split < 0) break;
-                fragments.add(remaining.substring(0, split).trim());
+                fragments.add(capitalizeFirstLetter(remaining.substring(0, split).trim()));
                 remaining = remaining.substring(split + 1).trim();
             }
-            if (!remaining.isEmpty()) fragments.add(remaining);
+            if (!remaining.isEmpty()) fragments.add(capitalizeFirstLetter(remaining));
         }
         return fragments;
+    }
+
+    private static String capitalizeFirstLetter(String text) {
+        if (text.isEmpty()) return text;
+        int firstCodePoint = text.codePointAt(0);
+        return new StringBuilder()
+                .appendCodePoint(Character.toUpperCase(firstCodePoint))
+                .append(text.substring(Character.charCount(firstCodePoint)))
+                .toString();
     }
 
 }
