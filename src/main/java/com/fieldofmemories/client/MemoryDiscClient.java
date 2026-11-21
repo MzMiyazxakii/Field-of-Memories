@@ -144,7 +144,7 @@ public final class MemoryDiscClient {
         if (fragmentIndex >= 0 && fragmentIndex < fragments.size()) {
             Component message = Component.literal(fragments.get(fragmentIndex));
             if (discId == 6) {
-                message = message.setStyle(Style.EMPTY.withFont(new ResourceLocation("minecraft", "uniform")));
+                message = message.withStyle(Style.EMPTY.withFont(new ResourceLocation("minecraft", "uniform")));
             }
             int maxWidth = Math.max(80, width - 32);
             List<FormattedCharSequence> lines = mc.font.split(message, maxWidth);
