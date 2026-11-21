@@ -21,6 +21,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
@@ -494,6 +495,13 @@ public final class MovementClient {
         consumer.vertex(matrix, left, bottom, 0.0F).color(red, green, blue, alpha).endVertex();
         consumer.vertex(matrix, right, bottom, 0.0F).color(red, green, blue, alpha).endVertex();
         consumer.vertex(matrix, right, top, 0.0F).color(red, green, blue, alpha).endVertex();
+    }
+
+    @SubscribeEvent
+    public static void onScreenOpening(ScreenEvent.Opening event) {
+        if (event.getScreen() instanceof net.minecraft.client.gui.screens.DeathScreen) {
+            event.setNewScreen(new DeathScreen());
+        }
     }
 
     @SubscribeEvent
