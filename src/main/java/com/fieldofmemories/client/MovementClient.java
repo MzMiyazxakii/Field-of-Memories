@@ -6,6 +6,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -159,7 +160,7 @@ public final class MovementClient {
             pendingLowJump = stamina < 7.0F;
             if (player.isSprinting() && stamina >= 7.0F) {
                 var motion = player.getDeltaMovement();
-                player.setDeltaMovement(motion.x * 1.14D, motion.y, motion.z * 1.14D);
+                player.setDeltaMovement(motion.x * 1.20D, motion.y, motion.z * 1.20D);
             }
             stamina = Math.max(0, stamina - 7.0F);
             recoveryDelay = stamina <= 0 ? 60 : 20;
@@ -198,13 +199,14 @@ public final class MovementClient {
         }
 
         if (sprinting && sprintTicks >= 20 * 4 && player.onGround()
-                && mc.level.random.nextDouble() < 0.0015D) {
+                && mc.level.random.nextDouble() < 0.0018D) {
             startFall(player);
             sprintTicks = 0;
         }
     }
 
     private static void startFall(LocalPlayer player) {
+        player.playSound(SoundEvents.PLAYER_SMALL_FALL, 0.7F, 0.85F);
         prone = true;
         waitingForSpace = false;
         fallRecoveryTicks = 40;
@@ -241,6 +243,18 @@ public final class MovementClient {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         GuiGraphics gui = event.getGuiGraphics();
+        if (prone && !waitingForSpace) {
+            int w = gui.guiWidth(), h = gui.guiHeight();
+            int fadeTicks = Math.min(fallRecoveryTicks, 40);
+            int alpha = Math.min(42, Math.max(0, Math.round(42.0F * fadeTicks / 40.0F)));
+            if (alpha > 0) gui.fill(0, 0, w, h, (alpha << 24));
+            int textAlpha = Math.min(255, Math.round(255.0F * fadeTicks / 12.0F));
+            if (textAlpha > 0) {
+                int textY = h - 58;
+                gui.drawCenteredString(mc.font, Component.literal("Вы упали"), w / 2, textY,
+                        (textAlpha << 24) | 0x00E6E6E6);
+            }
+        }
         int width = 104, height = 8;
         int x = 10;
         int y = gui.guiHeight() - 16;
