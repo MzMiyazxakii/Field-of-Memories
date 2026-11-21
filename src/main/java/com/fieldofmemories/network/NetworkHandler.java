@@ -20,7 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class NetworkHandler {
-    private static final String PROTOCOL = "1";
+    private static final String PROTOCOL = "2";
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(FieldOfMemories.MOD_ID, "main"),
             () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
@@ -38,6 +38,7 @@ public final class NetworkHandler {
                         if (packet.prone()) {
                             PRONE_PLAYERS.put(player.getUUID(), -1);
                             player.setPose(Pose.SWIMMING);
+                            player.setDeltaMovement(0, 0, 0);
                         } else {
                             PRONE_PLAYERS.remove(player.getUUID());
                             player.setPose(Pose.STANDING);
@@ -56,6 +57,7 @@ public final class NetworkHandler {
                         if (target != null) {
                             PRONE_PLAYERS.put(target.getUUID(), 40);
                             target.setPose(Pose.SWIMMING);
+                            target.setDeltaMovement(0, 0, 0);
                             CHANNEL.send(PacketDistributor.PLAYER.with(() -> target),
                                     new ForcedFallClientPacket());
                         }
