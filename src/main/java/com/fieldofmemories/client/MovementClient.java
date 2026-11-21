@@ -186,23 +186,24 @@ public final class MovementClient {
             return;
         }
 
-        double targetY = climbStartY + (climbTargetY - climbStartY);
-        if (player.getY() < targetY - 0.08D) {
-            player.setDeltaMovement(0.0D, 0.075D, 0.0D);
+        double targetY = (double) climbTargetY;
+        if (player.getY() < targetY - 0.03D) {
+            player.setDeltaMovement(0.0D, Math.min(0.075D, targetY - player.getY()), 0.0D);
             return;
         }
 
+        // Move only far enough to clear the wall edge. The previous 0.85-block
+        // push tried to reach the middle of the top block and could wedge the player.
         player.setDeltaMovement(
-                climbDirection.getStepX() * 0.12D,
-                0.015D,
-                climbDirection.getStepZ() * 0.12D);
+                climbDirection.getStepX() * 0.10D,
+                0.0D,
+                climbDirection.getStepZ() * 0.10D);
         climbForwardDistance = Math.sqrt(
                 (player.getX() - climbStartX) * (player.getX() - climbStartX)
                 + (player.getZ() - climbStartZ) * (player.getZ() - climbStartZ));
-        if (climbForwardDistance >= 0.85D) {
+        if (climbForwardDistance >= 0.42D) {
             player.setPose(Pose.STANDING);
-            player.setDeltaMovement(climbDirection.getStepX() * 0.08D, 0.0D,
-                    climbDirection.getStepZ() * 0.08D);
+            player.setDeltaMovement(0.0D, 0.0D, 0.0D);
             climbing = false;
             climbProgress = 0.0D;
             climbTargetProgress = 0.0D;
