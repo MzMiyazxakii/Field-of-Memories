@@ -5,7 +5,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
@@ -16,15 +19,24 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.UUID;
+
 @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, value = Dist.CLIENT)
 public final class MovementClient {
     private static final float MAX_STAMINA = 100.0F;
+    private static final float SPRINT_UNLOCK_STAMINA = 20.0F;
+    private static final UUID RUN_SPEED_MODIFIER = UUID.fromString("7d51a5d1-5f3b-4b2e-9b7b-1c2f7d8a9e31");
+    private static final AttributeModifier RUN_SPEED_BOOST =
+            new AttributeModifier(RUN_SPEED_MODIFIER, "Field of Memories running speed", 0.12D,
+                    AttributeModifier.Operation.MULTIPLY_TOTAL);
     private static float stamina = MAX_STAMINA;
     private static int recoveryDelay = 0;
     private static int sprintTicks = 0;
+    private static int runParticleTicks = 0;
     private static boolean exhausted = false;
     private static boolean prone = false;
     private static boolean wasJumping = false;
+    private static boolean reducedJump = false;
 
     private MovementClient() {}
 
@@ -49,11 +61,17 @@ public final class MovementClient {
 
     @SubscribeEvent
     public static void onInput(MovementInputUpdateEvent event) {
+        LocalPlayer player = (LocalPlayer) event.getEntity();
         if (prone) {
             event.getInput().forwardImpulse = 0;
             event.getInput().leftImpulse = 0;
             event.getInput().jumping = false;
             event.getInput().shiftKeyDown = false;
+            player.setSprinting(false);
+            return;
+        }
+        if (exhausted && stamina < SPRINT_UNLOCK_STAMINA) {
+            player.setSprinting(false);
         }
     }
 
@@ -67,29 +85,65 @@ public final class MovementClient {
             player.setPose(Pose.SWIMMING);
             player.setSprinting(false);
             player.setDeltaMovement(0, 0, 0);
+            removeRunBoost(player);
             return;
         }
 
-        boolean sprinting = player.isSprinting() && player.zza > 0.0F;
+        boolean sprintAllowed = !exhausted || stamina >= SPRINT_UNLOCK_STAMINA;
+        if (exhausted && stamina >= SPRINT_UNLOCK_STAMINA) exhausted = false;
+        if (!sprintAllowed) player.setSprinting(false);
+
+        boolean sprinting = sprintAllowed && player.isSprinting() && player.zza > 0.0F;
         boolean jumping = mc.options.keyJump.isDown() && player.onGround();
         if (sprinting) {
             stamina = Math.max(0, stamina - 0.42F);
             recoveryDelay = stamina <= 0 ? 60 : 20;
             sprintTicks++;
-            if (stamina <= 0) { exhausted = true; player.setSprinting(false); }
-        } else sprintTicks = 0;
+            if (stamina <= 0) {
+                exhausted = true;
+                player.setSprinting(false);
+            }
+        } else {
+            sprintTicks = 0;
+        }
 
         if (jumping && !wasJumping) {
+            boolean lowStaminaJump = stamina < 7.0F;
             stamina = Math.max(0, stamina - 7.0F);
             recoveryDelay = stamina <= 0 ? 60 : 20;
             if (stamina <= 0) exhausted = true;
+            if (lowStaminaJump && player.getDeltaMovement().y > 0.0D) {
+                player.setDeltaMovement(player.getDeltaMovement().x,
+                        player.getDeltaMovement().y * 0.80D, player.getDeltaMovement().z);
+            }
         }
         wasJumping = jumping;
-        if (exhausted) player.setSprinting(false);
+
+        if (reducedJump && player.onGround()) reducedJump = false;
+        if (jumping && !wasJumping && stamina < 7.0F && player.getDeltaMovement().y > 0.0D && !reducedJump) {
+            player.setDeltaMovement(player.getDeltaMovement().x,
+                    player.getDeltaMovement().y * 0.80D, player.getDeltaMovement().z);
+            reducedJump = true;
+        }
+
         if (recoveryDelay > 0) recoveryDelay--;
         else if (!sprinting && !jumping) {
             stamina = Math.min(MAX_STAMINA, stamina + 0.38F);
-            if (stamina > 0) exhausted = false;
+            if (exhausted && stamina >= SPRINT_UNLOCK_STAMINA) exhausted = false;
+        }
+
+        if (sprinting && player.onGround() && player.getDeltaMovement().horizontalDistanceSqr() > 0.0025D) {
+            addRunBoost(player);
+            if (++runParticleTicks >= 4) {
+                runParticleTicks = 0;
+                double side = (mc.level.random.nextDouble() - 0.5D) * 0.35D;
+                mc.level.addParticle(ParticleTypes.CLOUD,
+                        player.getX() + side, player.getY() + 0.08D, player.getZ() + side,
+                        0.0D, 0.015D, 0.0D);
+            }
+        } else {
+            removeRunBoost(player);
+            runParticleTicks = 0;
         }
 
         if (sprintTicks >= 20 * 12 && player.onGround()) {
@@ -99,8 +153,21 @@ public final class MovementClient {
                 player.setPose(Pose.SWIMMING);
                 player.setSprinting(false);
                 sprintTicks = 0;
+                removeRunBoost(player);
             }
         }
+    }
+
+    private static void addRunBoost(LocalPlayer player) {
+        var attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
+        if (attribute != null && !attribute.hasModifier(RUN_SPEED_MODIFIER)) {
+            attribute.addTransientModifier(RUN_SPEED_BOOST);
+        }
+    }
+
+    private static void removeRunBoost(LocalPlayer player) {
+        var attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
+        if (attribute != null) attribute.removeModifier(RUN_SPEED_MODIFIER);
     }
 
     @SubscribeEvent
