@@ -150,7 +150,8 @@ public final class MovementClient {
         if (!sprintAllowed) player.setSprinting(false);
 
         boolean sprinting = sprintAllowed && player.isSprinting() && player.zza > 0.0F;
-        boolean jumping = mc.options.keyJump.isDown() && player.onGround();
+        boolean jumping = mc.options.keyJump.isDown() && player.onGround()
+                && (!player.isSprinting() || sprintJumpCooldown <= 0);
         if (sprinting) {
             stamina = Math.max(0, stamina - 0.42F);
             recoveryDelay = stamina <= 0 ? 60 : 20;
