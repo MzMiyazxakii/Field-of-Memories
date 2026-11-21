@@ -192,6 +192,9 @@ public final class NetworkHandler {
         } else {
             ACTIVE_MEMORY_DISCS.remove(player.getUUID());
             MemoryDiscWorldData.markRead(player.serverLevel(), session.discId());
+            for (ServerPlayer online : player.server.getPlayerList().getPlayers()) {
+                if (online.hasPermissions(2)) sendMemoryDiscStats(online);
+            }
             restoreMemoryDisc(player, session);
             CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(2, session.discId(), -1));
         }
