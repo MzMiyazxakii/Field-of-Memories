@@ -9,6 +9,12 @@ public final class AdminToolItemClient {
     private AdminToolItemClient() {}
     public static void open() {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player != null && mc.player.hasPermissions(2)) mc.setScreen(new AdminToolScreen());
+        // Item.use may be invoked on the integrated server thread. All GUI
+        // operations must be queued onto the render/client thread.
+        mc.execute(() -> {
+            if (mc.player != null && mc.player.hasPermissions(2)) {
+                mc.setScreen(new AdminToolScreen());
+            }
+        });
     }
 }
