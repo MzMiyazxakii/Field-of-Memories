@@ -169,14 +169,23 @@ public final class MovementClient {
         }
 
         if (jumping && !wasJumping) {
-            pendingLowJump = stamina < 7.0F;
-            if (player.isSprinting() && stamina >= 7.0F && sprintJumpCooldown <= 0) {
-                sprintJumpCooldown = sprintJumpCooldownLength;
+            boolean crouchJump = mc.options.keyShift.isDown() && stamina >= 32.0F;
+            pendingLowJump = !crouchJump && stamina < 7.0F;
+            if (crouchJump) {
+                // Crouch-jump: a higher leap at a significant stamina cost.
                 var motion = player.getDeltaMovement();
-                player.setDeltaMovement(motion.x * jumpDistanceMultiplier, motion.y, motion.z * jumpDistanceMultiplier);
+                player.setDeltaMovement(motion.x, 0.88D, motion.z);
+                stamina = Math.max(0, stamina - 32.0F);
+                recoveryDelay = 45;
+            } else {
+                if (player.isSprinting() && stamina >= 7.0F && sprintJumpCooldown <= 0) {
+                    sprintJumpCooldown = sprintJumpCooldownLength;
+                    var motion = player.getDeltaMovement();
+                    player.setDeltaMovement(motion.x * jumpDistanceMultiplier, motion.y, motion.z * jumpDistanceMultiplier);
+                }
+                stamina = Math.max(0, stamina - 7.0F);
+                recoveryDelay = stamina <= 0 ? 60 : 20;
             }
-            stamina = Math.max(0, stamina - 7.0F);
-            recoveryDelay = stamina <= 0 ? 60 : 20;
             if (stamina <= 0) exhausted = true;
         }
         wasJumping = jumping;
@@ -313,31 +322,33 @@ public final class MovementClient {
         if (mc.player == null) return;
         GuiGraphics gui = event.getGuiGraphics();
 
-        // A restrained CRT layer for the normal gameplay view: fine scanlines,
-        // a slow faint interference band, and a few dim static pixels.
-        // Draw it before the HUD so the stamina bar and vanilla UI stay crisp.
+        // Alternate, slightly darker CRT look: dense scanlines, a drifting
+        // interference band, sparse static streaks, and a soft vignette.
+        // The HUD is rendered afterward and remains crisp.
         if (!prone && !waitingForSpace) {
             int screenWidth = gui.guiWidth();
             int screenHeight = gui.guiHeight();
-            for (int lineY = 1; lineY < screenHeight; lineY += 3) {
-                gui.fill(0, lineY, screenWidth, lineY + 1, 0x10000000);
+            gui.fill(0, 0, screenWidth, screenHeight, 0x12000000);
+            for (int lineY = 0; lineY < screenHeight; lineY += 2) {
+                gui.fill(0, lineY, screenWidth, Math.min(screenHeight, lineY + 1), 0x1B000000);
             }
 
-            int bandY = (mc.player.tickCount * 2) % Math.max(1, screenHeight);
-            gui.fill(0, bandY, screenWidth, Math.min(screenHeight, bandY + 2), 0x16D8E2E8);
-
-            int phase = mc.player.tickCount / 3;
-            for (int i = 0; i < 22; i++) {
-                int seed = phase * 1103515245 + i * 12345;
-                int noiseX = Math.floorMod(seed ^ (seed >>> 16), Math.max(1, screenWidth));
-                int noiseY = Math.floorMod(seed * 31 + i * 7919, Math.max(1, screenHeight));
-                gui.fill(noiseX, noiseY, Math.min(screenWidth, noiseX + 2),
-                        Math.min(screenHeight, noiseY + 1), 0x20DDE5E8);
+            int bandY = (mc.player.tickCount * 3) % Math.max(1, screenHeight);
+            gui.fill(0, bandY, screenWidth, Math.min(screenHeight, bandY + 3), 0x18D5E0E5);
+            int phase = mc.player.tickCount / 2;
+            for (int i = 0; i < 13; i++) {
+                int seed = phase * 1664525 + i * 1013904223;
+                int noiseX = Math.floorMod(seed ^ (seed >>> 15), Math.max(1, screenWidth));
+                int noiseY = Math.floorMod(seed * 17 + i * 7919, Math.max(1, screenHeight));
+                int streakWidth = 2 + Math.floorMod(seed >>> 5, 9);
+                gui.fill(noiseX, noiseY, Math.min(screenWidth, noiseX + streakWidth),
+                        Math.min(screenHeight, noiseY + 1), 0x24DDE5E8);
             }
 
-            // Very soft edge darkening, keeping the center unobstructed.
-            gui.fill(0, 0, 5, screenHeight, 0x12000000);
-            gui.fill(Math.max(0, screenWidth - 5), 0, screenWidth, screenHeight, 0x12000000);
+            gui.fill(0, 0, 12, screenHeight, 0x18000000);
+            gui.fill(Math.max(0, screenWidth - 12), 0, screenWidth, screenHeight, 0x18000000);
+            gui.fill(0, 0, screenWidth, 3, 0x18000000);
+            gui.fill(0, Math.max(0, screenHeight - 3), screenWidth, screenHeight, 0x18000000);
         }
         if (prone && !waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
