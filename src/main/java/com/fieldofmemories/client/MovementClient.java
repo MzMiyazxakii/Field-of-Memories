@@ -189,7 +189,7 @@ public final class MovementClient {
         }
 
         if (sprinting && sprintTicks >= 20 * 4 && player.onGround()
-                && mc.level.random.nextDouble() < 0.00008D) {
+                && mc.level.random.nextDouble() < 0.0015D) {
             startFall(player);
             sprintTicks = 0;
         }
@@ -218,30 +218,14 @@ public final class MovementClient {
         if (attribute != null) attribute.removeModifier(RUN_SPEED_MODIFIER);
     }
 
-    private static void drawVignette(GuiGraphics gui) {
-        int width = gui.guiWidth();
-        int height = gui.guiHeight();
-        // Soft, static CRT-like edge shading: darkest at the frame, fading inward.
-        for (int band = 0; band < 8; band++) {
-            int inset = band * 6;
-            int alpha = 25 - band * 2;
-            int shade = (alpha << 24);
-            gui.fill(inset, inset, width - inset, inset + 6, shade);
-            gui.fill(inset, height - inset - 6, width - inset, height - inset, shade);
-            gui.fill(inset, inset, inset + 6, height - inset, shade);
-            gui.fill(width - inset - 6, inset, width - inset, height - inset, shade);
-        }
-    }
-
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         GuiGraphics gui = event.getGuiGraphics();
-        drawVignette(gui);
         int width = 104, height = 8;
         int x = 10;
-        int y = gui.guiHeight() - 28;
+        int y = gui.guiHeight() - 16;
         if (emptySprintAttempt) {
             x += Math.round((float) Math.sin(shakeTicks * 1.7D) * 2.0F);
         }
