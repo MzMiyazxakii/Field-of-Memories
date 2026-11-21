@@ -35,6 +35,7 @@ public final class MemoryDiscClient {
     private static int warningTicks;
     private static int promptShakeTicks;
     private static int promptShakeAge;
+    private static int postReadCooldownTicks;
     private static MemoryDiscSound activeSound;
 
     private MemoryDiscClient() {}
@@ -64,6 +65,7 @@ public final class MemoryDiscClient {
             discId = -1;
             fragmentIndex = -1;
             warningTicks = 0;
+            postReadCooldownTicks = 12;
         }
     }
 
@@ -78,6 +80,7 @@ public final class MemoryDiscClient {
         }
 
         if (promptShakeTicks > 0) promptShakeTicks--;
+        if (postReadCooldownTicks > 0) postReadCooldownTicks--;
 
         if (reading) {
             if (fragmentIndex < 0) {
@@ -97,9 +100,11 @@ public final class MemoryDiscClient {
                 }
             }
             if (promptShakeTicks > 0) promptShakeAge++;
-        } else if (MemoryDiscKeybinds.READ_MEMORY.consumeClick()) {
-            if (mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem() instanceof MemoryDiscItem
-                    || mc.player.getItemInHand(InteractionHand.OFF_HAND).getItem() instanceof MemoryDiscItem) {
+        } else {
+            boolean pressedRead = MemoryDiscKeybinds.READ_MEMORY.consumeClick();
+            if (pressedRead && postReadCooldownTicks <= 0
+                    && (mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem() instanceof MemoryDiscItem
+                    || mc.player.getItemInHand(InteractionHand.OFF_HAND).getItem() instanceof MemoryDiscItem)) {
                 NetworkHandler.requestMemoryDiscStart();
             }
         }
@@ -141,6 +146,7 @@ public final class MemoryDiscClient {
         int height = gui.guiHeight();
 
         if (!reading) {
+            if (postReadCooldownTicks > 0) return;
             boolean hasDisc = mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem() instanceof MemoryDiscItem
                     || mc.player.getItemInHand(InteractionHand.OFF_HAND).getItem() instanceof MemoryDiscItem;
             if (hasDisc) {
