@@ -128,10 +128,12 @@ public final class MovementClient {
         Direction direction = player.getDirection();
         BlockPos base = player.blockPosition().relative(direction);
         BlockPos upper = base.above();
-        BlockPos aboveWall = upper.above();
+        BlockPos third = upper.above();
+        BlockPos aboveWall = third.above();
         BlockPos headClearance = aboveWall.above();
         return isClimbableWallBlock(player, base)
                 && isClimbableWallBlock(player, upper)
+                && isClimbableWallBlock(player, third)
                 && player.level().getBlockState(aboveWall).getCollisionShape(player.level(), aboveWall).isEmpty()
                 && player.level().getBlockState(headClearance).getCollisionShape(player.level(), headClearance).isEmpty();
     }
@@ -147,7 +149,7 @@ public final class MovementClient {
         climbStartX = player.getX();
         climbStartY = player.getY();
         climbStartZ = player.getZ();
-        climbTargetY = base.getY() + 2;
+        climbTargetY = base.getY() + 3;
         climbProgress = 0.0D;
         climbTargetProgress = 1.0D;
         climbForwardDistance = 0.0D;
@@ -415,8 +417,8 @@ public final class MovementClient {
         savedLeftArmX = model.leftArm.xRot;
         savedLeftArmY = model.leftArm.yRot;
         savedLeftArmZ = model.leftArm.zRot;
-        model.rightArm.xRot = -1.65F;
-        model.leftArm.xRot = -1.65F;
+        model.rightArm.xRot = -2.35F;
+        model.leftArm.xRot = -2.35F;
         model.rightArm.yRot = -0.12F;
         model.leftArm.yRot = 0.12F;
         model.rightArm.zRot = 0.22F;
