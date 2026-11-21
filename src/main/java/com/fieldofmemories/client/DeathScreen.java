@@ -60,27 +60,36 @@ public final class DeathScreen extends Screen {
         gui.fill(0, 0, 12, h, 0x70000000);
         gui.fill(w - 12, 0, w, h, 0x70000000);
 
-        int titleY = centerY - 62;
-        int flicker = (age % 47 < 2) ? 0xFF650000 : 0xFFFF2020;
-        gui.drawCenteredString(this.font, Component.literal("СМЕРТЬ"), centerX + 2, titleY + 1, 0xFF4A0000);
-        gui.drawCenteredString(this.font, Component.literal("СМЕРТЬ"), centerX, titleY, flicker);
-        gui.drawCenteredString(this.font, Component.literal("СИГНАЛ ПОТЕРЯН"), centerX, centerY - 28, 0xFF8B3434);
-
-        int heartY = centerY + 48;
-        heartHovered = mouseX >= centerX - 34 && mouseX <= centerX + 34
-                && mouseY >= heartY - 30 && mouseY <= heartY + 28;
-        float beat = 1.0F + (float) Math.sin((age + partialTick) * 0.16D) * 0.055F;
-        int heartColor = heartHovered ? 0xFFFF7777 : 0xFFB50918;
+        int titleY = centerY - 76;
+        int flicker = (age % 47 < 2) ? 0xFF9A2525 : 0xFFFF3B3B;
         gui.pose().pushPose();
-        gui.pose().translate(centerX, heartY, 0);
-        gui.pose().scale(beat, beat, 1.0F);
-        gui.drawCenteredString(this.font, Component.literal("♥"), 0, -18, 0xFF3A0000);
-        gui.drawCenteredString(this.font, Component.literal("♥"), 0, -19, heartColor);
+        gui.pose().translate(centerX, titleY + 5, 0);
+        gui.pose().scale(2.35F, 2.35F, 1.0F);
+        // A dark offset keeps the enlarged title readable against the CRT image.
+        gui.drawCenteredString(this.font, Component.literal("СМЕРТЬ"), 1, 1, 0xFF260000);
+        gui.drawCenteredString(this.font, Component.literal("СМЕРТЬ"), 0, 0, flicker);
         gui.pose().popPose();
 
-        gui.drawCenteredString(this.font, Component.literal("ВОЗРОДИТЬСЯ"), centerX, heartY + 27,
-                heartHovered ? 0xFFFFAAAA : 0xFFB86B6B);
-        gui.drawCenteredString(this.font, Component.literal("НАЖМИ НА СЕРДЦЕ"), centerX, h - 28, 0xFF6B5555);
+        int heartY = centerY + 55;
+        heartHovered = mouseX >= centerX - 48 && mouseX <= centerX + 48
+                && mouseY >= heartY - 44 && mouseY <= heartY + 42;
+        float beat = 1.0F + (float) Math.sin((age + partialTick) * 0.16D) * 0.045F;
+        int heartColor = heartHovered ? 0xFFFF7777 : 0xFFE52B43;
+        gui.pose().pushPose();
+        gui.pose().translate(centerX, heartY, 0);
+        gui.pose().scale(beat * 2.25F, beat * 2.25F, 1.0F);
+        // Layered heart gives the respawn control a cleaner, fuller silhouette.
+        gui.drawCenteredString(this.font, Component.literal("♥"), 0, -9, 0xFF260006);
+        gui.drawCenteredString(this.font, Component.literal("♥"), 0, -10, heartColor);
+        gui.pose().popPose();
+
+        // Faint interference streaks pass over the title and heart like CRT noise.
+        int overlayY = Math.floorMod(age * 3, Math.max(1, h));
+        gui.fill(0, overlayY, w, Math.min(h, overlayY + 2), 0x249AA5AA);
+        if (age % 5 == 0) {
+            int noiseY = Math.floorMod(age * 11, Math.max(1, h));
+            gui.fill(0, noiseY, w, Math.min(h, noiseY + 1), 0x1EFFFFFF);
+        }
     }
 
     private void respawn() {
