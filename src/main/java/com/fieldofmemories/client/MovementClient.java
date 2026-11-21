@@ -317,6 +317,23 @@ public final class MovementClient {
 
     private static void startFall(LocalPlayer player) {
         player.playSound(SoundEvents.PLAYER_SMALL_FALL, 0.7F, 0.85F);
+        // A short, subtle dust puff at the feet when the sprint stumble begins.
+        for (int i = 0; i < 7; i++) {
+            double angle = (Math.PI * 2.0D * i) / 7.0D;
+            double speed = 0.035D + player.level().random.nextDouble() * 0.025D;
+            player.level().addParticle(ParticleTypes.CLOUD,
+                    player.getX() + Math.cos(angle) * 0.22D,
+                    player.getY() + 0.06D,
+                    player.getZ() + Math.sin(angle) * 0.22D,
+                    Math.cos(angle) * speed, 0.025D, Math.sin(angle) * speed);
+        }
+        for (int i = 0; i < 3; i++) {
+            double offsetX = (player.level().random.nextDouble() - 0.5D) * 0.45D;
+            double offsetZ = (player.level().random.nextDouble() - 0.5D) * 0.45D;
+            player.level().addParticle(ParticleTypes.POOF,
+                    player.getX() + offsetX, player.getY() + 0.12D, player.getZ() + offsetZ,
+                    0.0D, 0.015D, 0.0D);
+        }
         prone = true;
         waitingForSpace = false;
         fallRecoveryTicks = 40;
@@ -414,7 +431,7 @@ public final class MovementClient {
         if (prone && !waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
             int fadeTicks = Math.min(fallRecoveryTicks, 40);
-            int alpha = Math.min(42, Math.max(0, Math.round(42.0F * fadeTicks / 40.0F)));
+            int alpha = Math.min(52, Math.max(0, Math.round(52.0F * fadeTicks / 40.0F)));
             if (alpha > 0) gui.fill(0, 0, w, h, (alpha << 24));
             int textAlpha = Math.min(255, Math.round(255.0F * fadeTicks / 12.0F));
             if (textAlpha > 0) {
@@ -423,9 +440,9 @@ public final class MovementClient {
                         (textAlpha << 24) | 0x00E6E6E6);
             }
         }
-        int width = 104, height = 8;
+        int width = 104, height = 6;
         int x = 10;
-        int y = gui.guiHeight() - 16;
+        int y = gui.guiHeight() - 14;
         if (emptySprintAttempt) {
             x += Math.round((float) Math.sin(shakeTicks * 1.7D) * 2.0F);
         }
