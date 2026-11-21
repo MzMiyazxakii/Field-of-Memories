@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
@@ -126,12 +127,12 @@ public final class NetworkHandler {
                 }).add();
 
         CHANNEL.messageBuilder(MemoryDiscRequestPacket.class, 6)
-                .encoder((packet, buffer) -> buffer.writeBoolean(packet.next()))
-                .decoder(buffer -> new MemoryDiscRequestPacket(buffer.readBoolean()))
+                .encoder((packet, buffer) -> { buffer.writeBoolean(packet.next()); buffer.writeInt(packet.expectedFragmentIndex()); })
+                .decoder(buffer -> new MemoryDiscRequestPacket(buffer.readBoolean(), buffer.readInt()))
                 .consumerMainThread((packet, context) -> {
                     ServerPlayer player = context.get().getSender();
                     if (player != null) {
-                        if (packet.next()) advanceMemoryDisc(player);
+                        if (packet.next()) advanceMemoryDisc(player, packet.expectedFragmentIndex());
                         else startMemoryDisc(player);
                     }
                     context.get().setPacketHandled(true);
@@ -180,9 +181,9 @@ public final class NetworkHandler {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(0, id, -1));
     }
 
-    private static void advanceMemoryDisc(ServerPlayer player) {
+    private static void advanceMemoryDisc(ServerPlayer player, int expectedFragmentIndex) {
         ActiveMemoryDisc session = ACTIVE_MEMORY_DISCS.get(player.getUUID());
-        if (session == null) return;
+        if (session == null || session.fragmentIndex() != expectedFragmentIndex) return;
         List<String> fragments = MemoryDiscItem.getFragments(session.discId());
         int next = session.fragmentIndex() + 1;
         if (next < fragments.size()) {
@@ -234,15 +235,20 @@ public final class NetworkHandler {
     }
 
     public static void requestMemoryDiscStart() {
-        CHANNEL.send(PacketDistributor.SERVER.noArg(), new MemoryDiscRequestPacket(false));
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new MemoryDiscRequestPacket(false, -1));
     }
 
-    public static void requestMemoryDiscNext() {
-        CHANNEL.send(PacketDistributor.SERVER.noArg(), new MemoryDiscRequestPacket(true));
+    public static void requestMemoryDiscNext(int expectedFragmentIndex) {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new MemoryDiscRequestPacket(true, expectedFragmentIndex));
     }
 
     @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID)
     public static final class ServerEvents {
+        @SubscribeEvent
+        public static void onLivingDeath(LivingDeathEvent event) {
+            if (event.getEntity() instanceof ServerPlayer player) cancelMemoryDisc(player);
+        }
+
         @SubscribeEvent
         public static void onLivingDrops(LivingDropsEvent event) {
             if (!(event.getEntity() instanceof ServerPlayer)) return;
@@ -276,7 +282,7 @@ public final class NetworkHandler {
     private record MemoryDiscActionPacket(int action, int discId) {}
     private record MemoryDiscStatsRequest() {}
     private record MemoryDiscStatsPacket(int readMask, boolean spawnEnabled, int spawnChance) {}
-    private record MemoryDiscRequestPacket(boolean next) {}
+    private record MemoryDiscRequestPacket(boolean next, int expectedFragmentIndex) {}
     private record MemoryDiscStatePacket(int state, int discId, int fragmentIndex) {}
     private record ActiveMemoryDisc(int discId, ItemStack stack, InteractionHand hand, int fragmentIndex) {}
 }
