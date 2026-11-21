@@ -516,7 +516,7 @@ public final class MovementClient {
         // Alternate, slightly darker CRT look: dense scanlines, a drifting
         // interference band and sparse static streaks. The vignette is drawn
         // separately below so it remains visible while the player is prone.
-        if (!prone && !waitingForSpace) {
+        if (!waitingForSpace) {
             int screenWidth = gui.guiWidth();
             int screenHeight = gui.guiHeight();
             gui.fill(0, 0, screenWidth, screenHeight, 0x12000000);
