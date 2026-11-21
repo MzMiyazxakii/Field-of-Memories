@@ -4,12 +4,8 @@ import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.model.PlayerModel;
-import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -57,16 +53,6 @@ public final class MovementClient {
     private static boolean proneAnglesCaptured = false;
     private static boolean emptySprintAttempt = false;
     private static int shakeTicks = 0;
-    private static boolean climbing = false;
-    private static double climbProgress = 0.0D;
-    private static double climbTargetProgress = 0.0D;
-    private static double climbStartX = 0.0D;
-    private static double climbStartY = 0.0D;
-    private static double climbStartZ = 0.0D;
-    private static int climbTargetY = 0;
-    private static Direction climbDirection = Direction.NORTH;
-    private static double climbForwardDistance = 0.0D;
-    private static float savedRightArmX, savedRightArmY, savedRightArmZ;
     private static float savedLeftArmX, savedLeftArmY, savedLeftArmZ;
 
     private MovementClient() {}
@@ -108,121 +94,16 @@ public final class MovementClient {
         }
     }
 
-    // Returns the exact wall height that can be climbed: two or three blocks.
-    // The first air block above the wall must have enough head clearance.
-    private static int getClimbableWallHeight(LocalPlayer player) {
-        if (player == null || !player.onGround()
-                || player.getXRot() < -35.0F || player.getXRot() > 35.0F) return 0;
-
-        Direction direction = player.getDirection();
-        BlockPos base = player.blockPosition().relative(direction);
-        BlockPos second = base.above();
-        BlockPos third = second.above();
-        BlockPos fourth = third.above();
-        BlockPos fifth = fourth.above();
-
-        if (!isClimbableWallBlock(player, base) || !isClimbableWallBlock(player, second)) return 0;
-
-        boolean thirdIsWall = isClimbableWallBlock(player, third);
-        if (thirdIsWall
-                && player.level().getBlockState(fourth).getCollisionShape(player.level(), fourth).isEmpty()
-                && player.level().getBlockState(fifth).getCollisionShape(player.level(), fifth).isEmpty()) {
-            return 3;
-        }
-
-        if (!thirdIsWall
-                && player.level().getBlockState(third).getCollisionShape(player.level(), third).isEmpty()
-                && player.level().getBlockState(fourth).getCollisionShape(player.level(), fourth).isEmpty()) {
-            return 2;
-        }
-        return 0;
-    }
-
-    private static boolean canClimb(LocalPlayer player) {
-        return getClimbableWallHeight(player) != 0;
-    }
-
-    private static void tryStartClimb(LocalPlayer player) {
-        int wallHeight = getClimbableWallHeight(player);
-        if (wallHeight == 0) return;
-
-        climbDirection = player.getDirection();
-        BlockPos base = player.blockPosition().relative(climbDirection);
-        climbing = true;
-        climbStartX = player.getX();
-        climbStartY = player.getY();
-        climbStartZ = player.getZ();
-        // Stop at the actual top surface: never add an extra invisible block.
-        climbTargetY = base.getY() + wallHeight;
-        climbProgress = 0.0D;
-        climbTargetProgress = 1.0D;
-        climbForwardDistance = 0.0D;
-        player.setPose(Pose.STANDING);
-        player.setDeltaMovement(0.0D, 0.0D, 0.0D);
-        player.setSprinting(false);
-        removeRunBoost(player);
-    }
-
-    private static boolean isClimbableWallBlock(LocalPlayer player, BlockPos pos) {
-        var state = player.level().getBlockState(pos);
-        return !state.isAir() && !state.getCollisionShape(player.level(), pos).isEmpty();
-    }
-
-    private static void tickClimb(LocalPlayer player) {
-        player.setPose(Pose.STANDING);
-        player.setSprinting(false);
-        player.setDeltaMovement(0.0D, 0.0D, 0.0D);
-
-        // Holding Space is required for every part of the climb. Releasing it
-        // pauses the player against the wall instead of auto-climbing.
-        if (!Minecraft.getInstance().options.keyJump.isDown()) return;
-
-        if (climbProgress < climbTargetProgress) {
-            climbProgress = Math.min(climbTargetProgress, climbProgress + 0.035D);
-            player.setDeltaMovement(
-                    climbDirection.getStepX() * 0.025D,
-                    0.115D,
-                    climbDirection.getStepZ() * 0.025D);
-            return;
-        }
-
-        double targetY = (double) climbTargetY;
-        if (player.getY() < targetY - 0.03D) {
-            player.setDeltaMovement(0.0D, Math.min(0.075D, targetY - player.getY()), 0.0D);
-            return;
-        }
-
-        // Move only far enough to clear the wall edge. The previous 0.85-block
-        // push tried to reach the middle of the top block and could wedge the player.
-        player.setDeltaMovement(
-                climbDirection.getStepX() * 0.10D,
-                0.0D,
-                climbDirection.getStepZ() * 0.10D);
-        climbForwardDistance = Math.sqrt(
-                (player.getX() - climbStartX) * (player.getX() - climbStartX)
-                + (player.getZ() - climbStartZ) * (player.getZ() - climbStartZ));
-        if (climbForwardDistance >= 0.42D) {
-            player.setPose(Pose.STANDING);
-            player.setDeltaMovement(0.0D, 0.0D, 0.0D);
-            climbing = false;
-            climbProgress = 0.0D;
-            climbTargetProgress = 0.0D;
-        }
-    }
-
     @SubscribeEvent
     public static void onInput(MovementInputUpdateEvent event) {
         LocalPlayer player = (LocalPlayer) event.getEntity();
-        if (prone || climbing) {
+        if (prone) {
             event.getInput().forwardImpulse = 0;
             event.getInput().leftImpulse = 0;
             event.getInput().jumping = false;
             event.getInput().shiftKeyDown = false;
             player.setSprinting(false);
             return;
-        }
-        if (canClimb(player) && Minecraft.getInstance().options.keyJump.isDown()) {
-            event.getInput().jumping = false;
         }
         if (player.isSprinting() && sprintJumpCooldown > 0) event.getInput().jumping = false;
         if (stamina <= 0.0F || (exhausted && stamina < SPRINT_UNLOCK_STAMINA)) {
@@ -237,11 +118,6 @@ public final class MovementClient {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null || mc.level == null) return;
-        if (climbing) {
-            tickClimb(player);
-            removeRunBoost(player);
-            return;
-        }
         if (prone) {
             if (!waitingForSpace && --fallRecoveryTicks <= 0) {
                 prone = false;
@@ -261,12 +137,6 @@ public final class MovementClient {
             player.setSprinting(false);
             player.setDeltaMovement(0, 0, 0);
             removeRunBoost(player);
-            return;
-        }
-
-        // Start climbing immediately while Space is held; no repeated tapping.
-        if (!climbing && mc.options.keyJump.isDown() && canClimb(player)) {
-            tryStartClimb(player);
             return;
         }
 
@@ -416,36 +286,6 @@ public final class MovementClient {
     }
 
     @SubscribeEvent
-    public static void onClimbRenderPre(RenderPlayerEvent.Pre event) {
-        if (!climbing || event.getEntity() != Minecraft.getInstance().player) return;
-        PlayerModel<?> model = event.getRenderer().getModel();
-        savedRightArmX = model.rightArm.xRot;
-        savedRightArmY = model.rightArm.yRot;
-        savedRightArmZ = model.rightArm.zRot;
-        savedLeftArmX = model.leftArm.xRot;
-        savedLeftArmY = model.leftArm.yRot;
-        savedLeftArmZ = model.leftArm.zRot;
-        model.rightArm.xRot = -2.35F;
-        model.leftArm.xRot = -2.35F;
-        model.rightArm.yRot = -0.12F;
-        model.leftArm.yRot = 0.12F;
-        model.rightArm.zRot = 0.22F;
-        model.leftArm.zRot = -0.22F;
-    }
-
-    @SubscribeEvent
-    public static void onClimbRenderPost(RenderPlayerEvent.Post event) {
-        if (!climbing || event.getEntity() != Minecraft.getInstance().player) return;
-        PlayerModel<?> model = event.getRenderer().getModel();
-        model.rightArm.xRot = savedRightArmX;
-        model.rightArm.yRot = savedRightArmY;
-        model.rightArm.zRot = savedRightArmZ;
-        model.leftArm.xRot = savedLeftArmX;
-        model.leftArm.yRot = savedLeftArmY;
-        model.leftArm.zRot = savedLeftArmZ;
-    }
-
-    @SubscribeEvent
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !player.isSprinting() || !player.onGround() || player.zza <= 0.0F) return;
@@ -482,10 +322,6 @@ public final class MovementClient {
         int color = 0xFFFF8A24;
         gui.fill(x, y, x + filled, y + height, color);
         gui.fill(x + filled, y, x + width, y + height, 0xAA292929);
-        if (!climbing && canClimb(mc.player)) {
-            int w = gui.guiWidth(), h = gui.guiHeight();
-            gui.drawCenteredString(mc.font, Component.literal("↑"), w / 2, h - 48, 0xFFFFD76A);
-        }
         if (prone && waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
             gui.fill(0, 0, w, h, 0xAA000000);
