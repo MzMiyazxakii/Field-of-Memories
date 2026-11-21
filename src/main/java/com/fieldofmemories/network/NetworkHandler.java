@@ -5,6 +5,7 @@ import com.fieldofmemories.client.MovementClient;
 import com.fieldofmemories.data.MemoryDiscWorldData;
 import com.fieldofmemories.item.MemoryDiscItem;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Pose;
@@ -31,6 +32,8 @@ public final class NetworkHandler {
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(FieldOfMemories.MOD_ID, "main"),
             () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
+    private static final String PENDING_DISC_TAG = "FieldOfMemoriesPendingDisc";
+    private static final String PENDING_DISC_HAND_TAG = "FieldOfMemoriesPendingDiscHand";
     private static final Map<UUID, Integer> PRONE_PLAYERS = new ConcurrentHashMap<>();
     private static final Map<UUID, ActiveMemoryDisc> ACTIVE_MEMORY_DISCS = new ConcurrentHashMap<>();
 
@@ -177,6 +180,8 @@ public final class NetworkHandler {
         player.getInventory().setChanged();
 
         int id = ((MemoryDiscItem) reservedDisc.getItem()).getDiscId();
+        player.getPersistentData().put(PENDING_DISC_TAG, reservedDisc.save(new CompoundTag()));
+        player.getPersistentData().putInt(PENDING_DISC_HAND_TAG, hand == InteractionHand.MAIN_HAND ? 0 : 1);
         ACTIVE_MEMORY_DISCS.put(player.getUUID(), new ActiveMemoryDisc(id, reservedDisc, hand, -1));
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(0, id, -1));
     }
@@ -202,12 +207,33 @@ public final class NetworkHandler {
     }
 
     private static void restoreMemoryDisc(ServerPlayer player, ActiveMemoryDisc session) {
-        if (player.getItemInHand(session.hand()).isEmpty()) {
-            player.setItemInHand(session.hand(), session.stack());
-        } else if (!player.getInventory().add(session.stack())) {
-            player.drop(session.stack(), false);
+        restoreStack(player, session.stack(), session.hand());
+        clearPendingMemoryDisc(player);
+    }
+
+    private static void restoreStack(ServerPlayer player, ItemStack stack, InteractionHand hand) {
+        if (stack.isEmpty()) return;
+        if (player.getItemInHand(hand).isEmpty()) {
+            player.setItemInHand(hand, stack);
+        } else if (!player.getInventory().add(stack)) {
+            player.drop(stack, false);
         }
         player.getInventory().setChanged();
+    }
+
+    private static void clearPendingMemoryDisc(ServerPlayer player) {
+        player.getPersistentData().remove(PENDING_DISC_TAG);
+        player.getPersistentData().remove(PENDING_DISC_HAND_TAG);
+    }
+
+    private static void restorePendingMemoryDisc(ServerPlayer player) {
+        CompoundTag data = player.getPersistentData();
+        if (!data.contains(PENDING_DISC_TAG)) return;
+        ItemStack stack = ItemStack.of(data.getCompound(PENDING_DISC_TAG));
+        InteractionHand hand = data.getInt(PENDING_DISC_HAND_TAG) == 0
+                ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+        clearPendingMemoryDisc(player);
+        restoreStack(player, stack, hand);
     }
 
     private static void cancelMemoryDisc(ServerPlayer player) {
@@ -244,6 +270,11 @@ public final class NetworkHandler {
 
     @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID)
     public static final class ServerEvents {
+        @SubscribeEvent
+        public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
+            if (event.getEntity() instanceof ServerPlayer player) restorePendingMemoryDisc(player);
+        }
+
         @SubscribeEvent
         public static void onLivingDeath(LivingDeathEvent event) {
             if (event.getEntity() instanceof ServerPlayer player) cancelMemoryDisc(player);
