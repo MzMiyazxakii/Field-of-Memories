@@ -113,10 +113,6 @@ public final class DeathScreen extends Screen {
         if (respawnHovered) {
             gui.fill(left - 5, buttonY - 4, right + 5, buttonY + BUTTON_HEIGHT + 4, 0x30FFFFFF);
         }
-        gui.fill(left, buttonY, right, buttonY + 1, 0xBFFFFFFF);
-        gui.fill(left, buttonY + BUTTON_HEIGHT - 1, right, buttonY + BUTTON_HEIGHT, 0xBFFFFFFF);
-        gui.fill(left, buttonY, left + 1, buttonY + BUTTON_HEIGHT, 0xBFFFFFFF);
-        gui.fill(right - 1, buttonY, right, buttonY + BUTTON_HEIGHT, 0xBFFFFFFF);
         gui.drawCenteredString(this.font, Component.literal("Возродиться"),
                 centerX, textY, respawnHovered ? 0xFFFFFFFF : white);
 
