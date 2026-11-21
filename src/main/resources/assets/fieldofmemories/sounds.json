@@ -12,7 +12,7 @@
     "sounds": [
       {
         "name": "fieldofmemories:diskmemorysound",
-        "stream": false
+        "stream": true
       }
     ]
   }
