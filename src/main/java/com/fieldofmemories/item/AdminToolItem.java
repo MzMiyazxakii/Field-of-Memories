@@ -16,7 +16,9 @@ public class AdminToolItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (player.hasPermissions(2)) {
+        // Only the client that actually used the item may open its local GUI.
+        // The logical server must never attempt to open a screen.
+        if (level.isClientSide && player.hasPermissions(2)) {
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> AdminToolItemClient.open());
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
