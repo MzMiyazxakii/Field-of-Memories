@@ -8,6 +8,9 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
+import com.fieldofmemories.client.MovementClient;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -53,8 +56,19 @@ public final class NetworkHandler {
                         if (target != null) {
                             PRONE_PLAYERS.put(target.getUUID(), 40);
                             target.setPose(Pose.SWIMMING);
+                            CHANNEL.send(PacketDistributor.PLAYER.with(() -> target),
+                                    new ForcedFallClientPacket());
                         }
                     }
+                    context.get().setPacketHandled(true);
+                })
+                .add();
+        CHANNEL.messageBuilder(ForcedFallClientPacket.class, 2)
+                .encoder((packet, buffer) -> {})
+                .decoder(buffer -> new ForcedFallClientPacket())
+                .consumerMainThread((packet, context) -> {
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
+                            () -> () -> MovementClient.beginForcedFallFromServer());
                     context.get().setPacketHandled(true);
                 })
                 .add();
@@ -92,5 +106,6 @@ public final class NetworkHandler {
     }
 
     private record ProneStatePacket(boolean prone) {}
+    private record ForcedFallClientPacket() {}
     private record ForceFallPacket(UUID target) {}
 }

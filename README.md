@@ -8,9 +8,9 @@ A psychological horror mod for Minecraft 1.20.1 (Forge).
 - Java 17
 
 ## Build
-Run `./gradlew build` (Windows: `gradlew.bat build`). The mod JAR is created in `build/libs/`.
+Install Gradle 8.8 and run `gradle build`. The mod JAR is created in `build/libs/`.
 
-Every push to `main` and every pull request runs the GitHub Actions build. Download the compiled JAR from the workflow run's **Artifacts** section.
+Every push to `main` and every pull request targeting `main` runs the GitHub Actions build. Download the compiled JAR from the workflow run's **Artifacts** section.
 
 ## First milestone
 - Ambient horror events in dark areas at night

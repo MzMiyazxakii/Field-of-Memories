@@ -272,7 +272,16 @@ public final class MovementClient {
         }
     }
 
+    public static void beginForcedFallFromServer() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player != null) startFall(player, false);
+    }
+
     private static void startFall(LocalPlayer player) {
+        startFall(player, true);
+    }
+
+    private static void startFall(LocalPlayer player, boolean notifyServer) {
         // Use the client level's local sound path; LocalPlayer.playSound can
         // be silent for client-only effects depending on the call context.
         player.level().playLocalSound(player.blockPosition(), SoundEvents.PLAYER_SMALL_FALL,
@@ -299,7 +308,7 @@ public final class MovementClient {
         shakeTicks = 0;
         player.setSprinting(false);
         removeRunBoost(player);
-        NetworkHandler.sendProneState(true);
+        if (notifyServer) NetworkHandler.sendProneState(true);
         fallRecoveryTicks = 40;
         player.setPose(Pose.SWIMMING);
         player.setDeltaMovement(0, 0, 0);
