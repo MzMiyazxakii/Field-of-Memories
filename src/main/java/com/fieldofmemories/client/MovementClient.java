@@ -57,6 +57,9 @@ public final class MovementClient {
     private static float stamina = maxStamina;
     private static int recoveryDelay = 0;
     private static int sprintTicks = 0;
+    // Prevent vanilla's held-sprint logic from immediately re-enabling sprint
+    // after the player presses the sprint key to switch back to walking.
+    private static boolean sprintCancelUntilRelease = false;
     private static int runParticleTicks = 0;
     private static boolean exhausted = false;
     private static boolean prone = false;
@@ -100,15 +103,22 @@ public final class MovementClient {
 
     @SubscribeEvent
     public static void onKey(InputEvent.Key event) {
-        LocalPlayer keyPlayer = Minecraft.getInstance().player;
-        if (keyPlayer != null && event.getAction() == GLFW.GLFW_PRESS
-                && Minecraft.getInstance().options.keySprint.matches(event.getKey(), event.getScanCode())
-                && keyPlayer.isSprinting()) {
-            keyPlayer.setSprinting(false);
-            removeRunBoost(keyPlayer);
-            return;
-        }
         Minecraft mc = Minecraft.getInstance();
+        LocalPlayer keyPlayer = mc.player;
+        if (mc.options.keySprint.matches(event.getKey(), event.getScanCode())) {
+            if (event.getAction() == GLFW.GLFW_PRESS && keyPlayer != null && keyPlayer.isSprinting()) {
+                // A second press while running means "walk", not "keep sprinting".
+                // Keep the cancellation latched until release so vanilla cannot
+                // turn sprint back on while the key is still held.
+                sprintCancelUntilRelease = true;
+                keyPlayer.setSprinting(false);
+                removeRunBoost(keyPlayer);
+                return;
+            }
+            if (event.getAction() == GLFW.GLFW_RELEASE) {
+                sprintCancelUntilRelease = false;
+            }
+        }
         if (event.getAction() != GLFW.GLFW_PRESS
                 || !mc.options.keyJump.matches(event.getKey(), event.getScanCode())) return;
         LocalPlayer player = mc.player;
@@ -128,6 +138,10 @@ public final class MovementClient {
     public static void onInput(MovementInputUpdateEvent event) {
         LocalPlayer player = (LocalPlayer) event.getEntity();
         longJumpInputSuppressed = false;
+        if (sprintCancelUntilRelease) {
+            player.setSprinting(false);
+            removeRunBoost(player);
+        }
         if (prone) {
             event.getInput().forwardImpulse = 0;
             event.getInput().leftImpulse = 0;
@@ -202,6 +216,10 @@ public final class MovementClient {
         }
 
         if (sprintJumpCooldown > 0) sprintJumpCooldown--;
+        if (sprintCancelUntilRelease) {
+            player.setSprinting(false);
+            removeRunBoost(player);
+        }
         boolean sprintKeyDown = mc.options.keySprint.isDown();
         emptySprintAttempt = exhausted && stamina < SPRINT_UNLOCK_STAMINA
                 && sprintKeyDown && (player.zza > 0.0F || mc.options.keyUp.isDown());
