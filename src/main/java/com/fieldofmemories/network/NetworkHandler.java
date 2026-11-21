@@ -3,6 +3,8 @@ package com.fieldofmemories.network;
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.client.MovementClient;
 import com.fieldofmemories.data.MemoryDiscWorldData;
+import com.fieldofmemories.item.MemoryDiscItem;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Pose;
@@ -28,6 +30,7 @@ public final class NetworkHandler {
             new ResourceLocation(FieldOfMemories.MOD_ID, "main"),
             () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
     private static final Map<UUID, Integer> PRONE_PLAYERS = new ConcurrentHashMap<>();
+    private static final Map<UUID, ActiveMemoryDisc> ACTIVE_MEMORY_DISCS = new ConcurrentHashMap<>();
 
     private NetworkHandler() {}
 
@@ -120,6 +123,32 @@ public final class NetworkHandler {
                                     packet.readMask(), packet.spawnEnabled(), packet.spawnChance()));
                     context.get().setPacketHandled(true);
                 }).add();
+
+        CHANNEL.messageBuilder(MemoryDiscRequestPacket.class, 6)
+                .encoder((packet, buffer) -> buffer.writeBoolean(packet.next()))
+                .decoder(buffer -> new MemoryDiscRequestPacket(buffer.readBoolean()))
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null) {
+                        if (packet.next()) advanceMemoryDisc(player);
+                        else startMemoryDisc(player);
+                    }
+                    context.get().setPacketHandled(true);
+                }).add();
+
+        CHANNEL.messageBuilder(MemoryDiscStatePacket.class, 7)
+                .encoder((packet, buffer) -> {
+                    buffer.writeInt(packet.state());
+                    buffer.writeInt(packet.discId());
+                    buffer.writeInt(packet.fragmentIndex());
+                })
+                .decoder(buffer -> new MemoryDiscStatePacket(buffer.readInt(), buffer.readInt(), buffer.readInt()))
+                .consumerMainThread((packet, context) -> {
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
+                            com.fieldofmemories.client.MemoryDiscClient.handleServerState(
+                                    packet.state(), packet.discId(), packet.fragmentIndex()));
+                    context.get().setPacketHandled(true);
+                }).add();
     }
 
     private static void sendMemoryDiscStats(ServerPlayer player) {
@@ -128,6 +157,60 @@ public final class NetworkHandler {
                 MemoryDiscWorldData.getReadMask(level),
                 MemoryDiscWorldData.isSpawnEnabled(level),
                 MemoryDiscWorldData.getSpawnChance(level)));
+    }
+
+
+    private static void startMemoryDisc(ServerPlayer player) {
+        if (ACTIVE_MEMORY_DISCS.containsKey(player.getUUID())) return;
+        InteractionHand hand = null;
+        if (player.getMainHandItem().getItem() instanceof MemoryDiscItem) hand = InteractionHand.MAIN_HAND;
+        else if (player.getOffhandItem().getItem() instanceof MemoryDiscItem) hand = InteractionHand.OFF_HAND;
+        if (hand == null) return;
+
+        ItemStack held = player.getItemInHand(hand);
+        ItemStack reservedDisc = held.copy();
+        reservedDisc.setCount(1);
+        held.shrink(1);
+        if (held.isEmpty()) player.setItemInHand(hand, ItemStack.EMPTY);
+        player.getInventory().setChanged();
+
+        int id = ((MemoryDiscItem) reservedDisc.getItem()).getDiscId();
+        ACTIVE_MEMORY_DISCS.put(player.getUUID(), new ActiveMemoryDisc(id, reservedDisc, hand, -1));
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(0, id, -1));
+    }
+
+    private static void advanceMemoryDisc(ServerPlayer player) {
+        ActiveMemoryDisc session = ACTIVE_MEMORY_DISCS.get(player.getUUID());
+        if (session == null) return;
+        List<String> fragments = MemoryDiscItem.getFragments(session.discId());
+        int next = session.fragmentIndex() + 1;
+        if (next < fragments.size()) {
+            ACTIVE_MEMORY_DISCS.put(player.getUUID(),
+                    new ActiveMemoryDisc(session.discId(), session.stack(), session.hand(), next));
+            CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(1, session.discId(), next));
+        } else {
+            ACTIVE_MEMORY_DISCS.remove(player.getUUID());
+            MemoryDiscWorldData.markRead(player.serverLevel(), session.discId());
+            restoreMemoryDisc(player, session);
+            CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(2, session.discId(), -1));
+        }
+    }
+
+    private static void restoreMemoryDisc(ServerPlayer player, ActiveMemoryDisc session) {
+        if (player.getItemInHand(session.hand()).isEmpty()) {
+            player.setItemInHand(session.hand(), session.stack());
+        } else if (!player.getInventory().add(session.stack())) {
+            player.drop(session.stack(), false);
+        }
+        player.getInventory().setChanged();
+    }
+
+    private static void cancelMemoryDisc(ServerPlayer player) {
+        ActiveMemoryDisc session = ACTIVE_MEMORY_DISCS.remove(player.getUUID());
+        if (session != null) {
+            restoreMemoryDisc(player, session);
+            CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(2, session.discId(), -1));
+        }
     }
 
     public static void sendProneState(boolean prone) {
@@ -144,6 +227,14 @@ public final class NetworkHandler {
 
     public static void requestMemoryDiscStats() {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new MemoryDiscStatsRequest());
+    }
+
+    public static void requestMemoryDiscStart() {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new MemoryDiscRequestPacket(false));
+    }
+
+    public static void requestMemoryDiscNext() {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new MemoryDiscRequestPacket(true));
     }
 
     @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID)
@@ -171,6 +262,7 @@ public final class NetworkHandler {
         @SubscribeEvent
         public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
             PRONE_PLAYERS.remove(event.getEntity().getUUID());
+            if (event.getEntity() instanceof ServerPlayer player) cancelMemoryDisc(player);
         }
     }
 
@@ -180,4 +272,7 @@ public final class NetworkHandler {
     private record MemoryDiscActionPacket(int action, int discId) {}
     private record MemoryDiscStatsRequest() {}
     private record MemoryDiscStatsPacket(int readMask, boolean spawnEnabled, int spawnChance) {}
+    private record MemoryDiscRequestPacket(boolean next) {}
+    private record MemoryDiscStatePacket(int state, int discId, int fragmentIndex) {}
+    private record ActiveMemoryDisc(int discId, ItemStack stack, InteractionHand hand, int fragmentIndex) {}
 }
