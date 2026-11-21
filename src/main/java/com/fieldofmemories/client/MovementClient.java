@@ -6,6 +6,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -53,6 +55,11 @@ public final class MovementClient {
     private static boolean proneAnglesCaptured = false;
     private static boolean emptySprintAttempt = false;
     private static int shakeTicks = 0;
+    private static boolean climbing = false;
+    private static int climbTapCount = 0;
+    private static int lastSpaceTapTick = -100;
+    private static int climbTargetY = 0;
+    private static Direction climbDirection = Direction.NORTH;
 
     private MovementClient() {}
 
@@ -81,21 +88,62 @@ public final class MovementClient {
 
     @SubscribeEvent
     public static void onKey(InputEvent.Key event) {
-        if (!prone || !waitingForSpace || event.getKey() != GLFW.GLFW_KEY_SPACE || event.getAction() != GLFW.GLFW_PRESS) return;
-        prone = false;
-        waitingForSpace = false;
-        proneAnglesCaptured = false;
+        if (event.getKey() != GLFW.GLFW_KEY_SPACE || event.getAction() != GLFW.GLFW_PRESS) return;
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) {
+        if (player == null) return;
+        if (prone && waitingForSpace) {
+            prone = false;
+            waitingForSpace = false;
+            proneAnglesCaptured = false;
             player.setPose(Pose.STANDING);
             player.setDeltaMovement(0, 0, 0);
+            return;
         }
+        if (climbing) {
+            player.setPos(player.getX(), Math.min(climbTargetY, player.getY() + 0.42D), player.getZ());
+            player.setDeltaMovement(0.0D, 0.0D, 0.0D);
+            if (player.getY() >= climbTargetY - 0.01D) {
+                player.setPos(player.getX() + climbDirection.getStepX() * 0.65D, climbTargetY + 0.02D,
+                        player.getZ() + climbDirection.getStepZ() * 0.65D);
+                player.setPose(Pose.STANDING);
+                climbing = false;
+                climbTapCount = 0;
+            }
+            return;
+        }
+        int tick = player.tickCount;
+        if (tick - lastSpaceTapTick <= 10) climbTapCount++;
+        else climbTapCount = 1;
+        lastSpaceTapTick = tick;
+        if (climbTapCount >= 2 && player.getXRot() <= -25.0F && player.onGround()) tryStartClimb(player);
+    }
+    private static void tryStartClimb(LocalPlayer player) {
+        Direction direction = player.getDirection();
+        BlockPos base = player.blockPosition().relative(direction);
+        BlockPos upper = base.above();
+        BlockPos aboveWall = upper.above();
+        if (!isClimbableWallBlock(player, base) || !isClimbableWallBlock(player, upper)
+                || !player.level().getBlockState(aboveWall).getCollisionShape(player.level(), aboveWall).isEmpty()) {
+            climbTapCount = 0;
+            return;
+        }
+        climbing = true;
+        climbDirection = direction;
+        climbTargetY = base.getY() + 2;
+        player.setPose(Pose.SWIMMING);
+        player.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        player.setSprinting(false);
+        climbTapCount = 0;
+    }
+    private static boolean isClimbableWallBlock(LocalPlayer player, BlockPos pos) {
+        var state = player.level().getBlockState(pos);
+        return !state.isAir() && !state.getCollisionShape(player.level(), pos).isEmpty();
     }
 
     @SubscribeEvent
     public static void onInput(MovementInputUpdateEvent event) {
         LocalPlayer player = (LocalPlayer) event.getEntity();
-        if (prone) {
+        if (prone || climbing) {
             event.getInput().forwardImpulse = 0;
             event.getInput().leftImpulse = 0;
             event.getInput().jumping = false;
@@ -116,6 +164,12 @@ public final class MovementClient {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null || mc.level == null) return;
+        if (climbing) {
+            player.setDeltaMovement(0.0D, 0.0D, 0.0D);
+            player.setSprinting(false);
+            removeRunBoost(player);
+            return;
+        }
         if (prone) {
             if (!waitingForSpace && --fallRecoveryTicks <= 0) {
                 prone = false;
