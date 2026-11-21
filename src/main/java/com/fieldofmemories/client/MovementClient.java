@@ -4,6 +4,8 @@ import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.model.PlayerModel;
+import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.BlockPos;
@@ -58,8 +60,15 @@ public final class MovementClient {
     private static boolean climbing = false;
     private static int climbTapCount = 0;
     private static int lastSpaceTapTick = -100;
+    private static double climbProgress = 0.0D;
+    private static double climbTargetProgress = 0.0D;
+    private static double climbStartX = 0.0D;
+    private static double climbStartY = 0.0D;
+    private static double climbStartZ = 0.0D;
     private static int climbTargetY = 0;
     private static Direction climbDirection = Direction.NORTH;
+    private static float savedRightArmX, savedRightArmY, savedRightArmZ;
+    private static float savedLeftArmX, savedLeftArmY, savedLeftArmZ;
 
     private MovementClient() {}
 
@@ -100,44 +109,80 @@ public final class MovementClient {
             return;
         }
         if (climbing) {
-            player.setPos(player.getX(), Math.min(climbTargetY, player.getY() + 0.42D), player.getZ());
-            player.setDeltaMovement(0.0D, 0.0D, 0.0D);
-            if (player.getY() >= climbTargetY - 0.01D) {
-                player.setPos(player.getX() + climbDirection.getStepX() * 0.65D, climbTargetY + 0.02D,
-                        player.getZ() + climbDirection.getStepZ() * 0.65D);
-                player.setPose(Pose.STANDING);
-                climbing = false;
-                climbTapCount = 0;
-            }
+            climbTargetProgress = Math.min(1.0D, climbTargetProgress + 0.20D);
+            return;
+        }
+        if (!canClimb(player)) {
+            climbTapCount = 0;
             return;
         }
         int tick = player.tickCount;
-        if (tick - lastSpaceTapTick <= 10) climbTapCount++;
-        else climbTapCount = 1;
+        climbTapCount = tick - lastSpaceTapTick <= 12 ? climbTapCount + 1 : 1;
         lastSpaceTapTick = tick;
-        if (climbTapCount >= 2 && player.getXRot() <= -25.0F && player.onGround()) tryStartClimb(player);
+        if (climbTapCount >= 3) tryStartClimb(player);
     }
-    private static void tryStartClimb(LocalPlayer player) {
+
+    private static boolean canClimb(LocalPlayer player) {
+        if (player == null || !player.onGround() || player.getXRot() > -75.0F) return false;
         Direction direction = player.getDirection();
         BlockPos base = player.blockPosition().relative(direction);
         BlockPos upper = base.above();
         BlockPos aboveWall = upper.above();
-        if (!isClimbableWallBlock(player, base) || !isClimbableWallBlock(player, upper)
-                || !player.level().getBlockState(aboveWall).getCollisionShape(player.level(), aboveWall).isEmpty()) {
+        BlockPos headClearance = aboveWall.above();
+        return isClimbableWallBlock(player, base)
+                && isClimbableWallBlock(player, upper)
+                && player.level().getBlockState(aboveWall).getCollisionShape(player.level(), aboveWall).isEmpty()
+                && player.level().getBlockState(headClearance).getCollisionShape(player.level(), headClearance).isEmpty();
+    }
+
+    private static void tryStartClimb(LocalPlayer player) {
+        if (!canClimb(player)) {
             climbTapCount = 0;
             return;
         }
+        climbDirection = player.getDirection();
+        BlockPos base = player.blockPosition().relative(climbDirection);
         climbing = true;
-        climbDirection = direction;
+        climbStartX = player.getX();
+        climbStartY = player.getY();
+        climbStartZ = player.getZ();
         climbTargetY = base.getY() + 2;
+        climbProgress = 0.0D;
+        climbTargetProgress = 0.0D;
         player.setPose(Pose.SWIMMING);
         player.setDeltaMovement(0.0D, 0.0D, 0.0D);
         player.setSprinting(false);
         climbTapCount = 0;
+        removeRunBoost(player);
     }
+
     private static boolean isClimbableWallBlock(LocalPlayer player, BlockPos pos) {
         var state = player.level().getBlockState(pos);
         return !state.isAir() && !state.getCollisionShape(player.level(), pos).isEmpty();
+    }
+
+    private static void tickClimb(LocalPlayer player) {
+        double difference = climbTargetProgress - climbProgress;
+        if (Math.abs(difference) > 0.0005D) {
+            climbProgress += difference * 0.16D;
+            if (Math.abs(climbTargetProgress - climbProgress) < 0.006D) climbProgress = climbTargetProgress;
+        }
+        double eased = climbProgress * climbProgress * (3.0D - 2.0D * climbProgress);
+        double targetY = climbStartY + (climbTargetY - climbStartY) * eased;
+        double forward = 0.65D * eased;
+        player.setPos(climbStartX + climbDirection.getStepX() * forward, targetY,
+                climbStartZ + climbDirection.getStepZ() * forward);
+        player.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        player.setSprinting(false);
+        if (climbTargetProgress >= 1.0D && climbProgress >= 0.999D) {
+            player.setPos(climbStartX + climbDirection.getStepX() * 0.65D, climbTargetY + 0.02D,
+                    climbStartZ + climbDirection.getStepZ() * 0.65D);
+            player.setPose(Pose.STANDING);
+            climbing = false;
+            climbProgress = 0.0D;
+            climbTargetProgress = 0.0D;
+            climbTapCount = 0;
+        }
     }
 
     @SubscribeEvent
@@ -151,7 +196,8 @@ public final class MovementClient {
             player.setSprinting(false);
             return;
         }
-        if (climbTapCount == 1 && player.tickCount - lastSpaceTapTick <= 10) event.getInput().jumping = false;
+        if (climbTapCount > 0 && canClimb(player)
+                && player.tickCount - lastSpaceTapTick <= 12) event.getInput().jumping = false;
         if (player.isSprinting() && sprintJumpCooldown > 0) event.getInput().jumping = false;
         if (stamina <= 0.0F || (exhausted && stamina < SPRINT_UNLOCK_STAMINA)) {
             player.setSprinting(false);
@@ -166,11 +212,11 @@ public final class MovementClient {
         LocalPlayer player = mc.player;
         if (player == null || mc.level == null) return;
         if (climbing) {
-            player.setDeltaMovement(0.0D, 0.0D, 0.0D);
-            player.setSprinting(false);
+            tickClimb(player);
             removeRunBoost(player);
             return;
         }
+        if (climbTapCount > 0 && player.tickCount - lastSpaceTapTick > 12) climbTapCount = 0;
         if (prone) {
             if (!waitingForSpace && --fallRecoveryTicks <= 0) {
                 prone = false;
@@ -322,6 +368,36 @@ public final class MovementClient {
     }
 
     @SubscribeEvent
+    public static void onClimbRenderPre(RenderPlayerEvent.Pre event) {
+        if (!climbing || event.getEntity() != Minecraft.getInstance().player) return;
+        PlayerModel<?> model = event.getRenderer().getModel();
+        savedRightArmX = model.rightArm.xRot;
+        savedRightArmY = model.rightArm.yRot;
+        savedRightArmZ = model.rightArm.zRot;
+        savedLeftArmX = model.leftArm.xRot;
+        savedLeftArmY = model.leftArm.yRot;
+        savedLeftArmZ = model.leftArm.zRot;
+        model.rightArm.xRot = -2.85F;
+        model.leftArm.xRot = -2.85F;
+        model.rightArm.yRot = 0.0F;
+        model.leftArm.yRot = 0.0F;
+        model.rightArm.zRot = 0.18F;
+        model.leftArm.zRot = -0.18F;
+    }
+
+    @SubscribeEvent
+    public static void onClimbRenderPost(RenderPlayerEvent.Post event) {
+        if (!climbing || event.getEntity() != Minecraft.getInstance().player) return;
+        PlayerModel<?> model = event.getRenderer().getModel();
+        model.rightArm.xRot = savedRightArmX;
+        model.rightArm.yRot = savedRightArmY;
+        model.rightArm.zRot = savedRightArmZ;
+        model.leftArm.xRot = savedLeftArmX;
+        model.leftArm.yRot = savedLeftArmY;
+        model.leftArm.zRot = savedLeftArmZ;
+    }
+
+    @SubscribeEvent
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !player.isSprinting() || !player.onGround() || player.zza <= 0.0F) return;
@@ -358,6 +434,10 @@ public final class MovementClient {
         int color = 0xFFFF8A24;
         gui.fill(x, y, x + filled, y + height, color);
         gui.fill(x + filled, y, x + width, y + height, 0xAA292929);
+        if (!climbing && canClimb(mc.player)) {
+            int w = gui.guiWidth(), h = gui.guiHeight();
+            gui.drawCenteredString(mc.font, Component.literal("↑"), w / 2, h - 48, 0xFFFFD76A);
+        }
         if (prone && waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
             gui.fill(0, 0, w, h, 0xAA000000);
