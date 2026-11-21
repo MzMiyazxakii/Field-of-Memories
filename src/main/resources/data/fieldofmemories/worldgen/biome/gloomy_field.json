@@ -12,7 +12,10 @@
   },
   "spawners": {},
   "spawn_costs": {},
-  "carvers": [],
+  "carvers": {
+    "air": [],
+    "liquid": []
+  },
   "features": [
     [],
     [],
