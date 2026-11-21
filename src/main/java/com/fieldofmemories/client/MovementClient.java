@@ -549,7 +549,7 @@ public final class MovementClient {
         }
         // A restrained crimson tint while any memory disc is being read.
         // Draw it before the CRT pass so scanlines and interference stay crisp.
-        if (MemoryDiscClient.isReading()) {
+        if (MemoryDiscClient.isReading() && !MemoryDiscClient.shouldDarkenScreen()) {
             gui.fill(0, 0, gui.guiWidth(), gui.guiHeight(), 0x16A00020);
         }
 
