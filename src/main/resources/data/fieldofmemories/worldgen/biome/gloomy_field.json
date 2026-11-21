@@ -23,7 +23,10 @@
     [],
     [],
     [],
-    [],
+    [
+      "minecraft:patch_tall_grass_2",
+      "minecraft:patch_pumpkin"
+    ],
     []
   ]
 }
