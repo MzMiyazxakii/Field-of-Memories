@@ -124,7 +124,7 @@ public final class MovementClient {
     }
 
     private static boolean canClimb(LocalPlayer player) {
-        if (player == null || !player.onGround() || player.getXRot() > -75.0F) return false;
+        if (player == null || !player.onGround() || player.getXRot() < -35.0F || player.getXRot() > 35.0F) return false;
         Direction direction = player.getDirection();
         BlockPos base = player.blockPosition().relative(direction);
         BlockPos upper = base.above();
