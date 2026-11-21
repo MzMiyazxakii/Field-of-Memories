@@ -37,6 +37,13 @@ public final class MovementClient {
     private static boolean prone = false;
     private static boolean wasJumping = false;
     private static boolean pendingLowJump = false;
+    private static float proneYaw;
+    private static float pronePitch;
+    private static float proneHeadYaw;
+    private static float proneBodyYaw;
+    private static boolean proneAnglesCaptured = false;
+    private static boolean emptySprintAttempt = false;
+    private static int shakeTicks = 0;
 
     private MovementClient() {}
 
@@ -46,12 +53,26 @@ public final class MovementClient {
     @SubscribeEvent
     public static void onRespawn(ClientPlayerNetworkEvent.Clone event) { enterProne(); }
 
-    private static void enterProne() { prone = true; }
+    private static void enterProne() {
+        prone = true;
+        proneAnglesCaptured = false;
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player != null) captureProneAngles(player);
+    }
+
+    private static void captureProneAngles(LocalPlayer player) {
+        proneYaw = player.getYRot();
+        pronePitch = player.getXRot();
+        proneHeadYaw = player.yHeadRot;
+        proneBodyYaw = player.yBodyRot;
+        proneAnglesCaptured = true;
+    }
 
     @SubscribeEvent
     public static void onKey(InputEvent.Key event) {
         if (!prone || event.getKey() != GLFW.GLFW_KEY_SPACE || event.getAction() != GLFW.GLFW_PRESS) return;
         prone = false;
+        proneAnglesCaptured = false;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null) {
             player.setPose(Pose.STANDING);
@@ -82,12 +103,25 @@ public final class MovementClient {
         LocalPlayer player = mc.player;
         if (player == null || mc.level == null) return;
         if (prone) {
+            if (!proneAnglesCaptured) captureProneAngles(player);
+            player.setYRot(proneYaw);
+            player.setXRot(pronePitch);
+            player.yRotO = proneYaw;
+            player.xRotO = pronePitch;
+            player.yHeadRot = proneHeadYaw;
+            player.yBodyRot = proneBodyYaw;
             player.setPose(Pose.SWIMMING);
             player.setSprinting(false);
             player.setDeltaMovement(0, 0, 0);
             removeRunBoost(player);
             return;
         }
+
+        boolean sprintKeyDown = mc.options.keySprint.isDown();
+        emptySprintAttempt = exhausted && stamina < SPRINT_UNLOCK_STAMINA
+                && sprintKeyDown && (player.zza > 0.0F || mc.options.keyUp.isDown());
+        if (emptySprintAttempt) shakeTicks++;
+        else shakeTicks = 0;
 
         boolean sprintAllowed = !exhausted || stamina >= SPRINT_UNLOCK_STAMINA;
         if (exhausted && stamina >= SPRINT_UNLOCK_STAMINA) exhausted = false;
@@ -142,7 +176,7 @@ public final class MovementClient {
         }
 
         if (sprintTicks >= 20 * 12 && player.onGround()) {
-            double chance = jumping ? 0.00055D : 0.00016D;
+            double chance = mc.options.keyJump.isDown() ? 0.0018D : 0.0008D;
             if (mc.level.random.nextDouble() < chance) {
                 enterProne();
                 player.setPose(Pose.SWIMMING);
@@ -155,7 +189,7 @@ public final class MovementClient {
 
     private static void addRunBoost(LocalPlayer player) {
         var attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
-        if (attribute != null && !attribute.hasModifier(RUN_SPEED_MODIFIER)) {
+        if (attribute != null && attribute.getModifier(RUN_SPEED_MODIFIER) == null) {
             attribute.addTransientModifier(RUN_SPEED_BOOST);
         }
     }
@@ -170,10 +204,15 @@ public final class MovementClient {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         GuiGraphics gui = event.getGuiGraphics();
-        int x = 10, y = 10, width = 104, height = 8;
+        int width = 104, height = 8;
+        int x = gui.guiWidth() - width - 10;
+        int y = gui.guiHeight() - 28;
+        if (emptySprintAttempt) {
+            x += Math.round((float) Math.sin(shakeTicks * 1.7D) * 2.0F);
+        }
         gui.fill(x - 1, y - 1, x + width + 1, y + height + 1, 0xCC101010);
         int filled = Math.round(width * (stamina / MAX_STAMINA));
-        int color = stamina > 35 ? 0xFFB8C6B0 : 0xFFB56A62;
+        int color = 0xFFFF8A24;
         gui.fill(x, y, x + filled, y + height, color);
         gui.fill(x + filled, y, x + width, y + height, 0xAA292929);
         if (prone) {
