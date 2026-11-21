@@ -191,7 +191,7 @@ public final class MovementClient {
 
         if (jumping && !wasJumping) {
             boolean crouchJump = mc.options.keyShift.isDown() && stamina >= longJumpStaminaCost;
-            pendingLowJump = !crouchJump && stamina < 7.0F;
+            pendingLowJump = !crouchJump && jumpedDuringHold && stamina < 7.0F;
             if (crouchJump) {
                 // Long jump: add a strong horizontal impulse in the direction
                 // the player is facing, while preserving normal jump height.
@@ -366,9 +366,9 @@ public final class MovementClient {
         GuiGraphics gui = event.getGuiGraphics();
 
         // Alternate, slightly darker CRT look: dense scanlines, a drifting
-        // interference band, sparse static streaks, and a soft vignette.
-        // The HUD is rendered afterward and remains crisp.
-        {
+        // interference band and sparse static streaks. The vignette is drawn
+        // separately below so it remains visible while the player is prone.
+        if (!prone && !waitingForSpace) {
             int screenWidth = gui.guiWidth();
             int screenHeight = gui.guiHeight();
             gui.fill(0, 0, screenWidth, screenHeight, 0x12000000);
@@ -389,12 +389,6 @@ public final class MovementClient {
             }
 
         }
-        int screenWidth = gui.guiWidth();
-        int screenHeight = gui.guiHeight();
-        gui.fill(0, 0, 12, screenHeight, 0x28000000);
-        gui.fill(Math.max(0, screenWidth - 12), 0, screenWidth, screenHeight, 0x28000000);
-        gui.fill(0, 0, screenWidth, 3, 0x28000000);
-        gui.fill(0, Math.max(0, screenHeight - 3), screenWidth, screenHeight, 0x28000000);
         if (prone && !waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
             int fadeTicks = Math.min(fallRecoveryTicks, 40);
@@ -423,5 +417,12 @@ public final class MovementClient {
             gui.fill(0, 0, w, h, 0xAA000000);
             gui.drawCenteredString(mc.font, Component.literal("Нажмите ПРОБЕЛ, чтобы встать"), w / 2, h / 2, 0xFFE6E6E6);
         }
+        // Persistent vignette: draw after prone/spawn overlays so it cannot be covered.
+        int screenWidth = gui.guiWidth();
+        int screenHeight = gui.guiHeight();
+        gui.fill(0, 0, 12, screenHeight, 0x28000000);
+        gui.fill(Math.max(0, screenWidth - 12), 0, screenWidth, screenHeight, 0x28000000);
+        gui.fill(0, 0, screenWidth, 3, 0x28000000);
+        gui.fill(0, Math.max(0, screenHeight - 3), screenWidth, screenHeight, 0x28000000);
     }
 }
