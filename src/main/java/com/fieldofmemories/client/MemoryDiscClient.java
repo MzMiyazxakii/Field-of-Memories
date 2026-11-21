@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
@@ -142,7 +143,7 @@ public final class MemoryDiscClient {
 
         List<String> fragments = MemoryDiscItem.getFragments(discId);
         if (fragmentIndex >= 0 && fragmentIndex < fragments.size()) {
-            Component message = Component.literal(fragments.get(fragmentIndex));
+            MutableComponent message = Component.literal(fragments.get(fragmentIndex));
             if (discId == 6) {
                 message = message.withStyle(Style.EMPTY.withFont(new ResourceLocation("minecraft", "uniform")));
             }
