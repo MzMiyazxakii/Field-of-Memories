@@ -103,7 +103,7 @@ public final class DeathScreen extends Screen {
 
         int pulse = (int) (Math.sin((age + partialTick) * 0.11D) * 13.0D + 242.0D);
         int white = (pulse << 24) | 0x00FFFFFF;
-        int textWidth = this.font.width("ВОЗРОДИТЬСЯ");
+        int textWidth = this.font.width("Возродиться");
         int textX = centerX - textWidth / 2;
         int textY = buttonY + (BUTTON_HEIGHT - this.font.lineHeight) / 2;
 
@@ -114,7 +114,7 @@ public final class DeathScreen extends Screen {
         gui.fill(left, buttonY + BUTTON_HEIGHT - 1, right, buttonY + BUTTON_HEIGHT, 0xBFFFFFFF);
         gui.fill(left, buttonY, left + 1, buttonY + BUTTON_HEIGHT, 0xBFFFFFFF);
         gui.fill(right - 1, buttonY, right, buttonY + BUTTON_HEIGHT, 0xBFFFFFFF);
-        gui.drawCenteredString(this.font, Component.literal("ВОЗРОДИТЬСЯ"),
+        gui.drawCenteredString(this.font, Component.literal("Возродиться"),
                 centerX, textY, respawnHovered ? 0xFFFFFFFF : white);
 
         // Final interference pass overlays both background and button, like a
