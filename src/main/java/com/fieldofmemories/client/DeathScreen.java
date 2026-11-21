@@ -1,7 +1,9 @@
 package com.fieldofmemories.client;
 
+import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
 import org.lwjgl.glfw.GLFW;
@@ -19,6 +21,16 @@ public final class DeathScreen extends Screen {
     }
 
     @Override
+    protected void init() {
+        super.init();
+        if (this.minecraft != null) {
+            this.minecraft.getSoundManager().play(
+                    SimpleSoundInstance.forUI(FieldOfMemories.DEATH_SCREEN_SOUND.get(), 1.0F)
+            );
+        }
+    }
+
+    @Override
     public void tick() {
         age++;
     }
@@ -30,12 +42,10 @@ public final class DeathScreen extends Screen {
         int centerX = w / 2;
         int centerY = h / 2;
 
-        // Almost-black picture with a faint, irregular red pulse.
         gui.fill(0, 0, w, h, 0xFF020203);
         int pulse = (int) (Math.sin((age + partialTick) * 0.075D) * 5.0D + 8.0D);
         gui.fill(0, 0, w, h, (pulse << 24) | 0x00300000);
 
-        // Dim phosphor glow, subtle vertical interference and analog picture noise.
         for (int x = 0; x < w; x += 3) {
             int alpha = 8 + Math.floorMod(x * 13 + age * 5, 9);
             gui.fill(x, 0, Math.min(w, x + 1), h, (alpha << 24) | 0x003D5960);
@@ -51,12 +61,10 @@ public final class DeathScreen extends Screen {
                     (alpha << 24) | 0x00B9D5D8);
         }
 
-        // Uneven rolling tracking bands, like a damaged analog signal.
         int bandY = Math.floorMod(age * 3, Math.max(1, h + 36)) - 18;
         gui.fill(0, bandY, w, Math.min(h, bandY + 2), 0x387FADB0);
         gui.fill(0, bandY + 5, w, Math.min(h, bandY + 7), 0x1685AEB3);
 
-        // Heavy dark edges and fine scanlines finish the CRT image.
         for (int y = 0; y < h; y += 3) {
             gui.fill(0, y, w, Math.min(h, y + 1), 0x26000000);
         }
@@ -69,7 +77,6 @@ public final class DeathScreen extends Screen {
         int titleColor = (age % 53 < 2) ? 0xFFB5C7C5 : 0xFFE7D8B8;
         gui.pose().pushPose();
         gui.pose().translate(centerX, titleY + 5, 0);
-        // Slightly wider lettering, now a pale, sickly phosphor rather than bright red.
         gui.pose().scale(2.65F, 2.35F, 1.0F);
         gui.drawCenteredString(this.font, Component.literal("СМЕРТЬ"), 1, 1, 0xFF241D19);
         gui.drawCenteredString(this.font, Component.literal("СМЕРТЬ"), 0, 0, titleColor);
@@ -83,7 +90,6 @@ public final class DeathScreen extends Screen {
         gui.pose().pushPose();
         gui.pose().translate(centerX - 45, heartY - 31, 0);
         gui.pose().scale(beat, beat, 1.0F);
-        // A custom pixel heart replaces the font glyph with a clean, unmistakable silhouette.
         int[] heartRows = {
                 0b0001100001100,
                 0b0011110011110,
@@ -109,7 +115,6 @@ public final class DeathScreen extends Screen {
         gui.fill(17, 9, 31, 13, heartHovered ? 0xFFFFD0B9 : 0xFFFFA39A);
         gui.pose().popPose();
 
-        // Final CRT pass deliberately crosses the foreground elements.
         for (int y = 0; y < h; y += 4) {
             gui.fill(0, y, w, Math.min(h, y + 1), 0x1C9AAEB0);
         }

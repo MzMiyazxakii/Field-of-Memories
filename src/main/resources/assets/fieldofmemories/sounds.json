@@ -1,0 +1,11 @@
+{
+  "death_screen": {
+    "subtitle": "subtitles.fieldofmemories.death_screen",
+    "sounds": [
+      {
+        "name": "fieldofmemories:death_screen",
+        "stream": false
+      }
+    ]
+  }
+}
