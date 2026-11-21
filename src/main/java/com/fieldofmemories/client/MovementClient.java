@@ -103,6 +103,8 @@ public final class MovementClient {
             player.setPose(Pose.STANDING);
             NetworkHandler.sendProneState(false);
             player.setDeltaMovement(0, 0, 0);
+            // The Space press used to get up must not also count as a jump.
+            jumpInputWasDown = true;
         }
     }
 
@@ -115,6 +117,7 @@ public final class MovementClient {
             event.getInput().leftImpulse = 0;
             event.getInput().jumping = false;
             event.getInput().shiftKeyDown = false;
+            jumpInputWasDown = false;
             player.setSprinting(false);
             return;
         }
@@ -198,8 +201,8 @@ public final class MovementClient {
         if (jumping && !wasJumping) {
             boolean crouchJump = longJumpInputSuppressed && mc.options.keyShift.isDown();
             longJumpInputSuppressed = false;
-            pendingLowJump = false;
             if (crouchJump) {
+                pendingLowJump = false;
                 // Trigger the base jump here (vanilla input was suppressed),
                 // then add the long-jump height and horizontal impulse.
                 player.jumpFromGround();
