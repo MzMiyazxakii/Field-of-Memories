@@ -28,7 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class NetworkHandler {
-    private static final String PROTOCOL = "5";
+    private static final String PROTOCOL = "4";
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(FieldOfMemories.MOD_ID, "main"),
             () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
@@ -154,18 +154,6 @@ public final class NetworkHandler {
                                     packet.state(), packet.discId(), packet.fragmentIndex()));
                     context.get().setPacketHandled(true);
                 }).add();
-
-        CHANNEL.messageBuilder(MemoryHeadVisualPacket.class, 8)
-                .encoder((packet, buffer) -> {
-                    buffer.writeUUID(packet.playerId());
-                    buffer.writeBoolean(packet.visible());
-                })
-                .decoder(buffer -> new MemoryHeadVisualPacket(buffer.readUUID(), buffer.readBoolean()))
-                .consumerMainThread((packet, context) -> {
-                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
-                            com.fieldofmemories.client.MemoryHeadRenderer.setVisible(packet.playerId(), packet.visible()));
-                    context.get().setPacketHandled(true);
-                }).add();
     }
 
     private static void sendMemoryDiscStats(ServerPlayer player) {
@@ -196,8 +184,6 @@ public final class NetworkHandler {
         player.getPersistentData().putInt(PENDING_DISC_HAND_TAG, hand == InteractionHand.MAIN_HAND ? 0 : 1);
         ACTIVE_MEMORY_DISCS.put(player.getUUID(), new ActiveMemoryDisc(id, reservedDisc, hand, -1));
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(0, id, -1));
-        CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player),
-                new MemoryHeadVisualPacket(player.getUUID(), true));
     }
 
     private static void advanceMemoryDisc(ServerPlayer player, int expectedFragmentIndex) {
@@ -216,8 +202,6 @@ public final class NetworkHandler {
                 if (online.hasPermissions(2)) sendMemoryDiscStats(online);
             }
             restoreMemoryDisc(player, session);
-            CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player),
-                    new MemoryHeadVisualPacket(player.getUUID(), false));
             CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(2, session.discId(), -1));
         }
     }
@@ -256,8 +240,6 @@ public final class NetworkHandler {
         ActiveMemoryDisc session = ACTIVE_MEMORY_DISCS.remove(player.getUUID());
         if (session != null) {
             restoreMemoryDisc(player, session);
-            CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player),
-                    new MemoryHeadVisualPacket(player.getUUID(), false));
             CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(2, session.discId(), -1));
         }
     }
@@ -291,16 +273,6 @@ public final class NetworkHandler {
         @SubscribeEvent
         public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
             if (event.getEntity() instanceof ServerPlayer player) restorePendingMemoryDisc(player);
-        }
-
-        @SubscribeEvent
-        public static void onStartTracking(PlayerEvent.StartTracking event) {
-            if (event.getTarget() instanceof ServerPlayer target
-                    && event.getEntity() instanceof ServerPlayer watcher
-                    && ACTIVE_MEMORY_DISCS.containsKey(target.getUUID())) {
-                CHANNEL.send(PacketDistributor.PLAYER.with(() -> watcher),
-                        new MemoryHeadVisualPacket(target.getUUID(), true));
-            }
         }
 
         @SubscribeEvent
@@ -343,6 +315,5 @@ public final class NetworkHandler {
     private record MemoryDiscStatsPacket(int readMask, boolean spawnEnabled, int spawnChance) {}
     private record MemoryDiscRequestPacket(boolean next, int expectedFragmentIndex) {}
     private record MemoryDiscStatePacket(int state, int discId, int fragmentIndex) {}
-    private record MemoryHeadVisualPacket(UUID playerId, boolean visible) {}
     private record ActiveMemoryDisc(int discId, ItemStack stack, InteractionHand hand, int fragmentIndex) {}
 }
