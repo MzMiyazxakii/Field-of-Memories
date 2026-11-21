@@ -26,6 +26,10 @@ public class FieldOfMemories {
     public static final RegistryObject<Item> MEMORY_DISC_6 = registerMemoryDisc("memory_disc_6", 5);
     public static final RegistryObject<Item> MEMORY_DISC_7 = registerMemoryDisc("memory_disc_7", 6);
     public static final RegistryObject<Item> MEMORY_DISC_8 = registerMemoryDisc("memory_disc_8", 7);
+    public static final RegistryObject<Item>[] MEMORY_DISCS = new RegistryObject[] {
+            MEMORY_DISC_1, MEMORY_DISC_2, MEMORY_DISC_3, MEMORY_DISC_4,
+            MEMORY_DISC_5, MEMORY_DISC_6, MEMORY_DISC_7, MEMORY_DISC_8
+    };
 
     private static RegistryObject<Item> registerMemoryDisc(String name, int discId) {
         return ITEMS.register(name, () -> new MemoryDiscItem(discId, new Item.Properties()));
