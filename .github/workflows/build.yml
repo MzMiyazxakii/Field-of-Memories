@@ -17,8 +17,11 @@ jobs:
           gradle-version: '8.8'
       - name: Build mod
         run: gradle build
+      - name: Show built JAR
+        run: ls -lah build/libs/
       - name: Upload mod JAR
         uses: actions/upload-artifact@v4
         with:
           name: FieldOfMemories-1.20.1-Forge
-          path: build/libs/*[! -sources].jar
+          path: build/libs/*.jar
+          if-no-files-found: error
