@@ -2,19 +2,25 @@ package com.fieldofmemories.client;
 
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.network.NetworkHandler;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.client.event.MovementInputUpdateEvent;
 import net.minecraftforge.client.event.ViewportEvent;
@@ -52,6 +58,7 @@ public final class MovementClient {
     private static int fallRecoveryTicks = 0;
     private static boolean wasJumping = false;
     private static boolean pendingLowJump = false;
+    private static boolean jumpHeld = false;
     private static boolean emptySprintAttempt = false;
     private static int shakeTicks = 0;
     private static float savedLeftArmX, savedLeftArmY, savedLeftArmZ;
@@ -109,6 +116,10 @@ public final class MovementClient {
             return;
         }
         if (player.isSprinting() && sprintJumpCooldown > 0) event.getInput().jumping = false;
+        // Shift+Space is handled manually below so vanilla cannot launch a
+        // normal jump before the long-jump impulse is applied.
+        if (player.onGround() && Minecraft.getInstance().options.keyShift.isDown()
+                && stamina >= longJumpStaminaCost) event.getInput().jumping = false;
         if (stamina <= 0.0F || (exhausted && stamina < SPRINT_UNLOCK_STAMINA)) {
             player.setSprinting(false);
             removeRunBoost(player);
@@ -150,6 +161,7 @@ public final class MovementClient {
         if (!sprintAllowed) player.setSprinting(false);
 
         boolean sprinting = sprintAllowed && player.isSprinting() && player.zza > 0.0F;
+        jumpHeld = mc.options.keyJump.isDown();
         boolean jumping = jumpHeld && player.onGround()
                 && (!player.isSprinting() || sprintJumpCooldown <= 0);
         if (sprinting) {
@@ -168,8 +180,9 @@ public final class MovementClient {
             boolean crouchJump = mc.options.keyShift.isDown() && stamina >= longJumpStaminaCost;
             pendingLowJump = !crouchJump && stamina < 7.0F;
             if (crouchJump) {
-                // Long jump: add a strong horizontal impulse in the direction
-                // the player is facing, while preserving normal jump height.
+                // Trigger the base jump here (vanilla input was suppressed),
+                // then add the long-jump height and horizontal impulse.
+                player.jumpFromGround();
                 var motion = player.getDeltaMovement();
                 var look = player.getLookAngle();
                 double lookLength = Math.sqrt(look.x * look.x + look.z * look.z);
@@ -316,8 +329,45 @@ public final class MovementClient {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !player.isSprinting() || !player.onGround() || player.zza <= 0.0F) return;
         float phase = player.tickCount * 0.85F;
-        event.setRoll(event.getRoll() + (float) Math.sin(phase) * 0.42F);
-        event.setPitch(event.getPitch() + (float) Math.sin(phase * 2.0F) * 0.19F);
+        event.setRoll(event.getRoll() + (float) Math.sin(phase) * 0.52F);
+        event.setPitch(event.getPitch() + (float) Math.sin(phase * 2.0F) * 0.23F);
+    }
+
+    @SubscribeEvent
+    public static void onRenderPlayer(RenderPlayerEvent.Post event) {
+        LocalPlayer localPlayer = Minecraft.getInstance().player;
+        if (localPlayer == null || event.getEntity() != localPlayer
+                || !Minecraft.getInstance().options.keyShift.isDown()
+                || !localPlayer.onGround() || prone || stamina <= 0.0F) return;
+
+        float readiness = Math.min(1.0F, stamina / Math.max(1.0F, longJumpStaminaCost));
+        PoseStack poseStack = event.getPoseStack();
+        poseStack.pushPose();
+        poseStack.translate(0.0D, localPlayer.getBbHeight() + 0.34D, 0.0D);
+        poseStack.mulPose(Minecraft.getInstance().getEntityRenderDispatcher().cameraOrientation());
+        poseStack.scale(-0.025F, -0.025F, 0.025F);
+
+        MultiBufferSource buffers = event.getMultiBufferSource();
+        VertexConsumer consumer = buffers.getBuffer(RenderType.debugQuads());
+        int halfWidth = 22;
+        float barHeight = 4.0F;
+        drawBillboardQuad(consumer, poseStack, -halfWidth - 1, -1, halfWidth + 1, barHeight + 1, 0, 0, 0, 190);
+        int fillWidth = Math.round(halfWidth * 2.0F * readiness);
+        int red = readiness >= 1.0F ? 70 : 235;
+        int green = readiness >= 1.0F ? 220 : 145;
+        drawBillboardQuad(consumer, poseStack, -halfWidth, 0, -halfWidth + fillWidth, barHeight,
+                red, green, 45, 240);
+        poseStack.popPose();
+    }
+
+    private static void drawBillboardQuad(VertexConsumer consumer, PoseStack poseStack,
+                                          float left, float top, float right, float bottom,
+                                          int red, int green, int blue, int alpha) {
+        var matrix = poseStack.last().pose();
+        consumer.vertex(matrix, left, top, 0.0F).color(red, green, blue, alpha).endVertex();
+        consumer.vertex(matrix, left, bottom, 0.0F).color(red, green, blue, alpha).endVertex();
+        consumer.vertex(matrix, right, bottom, 0.0F).color(red, green, blue, alpha).endVertex();
+        consumer.vertex(matrix, right, top, 0.0F).color(red, green, blue, alpha).endVertex();
     }
 
     @SubscribeEvent
@@ -364,7 +414,7 @@ public final class MovementClient {
         if (prone && !waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
             int fadeTicks = Math.min(fallRecoveryTicks, 40);
-            int alpha = Math.min(52, Math.max(0, Math.round(52.0F * fadeTicks / 40.0F)));
+            int alpha = Math.min(72, Math.max(0, Math.round(72.0F * fadeTicks / 40.0F)));
             if (alpha > 0) gui.fill(0, 0, w, h, (alpha << 24));
             int textAlpha = Math.min(255, Math.round(255.0F * fadeTicks / 12.0F));
             if (textAlpha > 0) {
