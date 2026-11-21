@@ -10,6 +10,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.resources.ResourceLocation;
 import com.fieldofmemories.item.AdminToolItem;
+import com.fieldofmemories.item.MemoryDiscItem;
 import com.fieldofmemories.network.NetworkHandler;
 
 @Mod(FieldOfMemories.MOD_ID)
@@ -17,6 +18,18 @@ public class FieldOfMemories {
     public static final String MOD_ID = "fieldofmemories";
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
     public static final RegistryObject<Item> ADMIN_TOOL = ITEMS.register("admin_tool", () -> new AdminToolItem(new Item.Properties()));
+    public static final RegistryObject<Item> MEMORY_DISC_1 = registerMemoryDisc("memory_disc_1", 0);
+    public static final RegistryObject<Item> MEMORY_DISC_2 = registerMemoryDisc("memory_disc_2", 1);
+    public static final RegistryObject<Item> MEMORY_DISC_3 = registerMemoryDisc("memory_disc_3", 2);
+    public static final RegistryObject<Item> MEMORY_DISC_4 = registerMemoryDisc("memory_disc_4", 3);
+    public static final RegistryObject<Item> MEMORY_DISC_5 = registerMemoryDisc("memory_disc_5", 4);
+    public static final RegistryObject<Item> MEMORY_DISC_6 = registerMemoryDisc("memory_disc_6", 5);
+    public static final RegistryObject<Item> MEMORY_DISC_7 = registerMemoryDisc("memory_disc_7", 6);
+    public static final RegistryObject<Item> MEMORY_DISC_8 = registerMemoryDisc("memory_disc_8", 7);
+
+    private static RegistryObject<Item> registerMemoryDisc(String name, int discId) {
+        return ITEMS.register(name, () -> new MemoryDiscItem(discId, new Item.Properties()));
+    }
 
     public static final DeferredRegister<SoundEvent> SOUND_EVENTS =
             DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MOD_ID);

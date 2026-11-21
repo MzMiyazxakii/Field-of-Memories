@@ -1,4 +1,12 @@
 {
   "item.fieldofmemories.admin_tool": "Admin Tool",
-  "subtitles.fieldofmemories.death_screen": "Death screen sound"
+  "subtitles.fieldofmemories.death_screen": "Death screen sound",
+  "item.fieldofmemories.memory_disc_1": "Strawberry Pie",
+  "item.fieldofmemories.memory_disc_2": "The Watchman",
+  "item.fieldofmemories.memory_disc_3": "Street Strand",
+  "item.fieldofmemories.memory_disc_4": "City Profit",
+  "item.fieldofmemories.memory_disc_5": "The Closed Door",
+  "item.fieldofmemories.memory_disc_6": "Holy Father",
+  "item.fieldofmemories.memory_disc_7": "The Field",
+  "item.fieldofmemories.memory_disc_8": "Evening"
 }
