@@ -33,6 +33,10 @@ public final class MovementClient {
     private static float sprintSpeedBoost = 0.16F;
     private static float jumpDistanceMultiplier = 1.20F;
     private static int sprintJumpCooldownLength = 12;
+    private static float longJumpDistance = 1.12F;
+    private static float longJumpHeight = 0.30F;
+    private static float longJumpStaminaCost = 32.0F;
+    private static boolean jumpedDuringHold = false;
     private static int sprintJumpCooldown = 0;
     private static final float SPRINT_UNLOCK_STAMINA = 20.0F;
     private static final UUID RUN_SPEED_MODIFIER = UUID.fromString("7d51a5d1-5f3b-4b2e-9b7b-1c2f7d8a9e31");
@@ -89,6 +93,14 @@ public final class MovementClient {
 
     @SubscribeEvent
     public static void onKey(InputEvent.Key event) {
+        LocalPlayer keyPlayer = Minecraft.getInstance().player;
+        if (keyPlayer != null && event.getAction() == GLFW.GLFW_PRESS
+                && Minecraft.getInstance().options.keySprint.matches(event.getKey(), event.getScanCode())
+                && keyPlayer.isSprinting()) {
+            keyPlayer.setSprinting(false);
+            removeRunBoost(keyPlayer);
+            return;
+        }
         if (event.getKey() != GLFW.GLFW_KEY_SPACE || event.getAction() != GLFW.GLFW_PRESS) return;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
@@ -161,7 +173,9 @@ public final class MovementClient {
         if (!sprintAllowed) player.setSprinting(false);
 
         boolean sprinting = sprintAllowed && player.isSprinting() && player.zza > 0.0F;
-        boolean jumping = mc.options.keyJump.isDown() && player.onGround()
+        boolean jumpHeld = mc.options.keyJump.isDown();
+        if (!jumpHeld) jumpedDuringHold = false;
+        boolean jumping = jumpHeld && player.onGround()
                 && (!player.isSprinting() || sprintJumpCooldown <= 0);
         if (sprinting) {
             stamina = Math.max(0, stamina - 0.42F);
@@ -176,7 +190,7 @@ public final class MovementClient {
         }
 
         if (jumping && !wasJumping) {
-            boolean crouchJump = mc.options.keyShift.isDown() && stamina >= 32.0F;
+            boolean crouchJump = mc.options.keyShift.isDown() && stamina >= longJumpStaminaCost;
             pendingLowJump = !crouchJump && stamina < 7.0F;
             if (crouchJump) {
                 // Long jump: add a strong horizontal impulse in the direction
@@ -185,23 +199,29 @@ public final class MovementClient {
                 var look = player.getLookAngle();
                 double lookLength = Math.sqrt(look.x * look.x + look.z * look.z);
                 if (lookLength > 1.0E-4D) {
-                    double boost = 1.12D;
+                    double boost = longJumpDistance;
                     player.setDeltaMovement(
                             motion.x + (look.x / lookLength) * boost,
-                            motion.y + 0.30D,
+                            motion.y + longJumpHeight,
                             motion.z + (look.z / lookLength) * boost);
                 }
-                stamina = Math.max(0, stamina - 32.0F);
+                stamina = Math.max(0, stamina - longJumpStaminaCost);
                 recoveryDelay = 45;
             } else {
+                if (jumpedDuringHold) {
+                    stamina = Math.max(0, stamina - 7.0F);
+                    recoveryDelay = stamina <= 0 ? 60 : 20;
+                }
                 if (player.isSprinting() && stamina >= 7.0F && sprintJumpCooldown <= 0) {
                     sprintJumpCooldown = sprintJumpCooldownLength;
                     var motion = player.getDeltaMovement();
                     player.setDeltaMovement(motion.x * jumpDistanceMultiplier, motion.y, motion.z * jumpDistanceMultiplier);
                 }
-                stamina = Math.max(0, stamina - 7.0F);
-                recoveryDelay = stamina <= 0 ? 60 : 20;
+                if (!jumpedDuringHold) {
+                    // The first jump in a continuous hold is free.
+                }
             }
+            jumpedDuringHold = true;
             if (stamina <= 0) exhausted = true;
         }
         wasJumping = jumping;
@@ -279,6 +299,9 @@ public final class MovementClient {
     public static float getAdminSpeed() { return sprintSpeedBoost; }
     public static float getAdminJump() { return jumpDistanceMultiplier; }
     public static int getAdminJumpCooldown() { return sprintJumpCooldownLength; }
+    public static float getAdminLongJumpDistance() { return longJumpDistance; }
+    public static float getAdminLongJumpHeight() { return longJumpHeight; }
+    public static float getAdminLongJumpCost() { return longJumpStaminaCost; }
     public static void setAdminMaxStamina(float value) {
         maxStamina = Math.max(20.0F, Math.min(300.0F, value));
         stamina = Math.min(stamina, maxStamina);
@@ -296,6 +319,9 @@ public final class MovementClient {
     }
     public static void setAdminJump(float value) { jumpDistanceMultiplier = Math.max(1.0F, Math.min(2.0F, value)); }
     public static void setAdminJumpCooldown(int value) { sprintJumpCooldownLength = Math.max(0, Math.min(40, value)); }
+    public static void setAdminLongJumpDistance(float value) { longJumpDistance = Math.max(0.2F, Math.min(2.5F, value)); }
+    public static void setAdminLongJumpHeight(float value) { longJumpHeight = Math.max(0.0F, Math.min(0.8F, value)); }
+    public static void setAdminLongJumpCost(float value) { longJumpStaminaCost = Math.max(0.0F, Math.min(100.0F, value)); }
     public static void adminForceFall() {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null && !prone) startFall(player);
@@ -342,7 +368,7 @@ public final class MovementClient {
         // Alternate, slightly darker CRT look: dense scanlines, a drifting
         // interference band, sparse static streaks, and a soft vignette.
         // The HUD is rendered afterward and remains crisp.
-        if (!prone && !waitingForSpace) {
+        {
             int screenWidth = gui.guiWidth();
             int screenHeight = gui.guiHeight();
             gui.fill(0, 0, screenWidth, screenHeight, 0x12000000);
@@ -362,11 +388,13 @@ public final class MovementClient {
                         Math.min(screenHeight, noiseY + 1), 0x24DDE5E8);
             }
 
-            gui.fill(0, 0, 12, screenHeight, 0x18000000);
-            gui.fill(Math.max(0, screenWidth - 12), 0, screenWidth, screenHeight, 0x18000000);
-            gui.fill(0, 0, screenWidth, 3, 0x18000000);
-            gui.fill(0, Math.max(0, screenHeight - 3), screenWidth, screenHeight, 0x18000000);
         }
+        int screenWidth = gui.guiWidth();
+        int screenHeight = gui.guiHeight();
+        gui.fill(0, 0, 12, screenHeight, 0x28000000);
+        gui.fill(Math.max(0, screenWidth - 12), 0, screenWidth, screenHeight, 0x28000000);
+        gui.fill(0, 0, screenWidth, 3, 0x28000000);
+        gui.fill(0, Math.max(0, screenHeight - 3), screenWidth, screenHeight, 0x28000000);
         if (prone && !waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
             int fadeTicks = Math.min(fallRecoveryTicks, 40);

@@ -12,7 +12,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,7 +21,7 @@ public final class NetworkHandler {
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(FieldOfMemories.MOD_ID, "main"),
             () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
-    private static final Set<UUID> PRONE_PLAYERS = ConcurrentHashMap.newKeySet();
+    private static final Map<UUID, Integer> PRONE_PLAYERS = new ConcurrentHashMap<>();
 
     private NetworkHandler() {}
 
@@ -33,7 +33,7 @@ public final class NetworkHandler {
                     ServerPlayer player = context.get().getSender();
                     if (player != null) {
                         if (packet.prone()) {
-                            PRONE_PLAYERS.add(player.getUUID());
+                            PRONE_PLAYERS.put(player.getUUID(), -1);
                             player.setPose(Pose.SWIMMING);
                         } else {
                             PRONE_PLAYERS.remove(player.getUUID());
@@ -43,10 +43,29 @@ public final class NetworkHandler {
                     context.get().setPacketHandled(true);
                 })
                 .add();
+        CHANNEL.messageBuilder(ForceFallPacket.class, 1)
+                .encoder((packet, buffer) -> buffer.writeUUID(packet.target()))
+                .decoder(buffer -> new ForceFallPacket(buffer.readUUID()))
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer sender = context.get().getSender();
+                    if (sender != null && sender.hasPermissions(2)) {
+                        ServerPlayer target = sender.server.getPlayerList().getPlayer(packet.target());
+                        if (target != null) {
+                            PRONE_PLAYERS.put(target.getUUID(), 40);
+                            target.setPose(Pose.SWIMMING);
+                        }
+                    }
+                    context.get().setPacketHandled(true);
+                })
+                .add();
     }
 
     public static void sendProneState(boolean prone) {
-        if (CHANNEL != null) CHANNEL.send(PacketDistributor.SERVER.noArg(), new ProneStatePacket(prone));
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new ProneStatePacket(prone));
+    }
+
+    public static void sendForceFall(UUID target) {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForceFallPacket(target));
     }
 
     @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID)
@@ -54,8 +73,15 @@ public final class NetworkHandler {
         @SubscribeEvent
         public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
             if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide) return;
-            if (PRONE_PLAYERS.contains(event.player.getUUID())) {
+            Integer ticks = PRONE_PLAYERS.get(event.player.getUUID());
+            if (ticks != null) {
                 event.player.setPose(Pose.SWIMMING);
+                if (ticks > 0) {
+                    if (ticks == 1) {
+                        PRONE_PLAYERS.remove(event.player.getUUID());
+                        event.player.setPose(Pose.STANDING);
+                    } else PRONE_PLAYERS.put(event.player.getUUID(), ticks - 1);
+                }
             }
         }
 
@@ -66,4 +92,5 @@ public final class NetworkHandler {
     }
 
     private record ProneStatePacket(boolean prone) {}
+    private record ForceFallPacket(UUID target) {}
 }
