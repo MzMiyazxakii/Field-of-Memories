@@ -312,6 +312,33 @@ public final class MovementClient {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         GuiGraphics gui = event.getGuiGraphics();
+
+        // A restrained CRT layer for the normal gameplay view: fine scanlines,
+        // a slow faint interference band, and a few dim static pixels.
+        // Draw it before the HUD so the stamina bar and vanilla UI stay crisp.
+        if (!prone && !waitingForSpace) {
+            int screenWidth = gui.guiWidth();
+            int screenHeight = gui.guiHeight();
+            for (int lineY = 1; lineY < screenHeight; lineY += 3) {
+                gui.fill(0, lineY, screenWidth, lineY + 1, 0x10000000);
+            }
+
+            int bandY = (mc.player.tickCount * 2) % Math.max(1, screenHeight);
+            gui.fill(0, bandY, screenWidth, Math.min(screenHeight, bandY + 2), 0x16D8E2E8);
+
+            int phase = mc.player.tickCount / 3;
+            for (int i = 0; i < 22; i++) {
+                int seed = phase * 1103515245 + i * 12345;
+                int noiseX = Math.floorMod(seed ^ (seed >>> 16), Math.max(1, screenWidth));
+                int noiseY = Math.floorMod(seed * 31 + i * 7919, Math.max(1, screenHeight));
+                gui.fill(noiseX, noiseY, Math.min(screenWidth, noiseX + 2),
+                        Math.min(screenHeight, noiseY + 1), 0x20DDE5E8);
+            }
+
+            // Very soft edge darkening, keeping the center unobstructed.
+            gui.fill(0, 0, 5, screenHeight, 0x12000000);
+            gui.fill(Math.max(0, screenWidth - 5), 0, screenWidth, screenHeight, 0x12000000);
+        }
         if (prone && !waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
             int fadeTicks = Math.min(fallRecoveryTicks, 40);
