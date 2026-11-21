@@ -53,11 +53,6 @@ public final class MovementClient {
     private static int fallRecoveryTicks = 0;
     private static boolean wasJumping = false;
     private static boolean pendingLowJump = false;
-    private static float proneYaw;
-    private static float pronePitch;
-    private static float proneHeadYaw;
-    private static float proneBodyYaw;
-    private static boolean proneAnglesCaptured = false;
     private static boolean emptySprintAttempt = false;
     private static int shakeTicks = 0;
     private static float savedLeftArmX, savedLeftArmY, savedLeftArmZ;
@@ -74,21 +69,11 @@ public final class MovementClient {
         prone = true;
         waitingForSpace = true;
         fallRecoveryTicks = 0;
-        proneAnglesCaptured = false;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null) {
-            captureProneAngles(player);
             player.setPose(Pose.SWIMMING);
         }
         NetworkHandler.sendProneState(true);
-    }
-
-    private static void captureProneAngles(LocalPlayer player) {
-        proneYaw = player.getYRot();
-        pronePitch = player.getXRot();
-        proneHeadYaw = player.yHeadRot;
-        proneBodyYaw = player.yBodyRot;
-        proneAnglesCaptured = true;
     }
 
     @SubscribeEvent
@@ -107,7 +92,6 @@ public final class MovementClient {
         if (prone && waitingForSpace) {
             prone = false;
             waitingForSpace = false;
-            proneAnglesCaptured = false;
             player.setPose(Pose.STANDING);
             NetworkHandler.sendProneState(false);
             player.setDeltaMovement(0, 0, 0);
@@ -141,22 +125,16 @@ public final class MovementClient {
         if (prone) {
             if (!waitingForSpace && --fallRecoveryTicks <= 0) {
                 prone = false;
-                proneAnglesCaptured = false;
-                player.setPose(Pose.STANDING);
+                    player.setPose(Pose.STANDING);
                 NetworkHandler.sendProneState(false);
                 player.setDeltaMovement(0, 0, 0);
                 return;
             }
-            if (!proneAnglesCaptured) captureProneAngles(player);
-            player.setYRot(proneYaw);
-            player.setXRot(pronePitch);
-            player.yRotO = proneYaw;
-            player.xRotO = pronePitch;
-            player.yHeadRot = proneHeadYaw;
-            player.yBodyRot = proneBodyYaw;
-            player.setPose(Pose.SWIMMING);
+            // The prone pose is applied once when entering this state and is
+            // synchronized by the server. Rewriting rotations, pose and motion
+            // every tick fights the local player renderer/interpolation and can
+            // make the first-person player's body jitter.
             player.setSprinting(false);
-            player.setDeltaMovement(0, 0, 0);
             removeRunBoost(player);
             return;
         }
@@ -286,9 +264,8 @@ public final class MovementClient {
         waitingForSpace = false;
         NetworkHandler.sendProneState(true);
         fallRecoveryTicks = 40;
-        proneAnglesCaptured = false;
-        captureProneAngles(player);
         player.setPose(Pose.SWIMMING);
+        player.setDeltaMovement(0, 0, 0);
         player.setSprinting(false);
         removeRunBoost(player);
     }
