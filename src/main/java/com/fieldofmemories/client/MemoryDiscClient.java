@@ -175,7 +175,9 @@ public final class MemoryDiscClient {
         gui.pose().pushPose();
         gui.pose().translate(width - 8.0D, 0.0D, 0.0D);
         gui.pose().scale(0.88F, 1.0F, 1.0F);
-        gui.drawString(mc.font, prompt, -mc.font.width(prompt) + shakeX, height - 18 + shakeY, 0xFFFFFFFF, true);
+        int promptX = -mc.font.width(prompt) + Math.round(shakeX);
+        int promptY = height - 18 + Math.round(shakeY);
+        gui.drawString(mc.font, prompt, promptX, promptY, 0xFFFFFFFF, true);
         gui.pose().popPose();
     }
 }
