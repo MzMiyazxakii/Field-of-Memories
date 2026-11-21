@@ -162,10 +162,12 @@ public final class MovementClient {
                 player.setDeltaMovement(0, 0, 0);
                 return;
             }
-            // The prone pose is applied once when entering this state and is
-            // synchronized by the server. Rewriting rotations, pose and motion
-            // every tick fights the local player renderer/interpolation and can
-            // make the first-person player's body jitter.
+            // Vanilla recalculates the local player's pose during its tick and
+            // can replace the forced prone pose with STANDING. Re-apply SWIMMING
+            // at END phase so rendering sees one stable pose in both camera modes.
+            // Do not rewrite position or velocity here: that would create a
+            // separate client/server correction loop.
+            player.setPose(Pose.SWIMMING);
             player.setSprinting(false);
             removeRunBoost(player);
             return;
