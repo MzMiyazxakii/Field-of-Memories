@@ -4,6 +4,7 @@ import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
 import org.lwjgl.glfw.GLFW;
@@ -15,6 +16,7 @@ import org.lwjgl.glfw.GLFW;
 public final class DeathScreen extends Screen {
     private int age;
     private boolean respawnHovered;
+    private SoundInstance deathScreenSound;
 
     private static final int BUTTON_WIDTH = 184;
     private static final int BUTTON_HEIGHT = 30;
@@ -27,9 +29,10 @@ public final class DeathScreen extends Screen {
     protected void init() {
         super.init();
         if (this.minecraft != null) {
-            this.minecraft.getSoundManager().play(
-                    SimpleSoundInstance.forUI(FieldOfMemories.DEATH_SCREEN_SOUND.get(), 1.0F)
+            this.deathScreenSound = SimpleSoundInstance.forUI(
+                    FieldOfMemories.DEATH_SCREEN_SOUND.get(), 1.0F
             );
+            this.minecraft.getSoundManager().play(this.deathScreenSound);
         }
     }
 
@@ -130,6 +133,10 @@ public final class DeathScreen extends Screen {
 
     private void respawn() {
         if (this.minecraft == null || this.minecraft.player == null) return;
+        if (this.deathScreenSound != null) {
+            this.minecraft.getSoundManager().stop(this.deathScreenSound);
+            this.deathScreenSound = null;
+        }
         this.minecraft.player.connection.send(new ServerboundClientCommandPacket(
                 ServerboundClientCommandPacket.Action.PERFORM_RESPAWN));
         this.minecraft.setScreen(null);
