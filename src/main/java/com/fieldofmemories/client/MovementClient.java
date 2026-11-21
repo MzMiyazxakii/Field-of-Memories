@@ -35,6 +35,8 @@ public final class MovementClient {
     private static int runParticleTicks = 0;
     private static boolean exhausted = false;
     private static boolean prone = false;
+    private static boolean waitingForSpace = false;
+    private static int fallRecoveryTicks = 0;
     private static boolean wasJumping = false;
     private static boolean pendingLowJump = false;
     private static float proneYaw;
@@ -55,6 +57,8 @@ public final class MovementClient {
 
     private static void enterProne() {
         prone = true;
+        waitingForSpace = true;
+        fallRecoveryTicks = 0;
         proneAnglesCaptured = false;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null) captureProneAngles(player);
@@ -70,8 +74,9 @@ public final class MovementClient {
 
     @SubscribeEvent
     public static void onKey(InputEvent.Key event) {
-        if (!prone || event.getKey() != GLFW.GLFW_KEY_SPACE || event.getAction() != GLFW.GLFW_PRESS) return;
+        if (!prone || !waitingForSpace || event.getKey() != GLFW.GLFW_KEY_SPACE || event.getAction() != GLFW.GLFW_PRESS) return;
         prone = false;
+        waitingForSpace = false;
         proneAnglesCaptured = false;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null) {
@@ -91,8 +96,9 @@ public final class MovementClient {
             player.setSprinting(false);
             return;
         }
-        if (exhausted && stamina < SPRINT_UNLOCK_STAMINA) {
+        if (stamina <= 0.0F || (exhausted && stamina < SPRINT_UNLOCK_STAMINA)) {
             player.setSprinting(false);
+            removeRunBoost(player);
         }
     }
 
@@ -103,6 +109,13 @@ public final class MovementClient {
         LocalPlayer player = mc.player;
         if (player == null || mc.level == null) return;
         if (prone) {
+            if (!waitingForSpace && --fallRecoveryTicks <= 0) {
+                prone = false;
+                proneAnglesCaptured = false;
+                player.setPose(Pose.STANDING);
+                player.setDeltaMovement(0, 0, 0);
+                return;
+            }
             if (!proneAnglesCaptured) captureProneAngles(player);
             player.setYRot(proneYaw);
             player.setXRot(pronePitch);
@@ -123,7 +136,7 @@ public final class MovementClient {
         if (emptySprintAttempt) shakeTicks++;
         else shakeTicks = 0;
 
-        boolean sprintAllowed = !exhausted || stamina >= SPRINT_UNLOCK_STAMINA;
+        boolean sprintAllowed = stamina > 0.0F && (!exhausted || stamina >= SPRINT_UNLOCK_STAMINA);
         if (exhausted && stamina >= SPRINT_UNLOCK_STAMINA) exhausted = false;
         if (!sprintAllowed) player.setSprinting(false);
 
@@ -161,7 +174,7 @@ public final class MovementClient {
             if (exhausted && stamina >= SPRINT_UNLOCK_STAMINA) exhausted = false;
         }
 
-        if (sprinting && player.onGround() && player.getDeltaMovement().horizontalDistanceSqr() > 0.0025D) {
+        if (sprinting && stamina > 0.0F && !exhausted && player.onGround() && player.getDeltaMovement().horizontalDistanceSqr() > 0.0025D) {
             addRunBoost(player);
             if (++runParticleTicks >= 4) {
                 runParticleTicks = 0;
@@ -175,16 +188,22 @@ public final class MovementClient {
             runParticleTicks = 0;
         }
 
-        if (sprintTicks >= 20 * 12 && player.onGround()) {
-            double chance = mc.options.keyJump.isDown() ? 0.0018D : 0.0008D;
-            if (mc.level.random.nextDouble() < chance) {
-                enterProne();
-                player.setPose(Pose.SWIMMING);
-                player.setSprinting(false);
-                sprintTicks = 0;
-                removeRunBoost(player);
-            }
+        if (sprinting && sprintTicks >= 20 * 4 && player.onGround()
+                && mc.level.random.nextDouble() < 0.00008D) {
+            startFall(player);
+            sprintTicks = 0;
         }
+    }
+
+    private static void startFall(LocalPlayer player) {
+        prone = true;
+        waitingForSpace = false;
+        fallRecoveryTicks = 40;
+        proneAnglesCaptured = false;
+        captureProneAngles(player);
+        player.setPose(Pose.SWIMMING);
+        player.setSprinting(false);
+        removeRunBoost(player);
     }
 
     private static void addRunBoost(LocalPlayer player) {
@@ -205,7 +224,7 @@ public final class MovementClient {
         if (mc.player == null) return;
         GuiGraphics gui = event.getGuiGraphics();
         int width = 104, height = 8;
-        int x = gui.guiWidth() - width - 10;
+        int x = 10;
         int y = gui.guiHeight() - 28;
         if (emptySprintAttempt) {
             x += Math.round((float) Math.sin(shakeTicks * 1.7D) * 2.0F);
@@ -215,9 +234,9 @@ public final class MovementClient {
         int color = 0xFFFF8A24;
         gui.fill(x, y, x + filled, y + height, color);
         gui.fill(x + filled, y, x + width, y + height, 0xAA292929);
-        if (prone) {
+        if (prone && waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
-            gui.fill(0, 0, w, h, 0x88000000);
+            gui.fill(0, 0, w, h, 0xAA000000);
             gui.drawCenteredString(mc.font, Component.literal("Нажмите ПРОБЕЛ, чтобы встать"), w / 2, h / 2, 0xFFE6E6E6);
         }
     }
