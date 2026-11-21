@@ -36,7 +36,7 @@ public final class MovementClient {
     private static boolean exhausted = false;
     private static boolean prone = false;
     private static boolean wasJumping = false;
-    private static boolean reducedJump = false;
+    private static boolean pendingLowJump = false;
 
     private MovementClient() {}
 
@@ -108,22 +108,17 @@ public final class MovementClient {
         }
 
         if (jumping && !wasJumping) {
-            boolean lowStaminaJump = stamina < 7.0F;
+            pendingLowJump = stamina < 7.0F;
             stamina = Math.max(0, stamina - 7.0F);
             recoveryDelay = stamina <= 0 ? 60 : 20;
             if (stamina <= 0) exhausted = true;
-            if (lowStaminaJump && player.getDeltaMovement().y > 0.0D) {
-                player.setDeltaMovement(player.getDeltaMovement().x,
-                        player.getDeltaMovement().y * 0.80D, player.getDeltaMovement().z);
-            }
         }
         wasJumping = jumping;
 
-        if (reducedJump && player.onGround()) reducedJump = false;
-        if (jumping && !wasJumping && stamina < 7.0F && player.getDeltaMovement().y > 0.0D && !reducedJump) {
+        if (pendingLowJump && !player.onGround() && player.getDeltaMovement().y > 0.0D) {
             player.setDeltaMovement(player.getDeltaMovement().x,
                     player.getDeltaMovement().y * 0.80D, player.getDeltaMovement().z);
-            reducedJump = true;
+            pendingLowJump = false;
         }
 
         if (recoveryDelay > 0) recoveryDelay--;
