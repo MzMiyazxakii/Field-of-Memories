@@ -9,9 +9,12 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.item.Item;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.levelgen.feature.Feature;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import com.fieldofmemories.item.AdminToolItem;
 import com.fieldofmemories.item.MemoryDiscItem;
 import com.fieldofmemories.network.NetworkHandler;
+import com.fieldofmemories.worldgen.FieldDecorFeature;
 
 @Mod(FieldOfMemories.MOD_ID)
 public class FieldOfMemories {
@@ -50,10 +53,16 @@ public class FieldOfMemories {
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "opensoundisk"))
     );
 
+    public static final DeferredRegister<Feature<?>> FEATURES =
+            DeferredRegister.create(ForgeRegistries.FEATURES, MOD_ID);
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> FIELD_DECOR =
+            FEATURES.register("field_decor", () -> new FieldDecorFeature(NoneFeatureConfiguration.CODEC));
+
     public FieldOfMemories() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ITEMS.register(modBus);
         SOUND_EVENTS.register(modBus);
+        FEATURES.register(modBus);
         NetworkHandler.register();
     }
 }
