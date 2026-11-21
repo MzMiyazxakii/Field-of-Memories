@@ -172,9 +172,18 @@ public final class MovementClient {
             boolean crouchJump = mc.options.keyShift.isDown() && stamina >= 32.0F;
             pendingLowJump = !crouchJump && stamina < 7.0F;
             if (crouchJump) {
-                // Crouch-jump: a higher leap at a significant stamina cost.
+                // Long jump: add a strong horizontal impulse in the direction
+                // the player is facing, while preserving normal jump height.
                 var motion = player.getDeltaMovement();
-                player.setDeltaMovement(motion.x, 0.88D, motion.z);
+                var look = player.getLookAngle();
+                double lookLength = Math.sqrt(look.x * look.x + look.z * look.z);
+                if (lookLength > 1.0E-4D) {
+                    double boost = 0.72D;
+                    player.setDeltaMovement(
+                            motion.x + (look.x / lookLength) * boost,
+                            motion.y,
+                            motion.z + (look.z / lookLength) * boost);
+                }
                 stamina = Math.max(0, stamina - 32.0F);
                 recoveryDelay = 45;
             } else {
