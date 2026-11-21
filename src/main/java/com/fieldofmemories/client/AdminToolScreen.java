@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 
 public class AdminToolScreen extends Screen {
     private String page = "home";
+    private Button spawnToggleButton;
     private static int memoryReadMask;
     private static boolean memorySpawnEnabled = true;
     private static int memorySpawnChance = 10;
@@ -24,11 +25,16 @@ public class AdminToolScreen extends Screen {
         memoryReadMask = readMask & 0xFF;
         memorySpawnEnabled = spawnEnabled;
         memorySpawnChance = Math.max(0, Math.min(100, spawnChance));
+        if (Minecraft.getInstance().screen instanceof AdminToolScreen screen && screen.spawnToggleButton != null) {
+            screen.spawnToggleButton.setMessage(Component.literal(
+                    memorySpawnEnabled ? "Отключить спавн предмета в мире" : "Включить спавн предмета в мире"));
+        }
     }
 
     @Override
     protected void init() {
         clearWidgets();
+        spawnToggleButton = null;
         int cx = width / 2;
         int y = height / 2 - 65;
         if (page.equals("home")) {
@@ -84,7 +90,7 @@ public class AdminToolScreen extends Screen {
         } else if (page.equals("memory_items")) {
             NetworkHandler.requestMemoryDiscStats();
             add("Выдать предмет", cx, y, () -> go("give_memory_disc"));
-            add(memorySpawnEnabled ? "Отключить спавн предмета в мире" : "Включить спавн предмета в мире",
+            spawnToggleButton = add(memorySpawnEnabled ? "Отключить спавн предмета в мире" : "Включить спавн предмета в мире",
                     cx, y + 25, () -> NetworkHandler.sendMemoryDiscAction(1, 0));
             add("Увеличить шанс предмета в мире", cx, y + 50, () -> NetworkHandler.sendMemoryDiscAction(2, 0));
             add("Уменьшить шанс предмета в мире", cx, y + 75, () -> NetworkHandler.sendMemoryDiscAction(3, 0));
@@ -104,9 +110,11 @@ public class AdminToolScreen extends Screen {
         }
     }
 
-    private void add(String label, int centerX, int y, Runnable action) {
-        addRenderableWidget(Button.builder(Component.literal(label), b -> action.run())
-                .bounds(centerX - 90, y, 180, 20).build());
+    private Button add(String label, int centerX, int y, Runnable action) {
+        Button button = Button.builder(Component.literal(label), b -> action.run())
+                .bounds(centerX - 90, y, 180, 20).build();
+        addRenderableWidget(button);
+        return button;
     }
 
     private void go(String next) { page = next; init(); }
