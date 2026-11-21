@@ -51,7 +51,7 @@ public final class MemoryDiscClient {
         int fragmentIndex = (elapsed - MemoryDiscItem.WARNING_TICKS) / MemoryDiscItem.FRAGMENT_TICKS;
         if (fragmentIndex < 0 || fragmentIndex >= fragments.size()) return;
 
-        Component message = Component.literal(fragments.get(fragmentIndex));
+        var message = Component.literal(fragments.get(fragmentIndex));
         if (disc.getDiscId() == 6) {
             message = message.setStyle(Style.EMPTY.withFont(new ResourceLocation("minecraft", "uniform")));
         }
