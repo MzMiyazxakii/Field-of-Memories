@@ -15,5 +15,13 @@
         "stream": true
       }
     ]
+  },
+  "opensoundisk": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:opensoundisk",
+        "stream": false
+      }
+    ]
   }
 }

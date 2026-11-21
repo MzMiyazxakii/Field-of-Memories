@@ -6,6 +6,7 @@ import com.fieldofmemories.network.NetworkHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -32,6 +33,8 @@ public final class MemoryDiscClient {
     private static int discId = -1;
     private static int fragmentIndex = -1;
     private static int warningTicks;
+    private static int promptShakeTicks;
+    private static int promptShakeAge;
     private static MemoryDiscSound activeSound;
 
     private MemoryDiscClient() {}
@@ -45,6 +48,9 @@ public final class MemoryDiscClient {
             discId = receivedDiscId;
             fragmentIndex = -1;
             warningTicks = 0;
+            promptShakeTicks = 0;
+            promptShakeAge = 0;
+            mc.getSoundManager().play(SimpleSoundInstance.forUI(FieldOfMemories.OPEN_SOUNDISK.get(), 1.0F));
         } else if (state == 1 && reading) {
             fragmentIndex = receivedFragmentIndex;
         } else if (state == 2) {
@@ -67,6 +73,8 @@ public final class MemoryDiscClient {
             return;
         }
 
+        if (promptShakeTicks > 0) promptShakeTicks--;
+
         if (reading) {
             if (fragmentIndex < 0) {
                 warningTicks++;
@@ -78,8 +86,13 @@ public final class MemoryDiscClient {
             }
 
             while (MemoryDiscKeybinds.READ_MEMORY.consumeClick()) {
-                if (fragmentIndex >= 0) NetworkHandler.requestMemoryDiscNext(fragmentIndex);
+                if (fragmentIndex >= 0) {
+                    promptShakeTicks = 6;
+                    promptShakeAge = 0;
+                    NetworkHandler.requestMemoryDiscNext(fragmentIndex);
+                }
             }
+            if (promptShakeTicks > 0) promptShakeAge++;
         } else if (MemoryDiscKeybinds.READ_MEMORY.consumeClick()) {
             if (mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem() instanceof MemoryDiscItem
                     || mc.player.getItemInHand(InteractionHand.OFF_HAND).getItem() instanceof MemoryDiscItem) {
@@ -157,6 +170,12 @@ public final class MemoryDiscClient {
         }
 
         String prompt = "Нажмите U чтоб продолжить";
-        gui.drawString(mc.font, prompt, width - mc.font.width(prompt) - 8, height - 18, 0xFFFFFFFF, true);
+        float shakeX = promptShakeTicks > 0 ? (float) Math.sin(promptShakeAge * 2.8D) * 0.8F : 0.0F;
+        float shakeY = promptShakeTicks > 0 ? (float) Math.cos(promptShakeAge * 3.1D) * 0.65F : 0.0F;
+        gui.pose().pushPose();
+        gui.pose().translate(width - 8.0D, 0.0D, 0.0D);
+        gui.pose().scale(0.88F, 1.0F, 1.0F);
+        gui.drawString(mc.font, prompt, -mc.font.width(prompt) + shakeX, height - 18 + shakeY, 0xFFFFFFFF, true);
+        gui.pose().popPose();
     }
 }

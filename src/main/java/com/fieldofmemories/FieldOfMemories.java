@@ -45,6 +45,10 @@ public class FieldOfMemories {
             "diskmemorysound",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "diskmemorysound"))
     );
+    public static final RegistryObject<SoundEvent> OPEN_SOUNDISK = SOUND_EVENTS.register(
+            "opensoundisk",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "opensoundisk"))
+    );
 
     public FieldOfMemories() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
