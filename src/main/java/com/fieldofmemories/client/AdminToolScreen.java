@@ -50,17 +50,18 @@ public class AdminToolScreen extends Screen {
             add("Восстановление +", cx + 82, y + 27, () -> MovementClient.setAdminRecovery(MovementClient.getAdminRecovery() + 0.05F));
             add("Назад", cx, y + 100, () -> go("home"));
         } else if (page.equals("jumps")) {
-            add(String.format("Дальность %.2f −", MovementClient.getAdminJump()), cx - 82, y, () -> { MovementClient.setAdminJump(MovementClient.getAdminJump() - 0.05F); init(); });
-            add(String.format("Дальность %.2f +", MovementClient.getAdminJump()), cx + 82, y, () -> { MovementClient.setAdminJump(MovementClient.getAdminJump() + 0.05F); init(); });
-            add("Откат " + MovementClient.getAdminJumpCooldown() + " −", cx - 82, y + 27, () -> { MovementClient.setAdminJumpCooldown(MovementClient.getAdminJumpCooldown() - 2); init(); });
-            add("Откат " + MovementClient.getAdminJumpCooldown() + " +", cx + 82, y + 27, () -> { MovementClient.setAdminJumpCooldown(MovementClient.getAdminJumpCooldown() + 2); init(); });
-            add(String.format("Длинный %.2f −", MovementClient.getAdminLongJumpDistance()), cx - 82, y + 54, () -> { MovementClient.setAdminLongJumpDistance(MovementClient.getAdminLongJumpDistance() - 0.1F); init(); });
-            add(String.format("Длинный %.2f +", MovementClient.getAdminLongJumpDistance()), cx + 82, y + 54, () -> { MovementClient.setAdminLongJumpDistance(MovementClient.getAdminLongJumpDistance() + 0.1F); init(); });
-            add(String.format("Высота %.2f −", MovementClient.getAdminLongJumpHeight()), cx - 82, y + 81, () -> { MovementClient.setAdminLongJumpHeight(MovementClient.getAdminLongJumpHeight() - 0.05F); init(); });
-            add(String.format("Высота %.2f +", MovementClient.getAdminLongJumpHeight()), cx + 82, y + 81, () -> { MovementClient.setAdminLongJumpHeight(MovementClient.getAdminLongJumpHeight() + 0.05F); init(); });
-            add(String.format("Цена %.0f −", MovementClient.getAdminLongJumpCost()), cx - 82, y + 108, () -> { MovementClient.setAdminLongJumpCost(MovementClient.getAdminLongJumpCost() - 2); init(); });
-            add(String.format("Цена %.0f +", MovementClient.getAdminLongJumpCost()), cx + 82, y + 108, () -> { MovementClient.setAdminLongJumpCost(MovementClient.getAdminLongJumpCost() + 2); init(); });
-            add("Назад", cx, y + 135, () -> go("home"));
+            int jumpY = height / 2 - 12;
+            add("Дальность −", cx - 82, jumpY, () -> MovementClient.setAdminJump(MovementClient.getAdminJump() - 0.05F));
+            add("Дальность +", cx + 82, jumpY, () -> MovementClient.setAdminJump(MovementClient.getAdminJump() + 0.05F));
+            add("Откат −", cx - 82, jumpY + 22, () -> MovementClient.setAdminJumpCooldown(MovementClient.getAdminJumpCooldown() - 2));
+            add("Откат +", cx + 82, jumpY + 22, () -> MovementClient.setAdminJumpCooldown(MovementClient.getAdminJumpCooldown() + 2));
+            add("Длинный прыжок −", cx - 82, jumpY + 44, () -> MovementClient.setAdminLongJumpDistance(MovementClient.getAdminLongJumpDistance() - 0.1F));
+            add("Длинный прыжок +", cx + 82, jumpY + 44, () -> MovementClient.setAdminLongJumpDistance(MovementClient.getAdminLongJumpDistance() + 0.1F));
+            add("Высота −", cx - 82, jumpY + 66, () -> MovementClient.setAdminLongJumpHeight(MovementClient.getAdminLongJumpHeight() - 0.05F));
+            add("Высота +", cx + 82, jumpY + 66, () -> MovementClient.setAdminLongJumpHeight(MovementClient.getAdminLongJumpHeight() + 0.05F));
+            add("Цена выносливости −", cx - 82, jumpY + 88, () -> MovementClient.setAdminLongJumpCost(MovementClient.getAdminLongJumpCost() - 2));
+            add("Цена выносливости +", cx + 82, jumpY + 88, () -> MovementClient.setAdminLongJumpCost(MovementClient.getAdminLongJumpCost() + 2));
+            add("Назад", cx, jumpY + 110, () -> go("home"));
         }
     }
 
@@ -80,6 +81,11 @@ public class AdminToolScreen extends Screen {
         if (page.equals("stamina")) {
             gui.drawCenteredString(font, Component.literal("Максимум: " + (int) MovementClient.getAdminMaxStamina()), width / 2, height / 2 + 2, 0xFFFFFFFF);
             gui.drawCenteredString(font, Component.literal(String.format("Восстановление: %.2f / тик", MovementClient.getAdminRecovery())), width / 2, height / 2 + 14, 0xFFFFFFFF);
+        }
+        if (page.equals("jumps")) {
+            gui.drawCenteredString(font, Component.literal(String.format("Дальность: %.2f | Откат: %d", MovementClient.getAdminJump(), MovementClient.getAdminJumpCooldown())), width / 2, height / 2 - 64, 0xFFFFFFFF);
+            gui.drawCenteredString(font, Component.literal(String.format("Длинный прыжок: %.2f | Высота: %.2f", MovementClient.getAdminLongJumpDistance(), MovementClient.getAdminLongJumpHeight())), width / 2, height / 2 - 52, 0xFFFFFFFF);
+            gui.drawCenteredString(font, Component.literal(String.format("Цена выносливости: %.0f", MovementClient.getAdminLongJumpCost())), width / 2, height / 2 - 40, 0xFFFFFFFF);
         }
         super.render(gui, mouseX, mouseY, partialTick);
     }
