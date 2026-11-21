@@ -32,7 +32,7 @@ public final class MovementClient {
     public static void onLogin(ClientPlayerNetworkEvent.LoggingIn event) { enterProne(); }
 
     @SubscribeEvent
-    public static void onRespawn(ClientPlayerNetworkEvent.Respawn event) { enterProne(); }
+    public static void onRespawn(ClientPlayerNetworkEvent.Clone event) { enterProne(); }
 
     private static void enterProne() { prone = true; }
 
