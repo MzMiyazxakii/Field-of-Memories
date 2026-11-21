@@ -1,6 +1,7 @@
 package com.fieldofmemories.client;
 
 import com.fieldofmemories.FieldOfMemories;
+import com.fieldofmemories.network.NetworkHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
@@ -71,7 +72,11 @@ public final class MovementClient {
         fallRecoveryTicks = 0;
         proneAnglesCaptured = false;
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) captureProneAngles(player);
+        if (player != null) {
+            captureProneAngles(player);
+            player.setPose(Pose.SWIMMING);
+        }
+        NetworkHandler.sendProneState(true);
     }
 
     private static void captureProneAngles(LocalPlayer player) {
@@ -92,6 +97,7 @@ public final class MovementClient {
             waitingForSpace = false;
             proneAnglesCaptured = false;
             player.setPose(Pose.STANDING);
+            NetworkHandler.sendProneState(false);
             player.setDeltaMovement(0, 0, 0);
         }
     }
@@ -125,6 +131,7 @@ public final class MovementClient {
                 prone = false;
                 proneAnglesCaptured = false;
                 player.setPose(Pose.STANDING);
+                NetworkHandler.sendProneState(false);
                 player.setDeltaMovement(0, 0, 0);
                 return;
             }
@@ -178,10 +185,10 @@ public final class MovementClient {
                 var look = player.getLookAngle();
                 double lookLength = Math.sqrt(look.x * look.x + look.z * look.z);
                 if (lookLength > 1.0E-4D) {
-                    double boost = 0.72D;
+                    double boost = 1.12D;
                     player.setDeltaMovement(
                             motion.x + (look.x / lookLength) * boost,
-                            motion.y,
+                            motion.y + 0.30D,
                             motion.z + (look.z / lookLength) * boost);
                 }
                 stamina = Math.max(0, stamina - 32.0F);
@@ -257,6 +264,7 @@ public final class MovementClient {
         }
         prone = true;
         waitingForSpace = false;
+        NetworkHandler.sendProneState(true);
         fallRecoveryTicks = 40;
         proneAnglesCaptured = false;
         captureProneAngles(player);

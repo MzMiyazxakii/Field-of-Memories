@@ -8,6 +8,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.item.Item;
 import com.fieldofmemories.item.AdminToolItem;
+import com.fieldofmemories.network.NetworkHandler;
 
 @Mod(FieldOfMemories.MOD_ID)
 public class FieldOfMemories {
@@ -18,5 +19,6 @@ public class FieldOfMemories {
     public FieldOfMemories() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ITEMS.register(modBus);
+        NetworkHandler.register();
     }
 }
