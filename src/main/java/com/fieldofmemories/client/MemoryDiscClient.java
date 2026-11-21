@@ -36,6 +36,7 @@ public final class MemoryDiscClient {
     private static int promptShakeTicks;
     private static int promptShakeAge;
     private static int postReadCooldownTicks;
+    private static int eveningInitialWaitTicks;
     private static MemoryDiscSound activeSound;
 
     private MemoryDiscClient() {}
@@ -59,8 +60,12 @@ public final class MemoryDiscClient {
             warningTicks = 0;
             promptShakeTicks = 0;
             promptShakeAge = 0;
+            eveningInitialWaitTicks = 0;
             mc.getSoundManager().play(SimpleSoundInstance.forUI(FieldOfMemories.OPEN_SOUNDISK.get(), 1.0F));
         } else if (state == 1 && reading) {
+            if (discId == 7 && fragmentIndex < 0) {
+                eveningInitialWaitTicks = 40;
+            }
             fragmentIndex = receivedFragmentIndex;
         } else if (state == 2) {
             stopMemorySound(mc);
@@ -70,6 +75,7 @@ public final class MemoryDiscClient {
             fragmentIndex = -1;
             warningTicks = 0;
             postReadCooldownTicks = 52;
+            eveningInitialWaitTicks = 0;
         }
     }
 
@@ -85,6 +91,7 @@ public final class MemoryDiscClient {
 
         if (promptShakeTicks > 0) promptShakeTicks--;
         if (postReadCooldownTicks > 0) postReadCooldownTicks--;
+        if (eveningInitialWaitTicks > 0) eveningInitialWaitTicks--;
 
         if (reading) {
             if (fragmentIndex < 0) {
@@ -97,7 +104,7 @@ public final class MemoryDiscClient {
             }
 
             while (MemoryDiscKeybinds.READ_MEMORY.consumeClick()) {
-                if (fragmentIndex >= 0) {
+                if (fragmentIndex >= 0 && eveningInitialWaitTicks <= 0) {
                     promptShakeTicks = 6;
                     promptShakeAge = 0;
                     NetworkHandler.requestMemoryDiscNext(fragmentIndex);
@@ -182,6 +189,8 @@ public final class MemoryDiscClient {
                 y += 9;
             }
         }
+
+        if (eveningInitialWaitTicks > 0) return;
 
         String prompt = "Нажмите U чтоб продолжить";
         float shakeX = promptShakeTicks > 0 ? (float) Math.sin(promptShakeAge * 2.8D) * 0.8F : 0.0F;
