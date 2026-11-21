@@ -2,7 +2,7 @@ package com.fieldofmemories.client;
 
 import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.OverlayTexture;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
