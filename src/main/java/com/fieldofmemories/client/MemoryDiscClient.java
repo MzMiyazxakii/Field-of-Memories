@@ -72,12 +72,12 @@ public final class MemoryDiscClient {
                 if (warningTicks >= MemoryDiscItem.WARNING_TICKS && !firstFragmentRequested) {
                     firstFragmentRequested = true;
                     startMemorySound(mc);
-                    NetworkHandler.requestMemoryDiscNext();
+                    NetworkHandler.requestMemoryDiscNext(-1);
                 }
             }
 
             while (MemoryDiscKeybinds.READ_MEMORY.consumeClick()) {
-                if (fragmentIndex >= 0) NetworkHandler.requestMemoryDiscNext();
+                if (fragmentIndex >= 0) NetworkHandler.requestMemoryDiscNext(fragmentIndex);
             }
         } else if (MemoryDiscKeybinds.READ_MEMORY.consumeClick()) {
             if (mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem() instanceof MemoryDiscItem
