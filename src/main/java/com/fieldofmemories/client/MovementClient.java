@@ -151,6 +151,7 @@ public final class MovementClient {
             player.setSprinting(false);
             return;
         }
+        if (climbTapCount == 1 && player.tickCount - lastSpaceTapTick <= 10) event.getInput().jumping = false;
         if (player.isSprinting() && sprintJumpCooldown > 0) event.getInput().jumping = false;
         if (stamina <= 0.0F || (exhausted && stamina < SPRINT_UNLOCK_STAMINA)) {
             player.setSprinting(false);
