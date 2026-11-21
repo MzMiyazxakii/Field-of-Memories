@@ -9,4 +9,7 @@
   "item.fieldofmemories.memory_disc_6": "Holy Father",
   "item.fieldofmemories.memory_disc_7": "The Field",
   "item.fieldofmemories.memory_disc_8": "Evening"
+,
+  "key.fieldofmemories.read_memory_disc": "Press U to read",
+  "key.categories.fieldofmemories": "Field of Memories"
 }
