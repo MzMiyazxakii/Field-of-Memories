@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -58,6 +59,7 @@ public final class MovementClient {
     private static boolean wasJumping = false;
     private static boolean pendingLowJump = false;
     private static boolean jumpHeld = false;
+    private static boolean jumpInputWasDown = false;
     private static boolean longJumpInputSuppressed = false;
     private static boolean emptySprintAttempt = false;
     private static int shakeTicks = 0;
@@ -116,13 +118,26 @@ public final class MovementClient {
             player.setSprinting(false);
             return;
         }
-        if (player.isSprinting() && sprintJumpCooldown > 0) event.getInput().jumping = false;
+        boolean jumpDown = event.getInput().jumping;
+        boolean jumpPressed = jumpDown && !jumpInputWasDown;
+        jumpInputWasDown = jumpDown;
+        boolean shiftDown = Minecraft.getInstance().options.keyShift.isDown();
+        boolean sprintJumpBlocked = player.isSprinting() && sprintJumpCooldown > 0;
+        if (sprintJumpBlocked) event.getInput().jumping = false;
         // Shift+Space is handled manually below so vanilla cannot launch a
         // normal jump before the long-jump impulse is applied.
-        if (player.onGround() && Minecraft.getInstance().options.keyShift.isDown()
-                && stamina >= longJumpStaminaCost) {
+        if (player.onGround() && shiftDown && stamina >= longJumpStaminaCost) {
             event.getInput().jumping = false;
             longJumpInputSuppressed = true;
+        } else if (jumpPressed && player.onGround() && !shiftDown && !sprintJumpBlocked) {
+            // Charge stamina on the input edge, before vanilla launches the
+            // player. Waiting until ClientTick END misses the first jump
+            // because the player is already airborne by then.
+            float staminaBeforeJump = stamina;
+            stamina = Math.max(0.0F, stamina - 7.0F);
+            recoveryDelay = stamina <= 0.0F ? 60 : 20;
+            pendingLowJump = staminaBeforeJump < 7.0F;
+            if (stamina <= 0.0F) exhausted = true;
         }
         if (stamina <= 0.0F || (exhausted && stamina < SPRINT_UNLOCK_STAMINA)) {
             player.setSprinting(false);
@@ -183,7 +198,7 @@ public final class MovementClient {
         if (jumping && !wasJumping) {
             boolean crouchJump = longJumpInputSuppressed && mc.options.keyShift.isDown();
             longJumpInputSuppressed = false;
-            pendingLowJump = !crouchJump && stamina < 7.0F;
+            pendingLowJump = false;
             if (crouchJump) {
                 // Trigger the base jump here (vanilla input was suppressed),
                 // then add the long-jump height and horizontal impulse.
@@ -201,13 +216,8 @@ public final class MovementClient {
                 stamina = Math.max(0, stamina - longJumpStaminaCost);
                 recoveryDelay = 45;
             } else {
-                // Every normal jump costs stamina, including the first jump
-                // after landing. If less than the full cost remains, the jump
-                // is shortened and the remaining stamina is consumed.
-                float staminaBeforeJump = stamina;
-                stamina = Math.max(0.0F, stamina - 7.0F);
-                recoveryDelay = stamina <= 0 ? 60 : 20;
-                if (player.isSprinting() && staminaBeforeJump >= 7.0F && sprintJumpCooldown <= 0) {
+                // Stamina was already charged on the jump input edge in onInput.
+                if (player.isSprinting() && sprintJumpCooldown <= 0) {
                     sprintJumpCooldown = sprintJumpCooldownLength;
                     var motion = player.getDeltaMovement();
                     player.setDeltaMovement(motion.x * jumpDistanceMultiplier, motion.y, motion.z * jumpDistanceMultiplier);
@@ -247,15 +257,21 @@ public final class MovementClient {
             runParticleTicks = 0;
         }
 
+        // After a sustained sprint, stumbling must be realistically reachable
+        // before the stamina bar is depleted. Keep it probabilistic, but not
+        // so rare that repeated long runs almost never trigger it.
         if (sprinting && sprintTicks >= 20 * 4 && player.onGround()
-                && mc.level.random.nextDouble() < 0.0018D) {
+                && mc.level.random.nextDouble() < 0.012D) {
             startFall(player);
             sprintTicks = 0;
         }
     }
 
     private static void startFall(LocalPlayer player) {
-        player.playSound(SoundEvents.PLAYER_SMALL_FALL, 0.7F, 0.85F);
+        // Use the client level's local sound path; LocalPlayer.playSound can
+        // be silent for client-only effects depending on the call context.
+        player.level().playLocalSound(player.blockPosition(), SoundEvents.PLAYER_SMALL_FALL,
+                SoundSource.PLAYERS, 0.7F, 0.85F, false);
         // A short, subtle dust puff at the feet when the sprint stumble begins.
         for (int i = 0; i < 7; i++) {
             double angle = (Math.PI * 2.0D * i) / 7.0D;
@@ -275,6 +291,9 @@ public final class MovementClient {
         }
         prone = true;
         waitingForSpace = false;
+        shakeTicks = 0;
+        player.setSprinting(false);
+        removeRunBoost(player);
         NetworkHandler.sendProneState(true);
         fallRecoveryTicks = 40;
         player.setPose(Pose.SWIMMING);
@@ -332,7 +351,8 @@ public final class MovementClient {
     @SubscribeEvent
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !player.isSprinting() || !player.onGround() || player.zza <= 0.0F) return;
+        if (player == null || prone || waitingForSpace || !player.isSprinting()
+                || !player.onGround() || player.zza <= 0.0F) return;
         float phase = player.tickCount * 0.85F;
         event.setRoll(event.getRoll() + (float) Math.sin(phase) * 0.52F);
         event.setPitch(event.getPitch() + (float) Math.sin(phase * 2.0F) * 0.23F);
@@ -421,7 +441,7 @@ public final class MovementClient {
             int fadeTicks = Math.min(fallRecoveryTicks, 40);
             int alpha = Math.min(72, Math.max(0, Math.round(72.0F * fadeTicks / 40.0F)));
             if (alpha > 0) gui.fill(0, 0, w, h, (alpha << 24));
-            int textAlpha = Math.min(255, Math.round(255.0F * fadeTicks / 12.0F));
+            int textAlpha = Math.min(255, Math.round(255.0F * fadeTicks / 40.0F));
             if (textAlpha > 0) {
                 int textY = h - 58;
                 gui.drawCenteredString(mc.font, Component.literal("Вы упали"), w / 2, textY,
