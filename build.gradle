@@ -1,0 +1,59 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+}
+
+version = '0.1.0'
+group = 'com.fieldofmemories'
+archivesBaseName = 'FieldOfMemories'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
+    copyIdeResources = true
+
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'info'
+            mods {
+                fieldofmemories {
+                    source sourceSets.main
+                }
+            }
+        }
+        client {}
+        server { args '--nogui' }
+    }
+}
+
+repositories {}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.2.0'
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [minecraft_version: '1.20.1', minecraft_version_range: '[1.20.1,1.21)', forge_version: '47.2.0', forge_version_range: '[47,)', loader_version_range: '[47,)', mod_id: 'fieldofmemories', mod_name: 'Field of Memories', mod_license: 'All Rights Reserved', mod_version: project.version, mod_authors: 'Field of Memories Team', mod_description: 'A psychological horror experience hidden in the dark.']
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+jar {
+    manifest {
+        attributes([
+            'Specification-Title': 'fieldofmemories',
+            'Specification-Vendor': 'Field of Memories Team',
+            'Specification-Version': '1',
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.jar.archiveVersion,
+            'Implementation-Vendor': 'Field of Memories Team'
+        ])
+    }
+    finalizedBy 'reobfJar'
+}
