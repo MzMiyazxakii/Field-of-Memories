@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Pose;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -86,6 +87,13 @@ public final class NetworkHandler {
 
     @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID)
     public static final class ServerEvents {
+        @SubscribeEvent
+        public static void onLivingDrops(LivingDropsEvent event) {
+            if (!(event.getEntity() instanceof ServerPlayer)) return;
+            // The admin tool is a permission-gated utility, not loot: retain it
+            // through death instead of allowing it to appear among dropped items.
+            event.getDrops().removeIf(drop -> drop.getItem().is(FieldOfMemories.ADMIN_TOOL.get()));
+        }
         @SubscribeEvent
         public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
             if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide) return;

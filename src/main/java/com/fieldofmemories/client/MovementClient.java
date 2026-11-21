@@ -573,7 +573,7 @@ public final class MovementClient {
         gui.fill(x + filled, y, x + width, y + height, 0xAA292929);
         if (prone && waitingForSpace) {
             int w = gui.guiWidth(), h = gui.guiHeight();
-            gui.fill(0, 0, w, h, 0xAA000000);
+            gui.fill(0, 0, w, h, 0xE6000000);
             gui.drawCenteredString(mc.font, Component.literal("Нажмите ПРОБЕЛ, чтобы встать"), w / 2, h / 2, 0xFFE6E6E6);
         }
         // Keep the vignette hidden during the spawn lock and prone recovery.
