@@ -153,7 +153,7 @@ public final class MovementClient {
         climbProgress = 0.0D;
         climbTargetProgress = 1.0D;
         climbForwardDistance = 0.0D;
-        player.setPose(Pose.SWIMMING);
+        player.setPose(Pose.STANDING);
         player.setDeltaMovement(0.0D, 0.0D, 0.0D);
         player.setSprinting(false);
         climbTapCount = 0;
@@ -168,7 +168,9 @@ public final class MovementClient {
     private static void tickClimb(LocalPlayer player) {
         // Do not teleport/setPos every tick: drive the normal entity movement
         // so collision handling and vanilla position packets stay in sync.
-        player.setPose(Pose.SWIMMING);
+        // Keep the player upright: the climb animation is carried by raised arms,
+        // not by the swimming/crawling pose.
+        player.setPose(Pose.STANDING);
         player.setSprinting(false);
         player.setDeltaMovement(0.0D, 0.0D, 0.0D);
 
@@ -183,7 +185,7 @@ public final class MovementClient {
             return;
         }
 
-        // Once the torso is above the ledge, crawl forward over its top.
+        // Once the player has risen above the ledge, move forward onto the top.
         double targetY = climbStartY + (climbTargetY - climbStartY);
         if (player.getY() < targetY - 0.08D) {
             player.setDeltaMovement(0.0D, 0.075D, 0.0D);
