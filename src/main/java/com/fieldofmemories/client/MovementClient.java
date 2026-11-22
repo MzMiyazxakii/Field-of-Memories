@@ -526,6 +526,14 @@ public final class MovementClient {
 
     @SubscribeEvent
     public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Pre event) {
+        Minecraft mc = Minecraft.getInstance();
+        // A restrained darkness pass before the HUD: the world is a little dimmer
+        // at both day and night, while the HUD and CRT pass remain clearly visible.
+        if (event.getOverlay() == VanillaGuiOverlay.VIGNETTE.type()
+                && mc.player != null && mc.screen == null && !prone && !waitingForSpace) {
+            GuiGraphics gui = event.getGuiGraphics();
+            gui.fill(0, 0, gui.guiWidth(), gui.guiHeight(), 0x0C000000);
+        }
         // During the initial spawn/get-up sequence, keep the vanilla hotbar
         // and crosshair hidden until the player presses Space.
         if (prone && waitingForSpace
