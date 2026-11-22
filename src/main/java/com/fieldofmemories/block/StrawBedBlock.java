@@ -4,20 +4,25 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class StrawBedBlock extends Block {
+public class StrawBedBlock extends BedBlock {
     private static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 5.0D, 16.0D);
 
-    public StrawBedBlock(Properties properties) {
-        super(properties);
+    public StrawBedBlock(DyeColor color, Properties properties) {
+        super(color, properties);
+    }
+
+    public static BlockPos getHeadPos(BlockState state, BlockPos pos) {
+        return state.getValue(PART) == BedPart.HEAD ? pos : pos.relative(state.getValue(FACING));
     }
 
     @Override
@@ -29,9 +34,10 @@ public class StrawBedBlock extends Block {
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
                                  InteractionHand hand, BlockHitResult hit) {
         if (player.isSleeping()) return InteractionResult.PASS;
-        if (!level.isClientSide) {
-            player.startSleeping(pos);
-        }
+        BlockPos headPos = getHeadPos(state, pos);
+        BlockState headState = level.getBlockState(headPos);
+        if (!headState.is(this) || headState.getValue(OCCUPIED)) return InteractionResult.PASS;
+        if (!level.isClientSide) player.startSleeping(headPos);
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 }
