@@ -29,18 +29,21 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         WorldGenLevel l=c.level(); RandomSource r=c.random(); ChunkPos ch=new ChunkPos(c.origin());
         int x=ch.getMinBlockX()+8,z=ch.getMinBlockZ()+8; BlockPos g=surface(l,x,z); if(g==null)return false;
         boolean forest=l.getBiome(g).is(FOREST), valid=forest||l.getBiome(g).is(FIELD)||l.getBiome(g).is(EDGE);
-        if(valid&&r.nextFloat()<0.009F){ if(!forest&&r.nextFloat()<0.42F) village(l,x,z); else house(l,x,z,r.nextInt(3)); return true; }
-        if(valid&&r.nextFloat()<0.010F){ if(forest||r.nextBoolean())stable(l,x,z); else well(l,x,z); return true; }
-        if(valid&&r.nextFloat()<0.014F){cart(l,x,z,r);return true;}
-        if(forest&&r.nextFloat()<0.075F)lamp(l,x,z);
-        else if(r.nextFloat()<0.035F)pillar(l,x,z,r);
-        else if(!forest&&r.nextFloat()<0.025F)garden(l,x,z,r);
-        else if(!forest&&r.nextFloat()<0.018F)market(l,x,z,r);
-        else if(!forest&&r.nextFloat()<0.018F)hayGolem(l,x,z);
-        else if(r.nextFloat()<0.012F)well(l,x,z);
+        if (valid && r.nextFloat() < 0.020F && placeLootContainer(l, x, z, com.fieldofmemories.FieldOfMemories.BACKPACK_BLOCK.get())) return true;
+        if (valid && r.nextFloat() < 0.020F && placeLootContainer(l, x, z, com.fieldofmemories.FieldOfMemories.CARDBOARD_BOX_BLOCK.get())) return true;
+        if(valid&&r.nextFloat()<0.006F){ if(!forest&&r.nextFloat()<0.42F) village(l,x,z); else house(l,x,z,r.nextInt(3)); return true; }
+        if(valid&&r.nextFloat()<0.006F){ if(forest||r.nextBoolean())stable(l,x,z); else well(l,x,z); return true; }
+        if(valid&&r.nextFloat()<0.008F){cart(l,x,z,r);return true;}
+        if(forest&&r.nextFloat()<0.018F)lamp(l,x,z);
+        else if(r.nextFloat()<0.006F)pillar(l,x,z,r);
+        else if(!forest&&r.nextFloat()<0.012F)garden(l,x,z,r);
+        else if(!forest&&r.nextFloat()<0.008F)market(l,x,z,r);
+        else if(!forest&&r.nextFloat()<0.008F)hayGolem(l,x,z);
+        else if(r.nextFloat()<0.006F)well(l,x,z);
         return true;
     }
 
+    private static boolean placeLootContainer(WorldGenLevel l,int x,int z,Block b){BlockPos p=surface(l,x,z);if(p==null||!l.getBlockState(p.above()).isAir())return false;l.setBlock(p.above(),b.defaultBlockState(),3);return true;}
     private static BlockPos surface(WorldGenLevel l,int x,int z){
         int y=l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z)-1;if(y<l.getMinBuildHeight())return null;
         BlockPos p=new BlockPos(x,y,z);Block b=l.getBlockState(p).getBlock();
