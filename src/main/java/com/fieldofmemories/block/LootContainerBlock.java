@@ -1,6 +1,9 @@
 package com.fieldofmemories.block;
 
 import com.fieldofmemories.data.BoxLootData;
+import com.fieldofmemories.FieldOfMemories;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -63,6 +66,9 @@ public class LootContainerBlock extends Block {
                     pos.getY() + 0.35D, pos.getZ() + 0.5D, stack);
             entity.setDefaultPickUpDelay();
             level.addFreshEntity(entity);
+        }
+        if (level.random.nextFloat() < 0.012F) {
+            Block.popResource(level, pos, new ItemStack(FieldOfMemories.MEMORY_DISCS[level.random.nextBoolean() ? 0 : 1].get()));
         }
     }
 }
