@@ -120,26 +120,21 @@ public final class HorrorNetwork {
                 .decoder(buffer -> new CameraBatterySlotPacket(buffer.readInt(), buffer.readBoolean()))
                 .consumerMainThread((packet, context) -> {
                     ServerPlayer player = context.get().getSender();
-                    if (player != null && packet.slot() >= 0 && packet.slot() < player.containerMenu.slots.size()) {
-                        var slot = player.containerMenu.slots.get(packet.slot());
+                    if (player != null && !packet.remove() && player.containerMenu == player.inventoryMenu
+                            && packet.slot() >= 0 && packet.slot() < player.inventoryMenu.slots.size()) {
+                        var slot = player.inventoryMenu.slots.get(packet.slot());
                         var camera = slot.getItem();
-                        var carried = player.containerMenu.getCarried();
-                        if (camera.getItem() instanceof com.fieldofmemories.item.VideoCameraItem) {
-                            if (packet.remove()) {
-                                if (com.fieldofmemories.item.VideoCameraItem.hasInsertedBattery(camera) && carried.isEmpty()) {
-                                    com.fieldofmemories.item.VideoCameraItem.setInsertedBattery(camera, false);
-                                    player.containerMenu.setCarried(new net.minecraft.world.item.ItemStack(FieldOfMemories.BATTERY.get()));
-                                    slot.setChanged();
-                                }
-                            } else if (carried.is(FieldOfMemories.BATTERY.get())
-                                    && !com.fieldofmemories.item.VideoCameraItem.hasInsertedBattery(camera)
-                                    && com.fieldofmemories.item.VideoCameraItem.getBattery(camera) < com.fieldofmemories.item.VideoCameraItem.MAX_BATTERY) {
-                                carried.shrink(1);
-                                if (carried.isEmpty()) player.containerMenu.setCarried(net.minecraft.world.item.ItemStack.EMPTY);
-                                com.fieldofmemories.item.VideoCameraItem.setInsertedBattery(camera, true);
-                                slot.setChanged();
-                            }
-                            player.containerMenu.broadcastChanges();
+                        var carried = player.inventoryMenu.getCarried();
+                        if (camera.getItem() instanceof com.fieldofmemories.item.VideoCameraItem
+                                && carried.is(FieldOfMemories.BATTERY.get())
+                                && !com.fieldofmemories.item.VideoCameraItem.hasInsertedBattery(camera)
+                                && com.fieldofmemories.item.VideoCameraItem.getBattery(camera)
+                                        < com.fieldofmemories.item.VideoCameraItem.MAX_BATTERY) {
+                            carried.shrink(1);
+                            if (carried.isEmpty()) player.inventoryMenu.setCarried(net.minecraft.world.item.ItemStack.EMPTY);
+                            com.fieldofmemories.item.VideoCameraItem.setInsertedBattery(camera, true);
+                            slot.setChanged();
+                            player.inventoryMenu.broadcastChanges();
                         }
                     }
                     context.get().setPacketHandled(true);
