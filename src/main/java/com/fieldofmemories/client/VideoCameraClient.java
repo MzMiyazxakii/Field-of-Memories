@@ -48,7 +48,7 @@ public final class VideoCameraClient {
     private static void setViewing(boolean active) {
         if (viewing == active) return;
         viewing = active;
-        blendTicks = active ? 0 : 8;
+        blendTicks = 8;
         if (active) {
             exitCooldown = 0;
             loadCameraEffect();
