@@ -28,7 +28,7 @@ public class SmileFaceRenderer extends EntityRenderer<SmileFaceEntity> {
         poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entity.getYRot()));
         // The Blockbench face mesh is vertically mirrored in model space.
         // Flip it around its vertical midpoint without changing its position.
-        poseStack.translate(0.0D, 1.5D, 0.0D);
+        poseStack.translate(0.0D, 1.725D, 0.0D);
         poseStack.scale(1.2F, -1.2F, 1.2F);
         model.setupAnim(entity, 0.0F, 0.0F, entity.tickCount + partialTick, 0.0F, 0.0F);
         model.renderToBuffer(poseStack, buffer.getBuffer(RenderType.entityTranslucent(TEXTURE)),
