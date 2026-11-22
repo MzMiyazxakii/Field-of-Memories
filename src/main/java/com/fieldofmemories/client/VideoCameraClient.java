@@ -68,6 +68,13 @@ public final class VideoCameraClient {
         }
 
         @SubscribeEvent
+        public static void tintWorld(RenderGuiEvent.Pre event) {
+            if (!viewing || Minecraft.getInstance().player == null) return;
+            var gui = event.getGuiGraphics();
+            gui.fill(0, 0, gui.guiWidth(), gui.guiHeight(), 0xA0808080);
+        }
+
+        @SubscribeEvent
         public static void render(RenderGuiEvent.Post event) {
             if (!viewing || Minecraft.getInstance().player == null) return;
             var gui = event.getGuiGraphics();
