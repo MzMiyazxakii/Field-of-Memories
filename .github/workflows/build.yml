@@ -70,6 +70,12 @@ jobs:
                       "1": "fieldofmemories:block/straw_bed_2",
                       "particle": "fieldofmemories:block/straw_bed_3"}
           main, pillow = bed["elements"]
+          # The supplied Blockbench bed was exported paper-thin (2 px base + 0.5 px pillow).
+          # Give the straw mattress a visible 5 px body and a 2 px raised pillow.
+          main["from"][1] = 0
+          main["to"][1] = 5
+          pillow["from"][1] = 5
+          pillow["to"][1] = 7
           foot_main = copy.deepcopy(main)
           foot_main["from"][2], foot_main["to"][2] = 0, 16
           foot_main["faces"].pop("south", None)
