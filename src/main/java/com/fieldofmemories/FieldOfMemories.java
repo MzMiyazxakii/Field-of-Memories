@@ -31,7 +31,6 @@ public class FieldOfMemories {
     public static final RegistryObject<Block> SCARECROW = BLOCKS.register("scarecrow", ScarecrowBlock::new);
     public static final RegistryObject<Block> BACKPACK_BLOCK = BLOCKS.register("backpack", () -> new LootContainerBlock(true));
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));
-    public static final RegistryObject<Item> BACKPACK_ITEM = ITEMS.register("backpack", () -> new BlockItem(BACKPACK_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> CARDBOARD_BOX_ITEM = ITEMS.register("cardboard_box", () -> new BlockItem(CARDBOARD_BOX_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> ADMIN_TOOL = ITEMS.register("admin_tool", () -> new AdminToolItem(new Item.Properties()));
     public static final RegistryObject<Item> MEMORY_DISC_1 = registerMemoryDisc("memory_disc_1", 0);
