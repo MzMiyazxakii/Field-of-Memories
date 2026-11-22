@@ -26,6 +26,7 @@ import com.fieldofmemories.network.NetworkHandler;
 import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.entity.ScarecrowEntity;
 import com.fieldofmemories.entity.SmileFaceEntity;
+import com.fieldofmemories.entity.PlayerEchoEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import com.fieldofmemories.worldgen.FieldDecorFeature;
