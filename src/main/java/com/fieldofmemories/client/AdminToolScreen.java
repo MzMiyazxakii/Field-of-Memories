@@ -43,7 +43,8 @@ public class AdminToolScreen extends Screen {
             add("Выносливость", cx, y, () -> go("stamina")); y += 25;
             add("Прыжки", cx, y, () -> go("jumps")); y += 25;
             add("Управление предметами", cx, y, () -> go("items")); y += 25;
-            add("Сюжет и статистика", cx, y, () -> go("story"));
+            add("Сюжет и статистика", cx, y, () -> go("story")); y += 25;
+            add("Туман", cx, y, () -> go("fog"));
         } else if (page.equals("events")) {
             add("Заставить игрока упасть", cx, y, () -> go("players"));
             add("Назад", cx, y + 52, () -> go("home"));
@@ -169,6 +170,7 @@ public class AdminToolScreen extends Screen {
             case "memory_items" -> "ВОСПОМИНАНИЯ";
             case "give_memory_disc" -> "ВЫБЕРИТЕ ДИСК";
             case "story" -> "СЮЖЕТ И СТАТИСТИКА";
+            case "fog" -> "ТУМАН";
             default -> "ГЛАВНОЕ МЕНЮ";
         };
     }
