@@ -1,5 +1,6 @@
 package com.fieldofmemories.data;
 
+import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -16,6 +17,8 @@ import java.util.List;
 public class BoxLootData extends SavedData {
     private static final String DATA_NAME = "fieldofmemories_box_loot";
     private final List<Entry> entries = new ArrayList<>();
+    private int brokenBoxes;
+    private boolean memoryDiscFound;
 
     public BoxLootData() {
         addDefault(Items.IRON_INGOT, 1, 3, 10);
@@ -56,6 +59,21 @@ public class BoxLootData extends SavedData {
     public static BoxLootData get(ServerLevel level) {
         return level.getServer().overworld().getDataStorage()
                 .computeIfAbsent(BoxLootData::load, BoxLootData::new, DATA_NAME);
+    }
+
+    /**
+     * Records one broken cardboard box for the entire world.
+     * Returns a memory disc when the random chance succeeds or the 40-box guarantee is reached.
+     */
+    public ItemStack rollMemoryDisc(net.minecraft.util.RandomSource random) {
+        brokenBoxes++;
+        if (!memoryDiscFound && (brokenBoxes >= 40 || random.nextFloat() < 0.012F)) {
+            memoryDiscFound = true;
+            setDirty();
+            return new ItemStack(FieldOfMemories.MEMORY_DISCS[random.nextBoolean() ? 0 : 1].get());
+        }
+        setDirty();
+        return ItemStack.EMPTY;
     }
 
     public List<Entry> getEntries() {
@@ -138,6 +156,8 @@ public class BoxLootData extends SavedData {
                 data.entries.add(new Entry(item, min, max, weight));
             }
         }
+        data.brokenBoxes = Math.max(0, tag.getInt("BrokenBoxes"));
+        data.memoryDiscFound = tag.getBoolean("MemoryDiscFound");
         return data;
     }
 
@@ -153,6 +173,8 @@ public class BoxLootData extends SavedData {
             list.add(entry);
         }
         tag.put("Entries", list);
+        tag.putInt("BrokenBoxes", brokenBoxes);
+        tag.putBoolean("MemoryDiscFound", memoryDiscFound);
         return tag;
     }
 
