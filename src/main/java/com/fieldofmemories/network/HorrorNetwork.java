@@ -51,13 +51,19 @@ public final class HorrorNetwork {
                     buffer.writeInt(packet.activity());
                     buffer.writeInt(packet.scarecrowChance());
                     buffer.writeInt(packet.faceChance());
+                    buffer.writeInt(packet.spiritChance());
+                    buffer.writeInt(packet.mimicChance());
+                    buffer.writeInt(packet.treeDiscChance());
+                    buffer.writeInt(packet.houseCameraChance());
                 })
                 .decoder(buffer -> new SyncDataPacket(buffer.readInt(), buffer.readInt(),
+                        buffer.readInt(), buffer.readInt(), buffer.readInt(), buffer.readInt(),
                         buffer.readInt(), buffer.readInt()))
                 .consumerMainThread((packet, context) -> {
                     DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
                             com.fieldofmemories.client.AdminToolScreen.updateHorrorData(
-                                    packet.danger(), packet.activity(), packet.scarecrowChance(), packet.faceChance()));
+                                    packet.danger(), packet.activity(), packet.scarecrowChance(), packet.faceChance(),
+                                    packet.spiritChance(), packet.mimicChance(), packet.treeDiscChance(), packet.houseCameraChance()));
                     context.get().setPacketHandled(true);
                 }).add();
 
@@ -89,7 +95,9 @@ public final class HorrorNetwork {
                     ServerPlayer player = context.get().getSender();
                     if (player != null && player.hasPermissions(2)) {
                         net.minecraft.world.item.ItemStack stack = switch (packet.itemId()) {
+                            case "battery" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.BATTERY.get());
                             case "video_camera" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.VIDEO_CAMERA.get());
+                            case "old_camera" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.OLD_CAMERA.get());
                             default -> net.minecraft.world.item.ItemStack.EMPTY;
                         };
                         if (!stack.isEmpty() && !player.getInventory().add(stack)) player.drop(stack, false);
@@ -292,7 +300,11 @@ public final class HorrorNetwork {
                 HorrorWorldData.getDangerLevel(level),
                 HorrorWorldData.getActivityMultiplier(level),
                 HorrorWorldData.getScarecrowChance(level),
-                HorrorWorldData.getFaceChance(level)));
+                HorrorWorldData.getFaceChance(level),
+                HorrorWorldData.getSpiritChance(level),
+                HorrorWorldData.getMimicChance(level),
+                HorrorWorldData.getTreeDiscChance(level),
+                HorrorWorldData.getHouseCameraChance(level)));
     }
 
     public static void requestData() {
@@ -353,7 +365,8 @@ public final class HorrorNetwork {
 
     private record RequestDataPacket() {}
     private record AdjustPacket(int setting, int amount) {}
-    private record SyncDataPacket(int danger, int activity, int scarecrowChance, int faceChance) {}
+    private record SyncDataPacket(int danger, int activity, int scarecrowChance, int faceChance,
+                                  int spiritChance, int mimicChance, int treeDiscChance, int houseCameraChance) {}
     private record ScreamPacket() {}
     private record ForceScreamRequestPacket(UUID target) {}
     private record GiveAdminItemPacket(String itemId) {}
