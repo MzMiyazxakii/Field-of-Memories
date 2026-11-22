@@ -5,6 +5,10 @@ import com.fieldofmemories.item.VideoCameraItem;
 import com.fieldofmemories.item.OldCameraItem;
 import com.fieldofmemories.network.HorrorNetwork;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.RandomSource;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
@@ -30,6 +34,7 @@ public final class VideoCameraClient {
     private static int exitKickTicks;
     private static int emptyBatteryShakeTicks;
     private static int emptyBatteryShakePhase;
+    private static CameraMovementSound cameraMovementSound;
 
     private VideoCameraClient() {}
 
@@ -60,11 +65,34 @@ public final class VideoCameraClient {
         if (active) {
             exitCooldown = 0;
             loadCameraEffect();
+            cameraMovementSound = new CameraMovementSound();
+            Minecraft.getInstance().getSoundManager().play(cameraMovementSound);
         } else {
             exitCooldown = 12;
             exitKickTicks = 7;
+            if (cameraMovementSound != null) {
+                cameraMovementSound.stop();
+                cameraMovementSound = null;
+            }
         }
         HorrorNetwork.requestCameraViewing(active);
+    }
+
+
+    private static final class CameraMovementSound extends AbstractTickableSoundInstance {
+        private CameraMovementSound() {
+            super(FieldOfMemories.CAMERA_MOVEMENT_SOUND.get(), SoundSource.PLAYERS, RandomSource.create());
+            this.looping = true;
+            this.delay = 0;
+            this.volume = 0.65F;
+            this.pitch = 1.0F;
+            this.attenuation = net.minecraft.client.resources.sounds.SoundInstance.Attenuation.NONE;
+        }
+
+        @Override
+        public void tick() {
+            if (!viewing || Minecraft.getInstance().player == null) stop();
+        }
     }
 
     private static void loadCameraEffect() {
