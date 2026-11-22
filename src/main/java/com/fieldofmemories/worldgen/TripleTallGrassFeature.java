@@ -29,11 +29,12 @@ public class TripleTallGrassFeature extends Feature<NoneFeatureConfiguration> {
         WorldGenLevel level = context.level();
         RandomSource random = context.random();
         BlockPos origin = context.origin();
+        net.minecraft.world.level.ChunkPos chunk = new net.minecraft.world.level.ChunkPos(origin);
         boolean placed = false;
 
         for (int i = 0; i < 48; i++) {
-            int x = origin.getX() + random.nextInt(16);
-            int z = origin.getZ() + random.nextInt(16);
+            int x = chunk.getMinBlockX() + random.nextInt(16);
+            int z = chunk.getMinBlockZ() + random.nextInt(16);
             int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
             BlockPos ground = new BlockPos(x, y - 1, z);
             if (!level.getBiome(ground).is(FIELD)) continue;
