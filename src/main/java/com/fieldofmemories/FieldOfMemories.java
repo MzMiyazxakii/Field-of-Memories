@@ -26,7 +26,7 @@ import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.entity.ScarecrowEntity;
 import com.fieldofmemories.entity.SmileFaceEntity;
 import com.fieldofmemories.entity.PlayerEchoEntity;
-import com.fieldofmemories.entity.SpiritEntity;
+import com.fieldofmemories.entity.SpiritEntity;\nimport com.fieldofmemories.entity.RiftEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import com.fieldofmemories.worldgen.FieldDecorFeature;
@@ -49,6 +49,9 @@ public class FieldOfMemories {
     public static final RegistryObject<EntityType<SpiritEntity>> SPIRIT_ENTITY = ENTITY_TYPES.register(
             "spirit", () -> EntityType.Builder.of(SpiritEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.8F).clientTrackingRange(64).updateInterval(2).build("spirit"));
+    public static final RegistryObject<EntityType<RiftEntity>> RIFT_ENTITY = ENTITY_TYPES.register(
+            "rift", () -> EntityType.Builder.of(RiftEntity::new, MobCategory.MISC)
+                    .sized(1.2F, 1.2F).clientTrackingRange(64).updateInterval(1).build("rift"));
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
     public static final RegistryObject<Block> BACKPACK_BLOCK = BLOCKS.register("backpack", () -> new LootContainerBlock(true));
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));

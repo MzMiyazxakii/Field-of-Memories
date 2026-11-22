@@ -51,7 +51,7 @@ public final class HorrorEvents {
         manageScarecrow(level, players, random, danger, activity);
         maybeSpawnSpirit(level, players, random, danger, activity);
         maybeSpawnFace(level, players, random, danger, activity);
-        maybeSpawnPlayerEcho(level, players, random, danger, activity);
+        maybeSpawnPlayerEcho(level, players, random, danger, activity);\n        maybeSpawnRift(level, players, random, danger, activity);
         HorrorSignEvent.tryTrigger(level, players, random, danger, activity);
 
         double dangerFactor = 1.0D - danger * 0.006D;
@@ -111,6 +111,25 @@ public final class HorrorEvents {
         if (spirit == null) return;
         spirit.moveTo(x + 0.5D, y, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
         if (level.noCollision(spirit)) level.addFreshEntity(spirit);
+    }
+
+    private static void maybeSpawnRift(ServerLevel level, List<ServerPlayer> players,
+                                       RandomSource random, int danger, int activity) {
+        if (!getLoadedEntities(level, RiftEntity.class).isEmpty()) return;
+        int chance = Math.min(18, (2 + danger / 12) * activity / 100);
+        if (random.nextInt(100) >= chance) return;
+        ServerPlayer target = players.get(random.nextInt(players.size()));
+        double angle = random.nextDouble() * Math.PI * 2.0D;
+        double distance = 18.0D + random.nextDouble() * 30.0D;
+        int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
+        int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        RiftEntity rift = FieldOfMemories.RIFT_ENTITY.get().create(level);
+        if (rift == null) return;
+        rift.setBlackRift(random.nextBoolean());
+        rift.moveTo(x + 0.5D, y + 0.1D, z + 0.5D, 0.0F, 0.0F);
+        rift.setLifetime(240 + random.nextInt(361));
+        if (level.noCollision(rift)) level.addFreshEntity(rift);
     }
 
     private static void maybeSpawnFace(ServerLevel level, List<ServerPlayer> players,
