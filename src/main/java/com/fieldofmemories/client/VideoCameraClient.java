@@ -19,7 +19,7 @@ import net.minecraftforge.fml.common.Mod;
 public final class VideoCameraClient {
     private static boolean viewing;
     private static boolean effectLoaded;
-    private static int blendTicks;
+    private static float viewBlend;
     private static int exitCooldown;
 
     private VideoCameraClient() {}
@@ -48,7 +48,6 @@ public final class VideoCameraClient {
     private static void setViewing(boolean active) {
         if (viewing == active) return;
         viewing = active;
-        blendTicks = 8;
         if (active) {
             exitCooldown = 0;
             loadCameraEffect();
@@ -68,7 +67,6 @@ public final class VideoCameraClient {
 
     public static void forceStopFromServer() {
         viewing = false;
-        blendTicks = 8;
         exitCooldown = 12;
     }
 
@@ -89,12 +87,11 @@ public final class VideoCameraClient {
             if (event.phase != TickEvent.Phase.END) return;
             Minecraft mc = Minecraft.getInstance();
             if (exitCooldown > 0) exitCooldown--;
-            if (blendTicks > 0) {
-                blendTicks--;
-                if (blendTicks == 0 && !viewing && effectLoaded) {
-                    mc.gameRenderer.shutdownEffect();
-                    effectLoaded = false;
-                }
+            viewBlend = viewing ? Math.min(1.0F, viewBlend + 0.125F)
+                    : Math.max(0.0F, viewBlend - 0.125F);
+            if (viewBlend <= 0.0F && !viewing && effectLoaded) {
+                mc.gameRenderer.shutdownEffect();
+                effectLoaded = false;
             }
             if (mc.player == null) {
                 if (viewing) setViewing(false);
@@ -113,11 +110,8 @@ public final class VideoCameraClient {
 
         @SubscribeEvent
         public static void fov(ComputeFovModifierEvent event) {
-            if (viewing || blendTicks > 0) {
-                float progress = viewing ? Math.min(1.0F, (8.0F - blendTicks) / 8.0F)
-                        : Math.max(0.0F, blendTicks / 8.0F);
-                float multiplier = 1.0F - 0.32F * progress;
-                event.setNewFovModifier(event.getNewFovModifier() * multiplier);
+            if (viewBlend > 0.0F) {
+                event.setNewFovModifier(event.getNewFovModifier() * (1.0F - 0.32F * viewBlend));
             }
         }
 
