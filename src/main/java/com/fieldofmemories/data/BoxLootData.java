@@ -47,8 +47,6 @@ public class BoxLootData extends SavedData {
         addDefault(Items.DIAMOND, 1, 1, 1);
         addDefault(Items.ARROW, 2, 8, 4);
         addDefault(Items.GOLDEN_CARROT, 1, 2, 1);
-        addDefault(BuiltInRegistries.ITEM.get(new ResourceLocation("fieldofmemories", "memory_disc_1")), 1, 1, 1);
-        addDefault(BuiltInRegistries.ITEM.get(new ResourceLocation("fieldofmemories", "memory_disc_2")), 1, 1, 1);
     }
 
     private void addDefault(Item item, int min, int max, int weight) {
