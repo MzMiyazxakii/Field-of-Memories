@@ -135,6 +135,7 @@ public class AdminToolScreen extends Screen {
             add("Заставить игрока упасть", cx, y, () -> go("players"));
             add("Вызвать скример на игроке", cx, y + 25, () -> go("scream_players"));
             add("Вызвать мимика", cx, y + 50, HorrorNetwork::requestMimic);
+            add("Призвать оба разлома рядом", cx, y + 75, HorrorNetwork::requestRifts);
             add("Назад", cx, y + 102, () -> go("home"));
         } else if (page.equals("activity")) {
             HorrorNetwork.requestData();
@@ -209,8 +210,8 @@ public class AdminToolScreen extends Screen {
             add("Воспоминания", cx, y + 100, () -> go("memory_items"));
             add("Лут коробок", cx, y + 125, () -> go("box_loot"));
             add("Награды табурета", cx, y + 150, () -> go("stool_loot"));
-            add("Шансы появления", cx, y + 150, () -> go("item_spawn"));
-            add("Назад", cx, y + 180, () -> go("home"));
+            add("Шансы появления", cx, y + 175, () -> go("item_spawn"));
+            add("Назад", cx, y + 200, () -> go("home"));
         } else if (page.equals("item_spawn")) {
             HorrorNetwork.requestData();
             add("Шанс диска на дереве −", cx - 82, y, () -> HorrorNetwork.adjust(5, -1));

@@ -24,7 +24,15 @@ import java.util.List;
 
 public class TreeLeafletBlock extends Block {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    private static final VoxelShape SHAPE = Block.box(0, 0, 7.5, 16, 16, 8.5);
+    private static VoxelShape shapeFor(Direction facing) {
+        return switch (facing) {
+            case NORTH -> Block.box(0, 0, 15, 16, 16, 16);
+            case SOUTH -> Block.box(0, 0, 0, 16, 16, 1);
+            case EAST -> Block.box(0, 0, 0, 1, 16, 16);
+            case WEST -> Block.box(15, 0, 0, 16, 16, 16);
+            default -> Shapes.empty();
+        };
+    }
 
     public TreeLeafletBlock(Properties properties) {
         super(properties);
@@ -55,7 +63,7 @@ public class TreeLeafletBlock extends Block {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return SHAPE;
+        return shapeFor(state.getValue(FACING));
     }
 
     @Override
