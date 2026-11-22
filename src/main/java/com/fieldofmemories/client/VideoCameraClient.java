@@ -91,6 +91,54 @@ public final class VideoCameraClient {
 
     @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, value = Dist.CLIENT)
     public static final class Events {
+        private static Slot findCameraSlot(InventoryScreen screen, double mouseX, double mouseY) {
+            int left = screen.getGuiLeft();
+            int top = screen.getGuiTop();
+            for (Slot slot : Minecraft.getInstance().player.inventoryMenu.slots) {
+                if (!(slot.getItem().getItem() instanceof VideoCameraItem)) continue;
+                int x = left + slot.x;
+                int y = top + slot.y;
+                int panelX = x + 18;
+                if ((mouseX >= x && mouseX < x + 16 && mouseY >= y && mouseY < y + 16)
+                        || (mouseX >= panelX && mouseX < panelX + 18 && mouseY >= y && mouseY < y + 18)) {
+                    return slot;
+                }
+            }
+            return null;
+        }
+
+        @SubscribeEvent
+        public static void renderBatterySlot(ScreenEvent.Render.Post event) {
+            if (!(event.getScreen() instanceof InventoryScreen screen)) return;
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null) return;
+            Slot slot = findCameraSlot(screen, event.getMouseX(), event.getMouseY());
+            if (slot == null) return;
+            int x = screen.getGuiLeft() + slot.x + 18;
+            int y = screen.getGuiTop() + slot.y;
+            var gui = event.getGuiGraphics();
+            gui.fill(x - 1, y - 1, x + 17, y + 17, 0xFF080808);
+            gui.fill(x, y, x + 16, y + 16, 0xFF555555);
+            gui.fill(x + 1, y + 1, x + 15, y + 15, 0xFF242424);
+            if (VideoCameraItem.hasInsertedBattery(slot.getItem())) {
+                gui.renderItem(new ItemStack(FieldOfMemories.BATTERY.get()), x, y);
+            }
+        }
+
+        @SubscribeEvent
+        public static void clickBatterySlot(ScreenEvent.MouseButtonPressed.Pre event) {
+            if (event.getButton() != 0 || !(event.getScreen() instanceof InventoryScreen screen)) return;
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null) return;
+            Slot slot = findCameraSlot(screen, event.getMouseX(), event.getMouseY());
+            if (slot == null) return;
+            boolean remove = VideoCameraItem.hasInsertedBattery(slot.getItem());
+            ItemStack carried = mc.player.containerMenu.getCarried();
+            if (remove ? !carried.isEmpty() : !carried.is(FieldOfMemories.BATTERY.get())) return;
+            HorrorNetwork.requestCameraBatterySlot(slot.index, remove);
+            event.setCanceled(true);
+        }
+
         @SubscribeEvent
         public static void tick(TickEvent.ClientTickEvent event) {
             if (event.phase != TickEvent.Phase.END) return;
