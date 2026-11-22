@@ -8,6 +8,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ComputeFovModifierEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -17,6 +19,25 @@ public final class OldCameraClientEvents {
     private static int photoFlashTicks;
 
     private OldCameraClientEvents() {}
+
+
+    @SubscribeEvent
+    public static void oldCameraTooltip(ItemTooltipEvent event) {
+        var stack = event.getItemStack();
+        if (!(stack.getItem() instanceof OldCameraItem)) return;
+        int charge = OldCameraItem.getCharge(stack);
+        event.getToolTip().add(Component.translatable(
+                "tooltip.fieldofmemories.old_camera.charge", charge));
+        event.getToolTip().add(Component.translatable(
+                "tooltip.fieldofmemories.old_camera.battery_slot"));
+        if (OldCameraItem.hasInsertedBattery(stack)) {
+            event.getToolTip().add(Component.translatable(
+                    "tooltip.fieldofmemories.old_camera.charging"));
+        } else if (charge < OldCameraItem.MAX_CHARGE) {
+            event.getToolTip().add(Component.translatable(
+                    "tooltip.fieldofmemories.old_camera.insert_hint"));
+        }
+    }
 
     @SubscribeEvent
     public static void tick(TickEvent.ClientTickEvent event) {
