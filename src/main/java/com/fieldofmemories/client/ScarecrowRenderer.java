@@ -24,6 +24,10 @@ public class ScarecrowRenderer extends EntityRenderer<ScarecrowEntity> {
     public void render(ScarecrowEntity entity, float entityYaw, float partialTick, PoseStack poseStack,
                        MultiBufferSource buffer, int packedLight) {
         poseStack.pushPose();
+        // Match vanilla's upright model coordinate system: model pixels use +Y downward,
+        // while world space uses +Y upward. EntityRenderer does not apply MobRenderer's flip.
+        poseStack.translate(0.0D, 1.5D, 0.0D);
+        poseStack.scale(1.0F, -1.0F, 1.0F);
         model.setupAnim(entity, 0.0F, 0.0F, entity.tickCount + partialTick, 0.0F, 0.0F);
         model.renderToBuffer(poseStack, buffer.getBuffer(RenderType.entityCutoutNoCull(TEXTURE)),
                 packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
