@@ -22,7 +22,7 @@ public class HorrorWorldData extends SavedData {
     private int faceChance = 10;
     private int spiritChance = 2;
     private int mimicChance = 3;
-    private int treeDiscChance = 3;
+    private int treeDiscChance = 25;
     private int houseCameraChance = 32;
     private long nextAmbientEvent;
     private int spiritDiscFailures;
@@ -116,7 +116,7 @@ public class HorrorWorldData extends SavedData {
             data.mimicChance = updated;
         } else if (setting == 5) {
             old = data.treeDiscChance;
-            updated = clamp(old + amount, 0, 100);
+            updated = clamp(old + amount, 0, 1000);
             data.treeDiscChance = updated;
         } else if (setting == 6) {
             old = data.houseCameraChance;
@@ -139,7 +139,7 @@ public class HorrorWorldData extends SavedData {
         data.faceChance = clamp(tag.contains(FACE_CHANCE_KEY) ? tag.getInt(FACE_CHANCE_KEY) : 10, 0, 100);
         data.spiritChance = clamp(tag.contains(SPIRIT_CHANCE_KEY) ? tag.getInt(SPIRIT_CHANCE_KEY) : 2, 0, 100);
         data.mimicChance = clamp(tag.contains(MIMIC_CHANCE_KEY) ? tag.getInt(MIMIC_CHANCE_KEY) : 3, 0, 100);
-        data.treeDiscChance = clamp(tag.contains(TREE_DISC_CHANCE_KEY) ? tag.getInt(TREE_DISC_CHANCE_KEY) : 3, 0, 100);
+        data.treeDiscChance = clamp(tag.contains(TREE_DISC_CHANCE_KEY) ? tag.getInt(TREE_DISC_CHANCE_KEY) : 25, 0, 1000);
         data.houseCameraChance = clamp(tag.contains(HOUSE_CAMERA_CHANCE_KEY) ? tag.getInt(HOUSE_CAMERA_CHANCE_KEY) : 32, 0, 100);
         data.nextAmbientEvent = Math.max(0L, tag.getLong(NEXT_EVENT_KEY));
         data.spiritDiscFailures = clamp(tag.getInt(SPIRIT_DISC_FAILURES_KEY), 0, 19);
