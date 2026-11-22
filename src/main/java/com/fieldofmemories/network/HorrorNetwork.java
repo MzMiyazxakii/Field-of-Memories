@@ -207,21 +207,23 @@ public final class HorrorNetwork {
         net.minecraft.server.level.ServerLevel level = player.serverLevel();
         net.minecraft.world.phys.Vec3 direction = player.getLookAngle().normalize();
         net.minecraft.world.phys.Vec3 origin = player.getEyePosition().add(direction.scale(1.4D));
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.FLASH,
+                origin.x, origin.y, origin.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
         level.sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD,
-                origin.x, origin.y, origin.z, 36, 0.8D, 0.65D, 0.8D, 0.09D);
+                origin.x, origin.y, origin.z, 64, 1.0D, 0.8D, 1.0D, 0.12D);
         level.playSound(null, player.blockPosition(),
                 net.minecraft.sounds.SoundEvents.FIREWORK_ROCKET_BLAST,
                 net.minecraft.sounds.SoundSource.PLAYERS, 0.75F, 1.55F);
 
-        net.minecraft.world.phys.AABB area = player.getBoundingBox().expandTowards(direction.scale(12.0D))
-                .inflate(3.0D, 2.5D, 3.0D);
+        net.minecraft.world.phys.AABB area = player.getBoundingBox().expandTowards(direction.scale(24.0D))
+                .inflate(5.0D, 3.5D, 5.0D);
         for (net.minecraft.world.entity.Entity target : level.getEntitiesOfClass(
                 net.minecraft.world.entity.Entity.class, area,
                 entity -> entity != player && !entity.isRemoved())) {
             net.minecraft.world.phys.Vec3 toTarget = target.getBoundingBox().getCenter()
                     .subtract(player.getEyePosition());
             double distanceSqr = toTarget.lengthSqr();
-            if (distanceSqr > 144.0D || distanceSqr < 0.01D) continue;
+            if (distanceSqr > 576.0D || distanceSqr < 0.01D) continue;
             if (direction.dot(toTarget.normalize()) < 0.70D || !player.hasLineOfSight(target)) continue;
 
             if (target instanceof com.fieldofmemories.entity.PlayerEchoEntity
@@ -231,7 +233,9 @@ public final class HorrorNetwork {
             }
             if (target instanceof net.minecraft.world.entity.LivingEntity living) {
                 living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                        net.minecraft.world.effect.MobEffects.BLINDNESS, 30, 0, false, false, true));
+                        net.minecraft.world.effect.MobEffects.BLINDNESS, 50, 0, false, false, true));
+                living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                        net.minecraft.world.effect.MobEffects.CONFUSION, 35, 0, false, false, true));
             }
         }
     }
