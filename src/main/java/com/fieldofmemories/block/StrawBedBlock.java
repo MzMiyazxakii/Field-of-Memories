@@ -9,6 +9,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.phys.BlockHitResult;
@@ -24,6 +25,13 @@ public class StrawBedBlock extends BedBlock {
 
     public static BlockPos getHeadPos(BlockState state, BlockPos pos) {
         return state.getValue(PART) == BedPart.HEAD ? pos : pos.relative(state.getValue(FACING));
+    }
+
+    @Override
+    public RenderShape getRenderShape(BlockState state) {
+        // BedBlock normally uses the vanilla animated bed renderer. This custom
+        // bed has no vanilla bed texture/renderer, so render its supplied block model.
+        return RenderShape.MODEL;
     }
 
     @Override
