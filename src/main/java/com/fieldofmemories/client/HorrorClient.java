@@ -18,7 +18,7 @@ public final class HorrorClient {
     private HorrorClient() {}
 
     public static void startScream() {
-        screamTicks = 80;
+        screamTicks = 50;
         MovementClient.beginForcedFallFromServer();
     }
 
