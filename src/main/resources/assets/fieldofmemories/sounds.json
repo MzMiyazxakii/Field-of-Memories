@@ -23,5 +23,37 @@
         "stream": false
       }
     ]
+  },
+  "camera_open": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:camera_open",
+        "stream": false
+      }
+    ]
+  },
+  "camera_movement": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:camera_movement",
+        "stream": true
+      }
+    ]
+  },
+  "smile_face_scream_1": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:smile_face_scream_1",
+        "stream": false
+      }
+    ]
+  },
+  "smile_face_scream_2": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:smile_face_scream_2",
+        "stream": false
+      }
+    ]
   }
 }
