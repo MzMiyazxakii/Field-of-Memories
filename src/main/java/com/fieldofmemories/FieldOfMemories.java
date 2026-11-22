@@ -7,7 +7,6 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.sounds.SoundEvent;
@@ -15,7 +14,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import com.fieldofmemories.block.LootContainerBlock;
-import com.fieldofmemories.block.StrawBedBlock;
 import com.fieldofmemories.block.TreeLeafletBlock;
 import net.minecraft.world.item.BlockItem;
 import com.fieldofmemories.item.AdminToolItem;
@@ -52,8 +50,6 @@ public class FieldOfMemories {
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));
     public static final RegistryObject<Block> TREE_LEAFLET_BLOCK = BLOCKS.register("tree_leaflet", () -> new TreeLeafletBlock(BlockBehaviour.Properties.of().strength(0.1F).sound(net.minecraft.world.level.block.SoundType.WOOL).noOcclusion().noCollission()));
     public static final RegistryObject<Item> CARDBOARD_BOX_ITEM = ITEMS.register("cardboard_box", () -> new BlockItem(CARDBOARD_BOX_BLOCK.get(), new Item.Properties()));
-    public static final RegistryObject<Block> STRAW_BED_BLOCK = BLOCKS.register("straw_bed", () -> new StrawBedBlock(DyeColor.BROWN, BlockBehaviour.Properties.of().strength(0.2F).sound(net.minecraft.world.level.block.SoundType.WOOL).noOcclusion()));
-    public static final RegistryObject<Item> STRAW_BED_ITEM = ITEMS.register("straw_bed", () -> new BlockItem(STRAW_BED_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> BATTERY = ITEMS.register("battery", () -> new BatteryItem(new Item.Properties()));
     public static final RegistryObject<Item> VIDEO_CAMERA = ITEMS.register("video_camera", () -> new VideoCameraItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> OLD_CAMERA = ITEMS.register("old_camera", () -> new OldCameraItem(new Item.Properties().stacksTo(1)));
@@ -129,7 +125,6 @@ public class FieldOfMemories {
         SOUND_EVENTS.register(modBus);
         FEATURES.register(modBus);
         NetworkHandler.register();
-        com.fieldofmemories.network.StrawBedNetwork.register();
         HorrorNetwork.register();
     }
 }
