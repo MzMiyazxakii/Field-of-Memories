@@ -350,8 +350,6 @@ public final class HorrorEvents {
                 moved.setChanged();
             }
             level.setBlock(source, Blocks.AIR.defaultBlockState(), 3);
-            level.playSound(null, destination, SoundEvents.BLOCK_PORTAL_AMBIENT,
-                    SoundSource.BLOCKS, 0.35F, 1.7F);
             return;
         }
     }

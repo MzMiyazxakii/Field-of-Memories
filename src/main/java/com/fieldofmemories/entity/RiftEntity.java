@@ -11,7 +11,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.inventory.CraftingMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -168,7 +168,7 @@ public class RiftEntity extends Entity {
             return input.copy();
         }
         for (ServerPlayer player : serverLevel.getEntitiesOfClass(ServerPlayer.class, getBoundingBox().inflate(12.0D))) {
-            CraftingContainer grid = new CraftingContainer(new CraftingMenu(0, player.getInventory()), 3, 3);
+            TransientCraftingContainer grid = new TransientCraftingContainer(new CraftingMenu(0, player.getInventory()), 3, 3);
             for (int i = 0; i < 9; i++) grid.setItem(i, ItemStack.EMPTY);
             boolean valid = true;
             List<net.minecraft.world.item.crafting.Ingredient> ingredients = null;
