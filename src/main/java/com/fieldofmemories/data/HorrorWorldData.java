@@ -10,12 +10,20 @@ public class HorrorWorldData extends SavedData {
     private static final String ACTIVITY_KEY = "ActivityMultiplier";
     private static final String SCARECROW_CHANCE_KEY = "ScarecrowChance";
     private static final String FACE_CHANCE_KEY = "FaceChance";
+    private static final String SPIRIT_CHANCE_KEY = "SpiritChance";
+    private static final String MIMIC_CHANCE_KEY = "MimicChance";
+    private static final String TREE_DISC_CHANCE_KEY = "TreeDiscChance";
+    private static final String HOUSE_CAMERA_CHANCE_KEY = "HouseCameraChance";
     private static final String NEXT_EVENT_KEY = "NextAmbientEvent";
     private static final String SPIRIT_DISC_FAILURES_KEY = "SpiritDiscFailures";
 
     private int activityMultiplier = 100;
     private int scarecrowChance = 10;
     private int faceChance = 10;
+    private int spiritChance = 2;
+    private int mimicChance = 3;
+    private int treeDiscChance = 3;
+    private int houseCameraChance = 32;
     private long nextAmbientEvent;
     private int spiritDiscFailures;
 
@@ -43,6 +51,22 @@ public class HorrorWorldData extends SavedData {
 
     public static int getFaceChance(ServerLevel level) {
         return get(level).faceChance;
+    }
+
+    public static int getSpiritChance(ServerLevel level) {
+        return get(level).spiritChance;
+    }
+
+    public static int getMimicChance(ServerLevel level) {
+        return get(level).mimicChance;
+    }
+
+    public static int getTreeDiscChance(ServerLevel level) {
+        return get(level).treeDiscChance;
+    }
+
+    public static int getHouseCameraChance(ServerLevel level) {
+        return get(level).houseCameraChance;
     }
 
     public static long getNextAmbientEvent(ServerLevel level) {
@@ -82,6 +106,22 @@ public class HorrorWorldData extends SavedData {
             old = data.activityMultiplier;
             updated = clamp(old + amount, 10, 300);
             data.activityMultiplier = updated;
+        } else if (setting == 3) {
+            old = data.spiritChance;
+            updated = clamp(old + amount, 0, 100);
+            data.spiritChance = updated;
+        } else if (setting == 4) {
+            old = data.mimicChance;
+            updated = clamp(old + amount, 0, 100);
+            data.mimicChance = updated;
+        } else if (setting == 5) {
+            old = data.treeDiscChance;
+            updated = clamp(old + amount, 0, 100);
+            data.treeDiscChance = updated;
+        } else if (setting == 6) {
+            old = data.houseCameraChance;
+            updated = clamp(old + amount, 0, 100);
+            data.houseCameraChance = updated;
         } else {
             return;
         }
@@ -97,6 +137,10 @@ public class HorrorWorldData extends SavedData {
         data.activityMultiplier = clamp(tag.getInt(ACTIVITY_KEY) == 0 ? 100 : tag.getInt(ACTIVITY_KEY), 10, 300);
         data.scarecrowChance = clamp(tag.contains(SCARECROW_CHANCE_KEY) ? tag.getInt(SCARECROW_CHANCE_KEY) : 10, 0, 100);
         data.faceChance = clamp(tag.contains(FACE_CHANCE_KEY) ? tag.getInt(FACE_CHANCE_KEY) : 10, 0, 100);
+        data.spiritChance = clamp(tag.contains(SPIRIT_CHANCE_KEY) ? tag.getInt(SPIRIT_CHANCE_KEY) : 2, 0, 100);
+        data.mimicChance = clamp(tag.contains(MIMIC_CHANCE_KEY) ? tag.getInt(MIMIC_CHANCE_KEY) : 3, 0, 100);
+        data.treeDiscChance = clamp(tag.contains(TREE_DISC_CHANCE_KEY) ? tag.getInt(TREE_DISC_CHANCE_KEY) : 3, 0, 100);
+        data.houseCameraChance = clamp(tag.contains(HOUSE_CAMERA_CHANCE_KEY) ? tag.getInt(HOUSE_CAMERA_CHANCE_KEY) : 32, 0, 100);
         data.nextAmbientEvent = Math.max(0L, tag.getLong(NEXT_EVENT_KEY));
         data.spiritDiscFailures = clamp(tag.getInt(SPIRIT_DISC_FAILURES_KEY), 0, 19);
         return data;
@@ -107,6 +151,10 @@ public class HorrorWorldData extends SavedData {
         tag.putInt(ACTIVITY_KEY, activityMultiplier);
         tag.putInt(SCARECROW_CHANCE_KEY, scarecrowChance);
         tag.putInt(FACE_CHANCE_KEY, faceChance);
+        tag.putInt(SPIRIT_CHANCE_KEY, spiritChance);
+        tag.putInt(MIMIC_CHANCE_KEY, mimicChance);
+        tag.putInt(TREE_DISC_CHANCE_KEY, treeDiscChance);
+        tag.putInt(HOUSE_CAMERA_CHANCE_KEY, houseCameraChance);
         tag.putLong(NEXT_EVENT_KEY, nextAmbientEvent);
         tag.putInt(SPIRIT_DISC_FAILURES_KEY, spiritDiscFailures);
         return tag;
