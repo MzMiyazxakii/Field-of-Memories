@@ -19,7 +19,7 @@ public class AnomalousStoolBlock extends Block {
     private static final VoxelShape SHAPE = Block.box(3, 0, 3, 13, 12, 13);
 
     public AnomalousStoolBlock() {
-        super(Properties.of().strength(0.4F).sound(SoundType.WOOD).noOcclusion().randomTicks());
+        super(Properties.of().strength(-1.0F, 3600000.0F).sound(SoundType.WOOD).noOcclusion().randomTicks());
     }
 
     @Override
