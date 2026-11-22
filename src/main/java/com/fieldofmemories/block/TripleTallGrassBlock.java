@@ -14,6 +14,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class TripleTallGrassBlock extends BushBlock {
     public static final EnumProperty<Part> PART = EnumProperty.create("part", Part.class);
+    private static final VoxelShape PLANT_SHAPE = net.minecraft.world.level.block.Block.box(2, 0, 2, 14, 16, 14);
 
     public TripleTallGrassBlock() {
         super(BlockBehaviour.Properties.of().noCollission().instabreak()
@@ -28,6 +29,11 @@ public class TripleTallGrassBlock extends BushBlock {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return PLANT_SHAPE;
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return Shapes.empty();
     }
 
