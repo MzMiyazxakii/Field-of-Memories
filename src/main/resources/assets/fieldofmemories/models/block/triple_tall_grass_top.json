@@ -1,7 +1,7 @@
 {
-  "parent": "minecraft:block/cross",
+  "parent": "minecraft:block/tinted_cross",
   "textures": {
-    "cross": "minecraft:block/tall_grass",
-    "particle": "minecraft:block/tall_grass"
+    "cross": "minecraft:block/tall_grass_top",
+    "particle": "minecraft:block/tall_grass_top"
   }
 }
