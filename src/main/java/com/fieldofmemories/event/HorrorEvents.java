@@ -51,7 +51,8 @@ public final class HorrorEvents {
         manageScarecrow(level, players, random, danger, activity);
         maybeSpawnSpirit(level, players, random, danger, activity);
         maybeSpawnFace(level, players, random, danger, activity);
-        maybeSpawnPlayerEcho(level, players, random, danger, activity);\n        maybeSpawnRift(level, players, random, danger, activity);
+        maybeSpawnPlayerEcho(level, players, random, danger, activity);
+        maybeSpawnRift(level, players, random, danger, activity);
         HorrorSignEvent.tryTrigger(level, players, random, danger, activity);
 
         double dangerFactor = 1.0D - danger * 0.006D;
