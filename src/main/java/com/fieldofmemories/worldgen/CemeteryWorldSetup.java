@@ -107,8 +107,10 @@ public final class CemeteryWorldSetup {
                 put(level, x + dx, y + 1, z + dz, Blocks.DEEPSLATE_BRICKS);
         }
         put(level, x, y + 1, z, FieldOfMemories.SCARECROW.get());
-        put(level, x, y + 2, z, Blocks.CHAIN);
-        put(level, x, y + 3, z, Blocks.SOUL_LANTERN);
+        put(level, x - 3, y + 1, z, Blocks.SOUL_LANTERN);
+        put(level, x + 3, y + 1, z, Blocks.SOUL_LANTERN);
+        put(level, x, y + 1, z - 3, Blocks.SOUL_LANTERN);
+        put(level, x, y + 1, z + 3, Blocks.SOUL_LANTERN);
 
         // Uneven rows of old graves, with cross-shaped markers and occasional cobwebs.
         int[][] graves = {
