@@ -3,18 +3,16 @@ package com.fieldofmemories.event;
 import com.fieldofmemories.worldgen.HomeMemoryTracker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.StandingSignBlock;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.ArrayList;
@@ -64,12 +62,10 @@ public final class HorrorSignEvent {
                 ? BLUE_MESSAGES[random.nextInt(BLUE_MESSAGES.length)]
                 : WHITE_MESSAGES[random.nextInt(WHITE_MESSAGES.length)];
 
-        // Sometimes an ordinary sign already in the loaded world is overwritten.
-        if (random.nextInt(100) < 48 && replaceNearbySign(level, target, random, message, blue, 28)) {
+        if (random.nextInt(100) < 48 && replaceNearbySign(level, target, random, message, blue, 24)) {
             return;
         }
 
-        // A recognized home is the preferred place for a newly appearing sign.
         BlockPos home = HomeMemoryTracker.getHorrorAnchor(target);
         BlockPos anchor = home != null ? home : target.blockPosition();
         int minDistance = home != null ? 4 : 9;
@@ -78,8 +74,7 @@ public final class HorrorSignEvent {
             return;
         }
 
-        // If placement is obstructed, try changing a sign close to the player instead.
-        replaceNearbySign(level, target, random, message, blue, 36);
+        replaceNearbySign(level, target, random, message, blue, 28);
     }
 
     private static boolean replaceNearbySign(ServerLevel level, ServerPlayer player,
@@ -91,7 +86,7 @@ public final class HorrorSignEvent {
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
                 if (x * x + z * z > radius * radius) continue;
-                for (int y = -6; y <= 8; y++) {
+                for (int y = -5; y <= 7; y++) {
                     BlockPos pos = center.offset(x, y, z);
                     if (!level.hasChunkAt(pos)) continue;
                     if (level.getBlockEntity(pos) instanceof SignBlockEntity) {
@@ -133,7 +128,7 @@ public final class HorrorSignEvent {
             if (hasNearbySign(level, pos, 5)) continue;
 
             BlockState state = Blocks.OAK_SIGN.defaultBlockState()
-                    .setValue(BlockStateProperties.ROTATION, random.nextInt(16));
+                    .setValue(StandingSignBlock.ROTATION, random.nextInt(16));
             if (!level.setBlock(pos, state, 3)) continue;
 
             if (level.getBlockEntity(pos) instanceof SignBlockEntity sign) {
