@@ -23,6 +23,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RiftEntity extends Entity {
@@ -109,9 +110,10 @@ public class RiftEntity extends Entity {
             }
             repelIncomingItems();
             if (--examineTicks <= 0) {
-                ItemStack result = process(examining);
+                List<ItemStack> results = process(examining);
                 clearExamining();
-                if (!result.isEmpty()) {
+                for (ItemStack result : results) {
+                    if (result.isEmpty()) continue;
                     double spitAngle = random.nextDouble() * Math.PI * 2.0D;
                     ItemEntity output = new ItemEntity(level(), getX() + Math.cos(spitAngle) * 3.0D,
                             getY() + 0.55D, getZ() + Math.sin(spitAngle) * 3.0D, result);
@@ -160,55 +162,52 @@ public class RiftEntity extends Entity {
         examineTicks = 0;
     }
 
-    private ItemStack process(ItemStack input) {
+    private List<ItemStack> process(ItemStack input) {
+        List<ItemStack> outputs = new ArrayList<>();
+        if (input.isEmpty()) return outputs;
         if (input.is(Items.CARVED_PUMPKIN)) {
-            return new ItemStack(FieldOfMemories.MEMORY_DISC_7.get());
+            outputs.add(new ItemStack(FieldOfMemories.MEMORY_DISC_7.get(), input.getCount()));
+            return outputs;
         }
         if (level().isClientSide || !(level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
-            return input.copy();
+            outputs.add(input.copy());
+            return outputs;
         }
-        for (ServerPlayer player : serverLevel.getEntitiesOfClass(ServerPlayer.class, getBoundingBox().inflate(12.0D))) {
-            TransientCraftingContainer grid = new TransientCraftingContainer(new CraftingMenu(0, player.getInventory()), 3, 3);
-            for (int i = 0; i < 9; i++) grid.setItem(i, ItemStack.EMPTY);
-            boolean valid = true;
-            List<net.minecraft.world.item.crafting.Ingredient> ingredients = null;
-            for (net.minecraft.world.item.crafting.Recipe<?> candidate : serverLevel.getRecipeManager().getRecipes()) {
-                if (!(candidate instanceof CraftingRecipe recipe)) continue;
-                List<net.minecraft.world.item.crafting.Ingredient> recipeIngredients = recipe.getIngredients();
-                if (recipeIngredients.isEmpty() || recipeIngredients.size() > 9) continue;
-                valid = true;
-                for (int i = 0; i < recipeIngredients.size(); i++) {
-                    net.minecraft.world.item.crafting.Ingredient ingredient = recipeIngredients.get(i);
-                    if (ingredient.isEmpty()) continue;
-                    if (!ingredient.test(input)) { valid = false; break; }
-                    grid.setItem(i, input.copyWithCount(1));
-                }
-                if (valid && recipe.matches(grid, serverLevel)) {
-                    ingredients = recipeIngredients;
-                    break;
-                }
-                for (int i = 0; i < 9; i++) grid.setItem(i, ItemStack.EMPTY);
+
+        // The rift reverses the recipe: the offered item must be the recipe result.
+        for (CraftingRecipe recipe : serverLevel.getRecipeManager().getRecipes().stream()
+                .filter(CraftingRecipe.class::isInstance)
+                .map(CraftingRecipe.class::cast).toList()) {
+            ItemStack crafted = recipe.getResultItem(serverLevel.registryAccess());
+            if (crafted.isEmpty() || !ItemStack.isSameItemSameTags(crafted, input)) continue;
+
+            List<net.minecraft.world.item.crafting.Ingredient> ingredients = new ArrayList<>();
+            for (var ingredient : recipe.getIngredients()) {
+                if (!ingredient.isEmpty() && ingredient.getItems().length > 0) ingredients.add(ingredient);
             }
-            if (ingredients != null) {
-                int count = 0;
-                for (net.minecraft.world.item.crafting.Ingredient ingredient : ingredients) {
-                    if (!ingredient.isEmpty() && ingredient.test(input)) count++;
+            if (ingredients.isEmpty()) break;
+
+            // Each crafted item gives back a random subset of its recipe ingredients.
+            for (int craft = 0; craft < input.getCount(); craft++) {
+                List<net.minecraft.world.item.crafting.Ingredient> shuffled = new ArrayList<>(ingredients);
+                for (int i = shuffled.size() - 1; i > 0; i--) {
+                    int j = random.nextInt(i + 1);
+                    Collections.swap(shuffled, i, j);
                 }
-                int returned = count / 2;
-                if (returned <= 0) return input.copy();
-                ItemStack material = ItemStack.EMPTY;
-                for (net.minecraft.world.item.crafting.Ingredient ingredient : ingredients) {
-                    if (!ingredient.isEmpty() && ingredient.test(input)) {
-                        ItemStack[] choices = ingredient.getItems();
-                        if (choices.length > 0) { material = choices[0].copy(); break; }
-                    }
+                int returnedCount = 1 + random.nextInt(shuffled.size());
+                for (int i = 0; i < returnedCount; i++) {
+                    var choices = shuffled.get(i).getItems();
+                    if (choices.length == 0) continue;
+                    ItemStack material = choices[random.nextInt(choices.length)].copy();
+                    if (!material.isEmpty()) outputs.add(material);
                 }
-                if (material.isEmpty()) return input.copy();
-                material.setCount(returned);
-                return material;
             }
+            return outputs;
         }
-        return input.copy();
+
+        // Items without a crafting recipe are returned unchanged.
+        outputs.add(input.copy());
+        return outputs;
     }
 
     @Override protected void readAdditionalSaveData(CompoundTag tag) {
