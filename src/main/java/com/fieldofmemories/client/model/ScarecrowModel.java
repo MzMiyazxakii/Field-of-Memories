@@ -46,7 +46,7 @@ public class ScarecrowModel<T extends Entity> extends HierarchicalModel<T> {
 
 	@Override
 	public ModelPart root() {
-		return root;
+		return Pug;
 	}
 
 	public static LayerDefinition createBodyLayer() {
