@@ -94,7 +94,7 @@ public final class HorrorEvents {
 
         int configuredChance = HorrorWorldData.getScarecrowChance(level);
         int chance = configuredChance == 0 ? 0
-                : Math.min(70, 10 + scaleChance(configuredChance, danger, activity, 65));
+                : Math.min(70, 18 + scaleChance(configuredChance, danger, activity, 65));
         // Let a spawned scarecrow remain as a distant watcher for up to 90 seconds.
         if (existing != null) return;
         if (random.nextInt(100) < chance) {
