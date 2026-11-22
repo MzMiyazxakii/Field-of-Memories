@@ -96,7 +96,7 @@ public class FieldOfMemories {
         BLOCKS.register(modBus);
         SOUND_EVENTS.register(modBus);
         FEATURES.register(modBus);
-        NetworkHandler.register();
+        NetworkHandler.register();\n        com.fieldofmemories.network.StrawBedNetwork.register();
         HorrorNetwork.register();
     }
 }
