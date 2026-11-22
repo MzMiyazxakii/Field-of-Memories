@@ -1,102 +1,27 @@
 package com.fieldofmemories.client;
 
-import com.fieldofmemories.network.NetworkHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.client.Minecraft;
+import com.fieldofmemories.network.NetworkHandler;
+import net.minecraft.client.gui.components.Button;
 
 public class AdminToolScreen extends Screen {
     private String page = "home";
-    private Button spawnToggleButton;
-    private static int memoryReadMask;
-    private static boolean memorySpawnEnabled = true;
-    private static int memorySpawnChance = 10;
-    private static String boxLootData = "";
-    private static int selectedLootItem;
-
-    private static final String[] LOOT_ITEM_IDS = {
-            "minecraft:iron_ingot", "minecraft:iron_nugget", "minecraft:gold_ingot",
-            "minecraft:carrot", "minecraft:potato", "minecraft:redstone", "minecraft:lapis_lazuli",
-            "minecraft:amethyst_shard", "minecraft:copper_ingot", "minecraft:bone", "minecraft:stick",
-            "minecraft:spruce_planks", "minecraft:string", "minecraft:feather", "minecraft:leather",
-            "minecraft:flint", "minecraft:beef", "minecraft:porkchop", "minecraft:chicken",
-            "minecraft:mutton", "minecraft:rabbit", "minecraft:bread", "minecraft:apple",
-            "minecraft:coal", "minecraft:torch", "minecraft:emerald", "minecraft:diamond",
-            "minecraft:arrow", "minecraft:golden_carrot",
-            "fieldofmemories:memory_disc_1", "fieldofmemories:memory_disc_2"
-    };
-    private static final String[] LOOT_ITEM_NAMES = {
-            "Железный слиток", "Железный самородок", "Золотой слиток", "Морковь", "Картофель",
-            "Редстоун", "Лазурит", "Осколок аметиста", "Медный слиток", "Кость", "Палка",
-            "Еловые доски", "Нить", "Перо", "Кожа", "Кремень", "Сырая говядина",
-            "Сырая свинина", "Сырая курятина", "Сырая баранина", "Сырая крольчатина",
-            "Хлеб", "Яблоко", "Уголь", "Факел", "Изумруд", "Алмаз", "Стрела",
-            "Золотая морковь", "Диск: Пирог с клубничкой", "Диск: Сторож"
-    };
-
-    private static final String[] DISC_NAMES = {
-            "Пирог с клубничкой", "Сторож", "Уличная прядь", "Городская выгода",
-            "Закрытая дверь", "Отец святой", "Поле", "Вечер"
-    };
 
     public AdminToolScreen() { super(Component.literal("Field of Memories — Admin Tool")); }
-
-    public static void updateBoxLootData(String data) {
-        boxLootData = data == null ? "" : data;
-    }
-
-    private static String selectedLootDetails() {
-        String selected = LOOT_ITEM_IDS[selectedLootItem];
-        int totalWeight = 0;
-        String[] entries = boxLootData.split(";");
-        for (String entry : entries) {
-            String[] parts = entry.split(",");
-            if (parts.length == 4) {
-                try { totalWeight += Integer.parseInt(parts[3]); } catch (NumberFormatException ignored) {}
-            }
-        }
-        for (String entry : entries) {
-            String[] parts = entry.split(",");
-            if (parts.length == 4 && parts[0].equals(selected)) {
-                try {
-                    int weight = Integer.parseInt(parts[3]);
-                    double chance = totalWeight <= 0 ? 0.0D : 100.0D * weight / totalWeight;
-                    return String.format("Шанс за выбор: %.1f%% | мин: %s | макс: %s | вес: %s",
-                            chance, parts[1], parts[2], parts[3]);
-                } catch (NumberFormatException ignored) {
-                    return "Ошибка данных таблицы";
-                }
-            }
-        }
-        return "Предмет не добавлен";
-    }
-
-    public static void updateMemoryData(int readMask, boolean spawnEnabled, int spawnChance) {
-        memoryReadMask = readMask & 0xFF;
-        memorySpawnEnabled = spawnEnabled;
-        memorySpawnChance = Math.max(0, Math.min(100, spawnChance));
-        if (Minecraft.getInstance().screen instanceof AdminToolScreen screen && screen.spawnToggleButton != null) {
-            screen.spawnToggleButton.setMessage(Component.literal(
-                    memorySpawnEnabled ? "Отключить спавн предмета в мире" : "Включить спавн предмета в мире"));
-        }
-    }
 
     @Override
     protected void init() {
         clearWidgets();
-        spawnToggleButton = null;
         int cx = width / 2;
         int y = height / 2 - 65;
         if (page.equals("home")) {
             add("События", cx, y, () -> go("events")); y += 25;
             add("Движение", cx, y, () -> go("movement")); y += 25;
             add("Выносливость", cx, y, () -> go("stamina")); y += 25;
-            add("Прыжки", cx, y, () -> go("jumps")); y += 25;
-            add("Управление предметами", cx, y, () -> go("items")); y += 25;
-            add("Сюжет и статистика", cx, y, () -> go("story")); y += 25;
-            add("Туман", cx, y, () -> go("fog"));
+            add("Прыжки", cx, y, () -> go("jumps"));
         } else if (page.equals("events")) {
             add("Заставить игрока упасть", cx, y, () -> go("players"));
             add("Назад", cx, y + 52, () -> go("home"));
@@ -137,62 +62,12 @@ public class AdminToolScreen extends Screen {
             add("Цена выносливости −", cx - 82, jumpY + 88, () -> MovementClient.setAdminLongJumpCost(MovementClient.getAdminLongJumpCost() - 2));
             add("Цена выносливости +", cx + 82, jumpY + 88, () -> MovementClient.setAdminLongJumpCost(MovementClient.getAdminLongJumpCost() + 2));
             add("Назад", cx, jumpY + 110, () -> go("home"));
-        } else if (page.equals("items")) {
-            add("Воспоминания", cx, y, () -> go("memory_items"));
-            add("Лут коробок", cx, y + 25, () -> go("box_loot"));
-            add("Назад", cx, y + 77, () -> go("home"));
-        } else if (page.equals("memory_items")) {
-            NetworkHandler.requestMemoryDiscStats();
-            add("Выдать предмет", cx, y, () -> go("give_memory_disc"));
-            spawnToggleButton = add(memorySpawnEnabled ? "Отключить спавн предмета в мире" : "Включить спавн предмета в мире",
-                    cx, y + 25, () -> NetworkHandler.sendMemoryDiscAction(1, 0));
-            add("Увеличить шанс предмета в мире", cx, y + 50, () -> NetworkHandler.sendMemoryDiscAction(2, 0));
-            add("Уменьшить шанс предмета в мире", cx, y + 75, () -> NetworkHandler.sendMemoryDiscAction(3, 0));
-            add("Назад", cx, y + 110, () -> go("items"));
-        } else if (page.equals("give_memory_disc")) {
-            for (int i = 0; i < DISC_NAMES.length; i++) {
-                final int discId = i;
-                add(DISC_NAMES[i], cx, y + i * 23, () -> {
-                    NetworkHandler.sendMemoryDiscAction(0, discId);
-                    go("memory_items");
-                });
-            }
-            add("Назад", cx, y + 8 * 23, () -> go("memory_items"));
-        } else if (page.equals("box_loot")) {
-            NetworkHandler.requestBoxLootTable();
-            int lootY = height / 2 - 35;
-            add("<", cx - 82, lootY, () -> {
-                selectedLootItem = Math.floorMod(selectedLootItem - 1, LOOT_ITEM_IDS.length);
-                init();
-            });
-            add(">", cx + 82, lootY, () -> {
-                selectedLootItem = (selectedLootItem + 1) % LOOT_ITEM_IDS.length;
-                init();
-            });
-            add("Добавить предмет", cx, lootY + 25, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 0));
-            add("Убрать предмет", cx, lootY + 50, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 1));
-            add("Вес шанса −", cx - 82, lootY + 78, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 3));
-            add("Вес шанса +", cx + 82, lootY + 78, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 2));
-            add("Мин. кол-во −", cx - 82, lootY + 103, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 5));
-            add("Мин. кол-во +", cx + 82, lootY + 103, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 4));
-            add("Макс. кол-во −", cx - 82, lootY + 128, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 7));
-            add("Макс. кол-во +", cx + 82, lootY + 128, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 6));
-            add("Назад", cx, lootY + 155, () -> go("items"));
-        } else if (page.equals("fog")) {
-            add("Дальность −", cx - 82, y, () -> NetworkHandler.changeFogDistance(-8));
-            add("Дальность +", cx + 82, y, () -> NetworkHandler.changeFogDistance(8));
-            add("Назад", cx, y + 52, () -> go("home"));
-        } else if (page.equals("story")) {
-            NetworkHandler.requestMemoryDiscStats();
-            add("Назад", cx, height - 35, () -> go("home"));
         }
     }
 
-    private Button add(String label, int centerX, int y, Runnable action) {
-        Button button = Button.builder(Component.literal(label), b -> action.run())
-                .bounds(centerX - 90, y, 180, 20).build();
-        addRenderableWidget(button);
-        return button;
+    private void add(String label, int centerX, int y, Runnable action) {
+        addRenderableWidget(Button.builder(Component.literal(label), b -> action.run())
+                .bounds(centerX - 78, y, 156, 20).build());
     }
 
     private void go(String next) { page = next; init(); }
@@ -212,27 +87,6 @@ public class AdminToolScreen extends Screen {
             drawRightInfo(gui, String.format("Длинный прыжок: %.2f | Высота: %.2f", MovementClient.getAdminLongJumpDistance(), MovementClient.getAdminLongJumpHeight()), height / 2 - 52);
             drawRightInfo(gui, String.format("Цена выносливости: %.0f", MovementClient.getAdminLongJumpCost()), height / 2 - 40);
         }
-        if (page.equals("fog")) drawRightInfo(gui, "Дальность: " + FogClient.getDistance() + " блоков", height / 2 + 12);
-        if (page.equals("box_loot")) {
-            gui.drawCenteredString(font, LOOT_ITEM_NAMES[selectedLootItem], width / 2, height / 2 - 58, 0xFFFFD08A);
-            drawRightInfo(gui, selectedLootDetails(), height / 2 + 12);
-        }
-
-        if (page.equals("memory_items")) {
-            drawRightInfo(gui, "Спавн: " + (memorySpawnEnabled ? "включён" : "отключён"), height / 2 + 8);
-            drawRightInfo(gui, "Шанс: " + memorySpawnChance + "%", height / 2 + 20);
-        }
-        if (page.equals("story")) {
-            int top = height / 2 - 62;
-            gui.drawCenteredString(font, Component.literal("Прочитано дисков: " + Integer.bitCount(memoryReadMask) + " / 8"),
-                    width / 2, top, 0xFFFFD08A);
-            for (int i = 0; i < DISC_NAMES.length; i++) {
-                boolean read = (memoryReadMask & (1 << i)) != 0;
-                String line = (read ? "✓ " : "○ ") + DISC_NAMES[i] + (read ? " — прочитан" : " — не прочитан");
-                gui.drawCenteredString(font, Component.literal(line), width / 2, top + 16 + i * 12,
-                        read ? 0xFF9BE39B : 0xFFB0B0B0);
-            }
-        }
         super.render(gui, mouseX, mouseY, partialTick);
     }
 
@@ -249,12 +103,6 @@ public class AdminToolScreen extends Screen {
             case "movement" -> "ДВИЖЕНИЕ";
             case "stamina" -> "ВЫНОСЛИВОСТЬ";
             case "jumps" -> "ПРЫЖКИ";
-            case "items" -> "УПРАВЛЕНИЕ ПРЕДМЕТАМИ";
-            case "memory_items" -> "ВОСПОМИНАНИЯ";
-            case "give_memory_disc" -> "ВЫБЕРИТЕ ДИСК";
-            case "story" -> "СЮЖЕТ И СТАТИСТИКА";
-            case "fog" -> "ТУМАН";
-            case "box_loot" -> "ЛУТ КОРОБОК";
             default -> "ГЛАВНОЕ МЕНЮ";
         };
     }

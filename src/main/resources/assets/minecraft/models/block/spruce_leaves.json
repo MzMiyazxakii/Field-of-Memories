@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "fieldofmemories:block/withered_leaves",
+    "particle": "fieldofmemories:block/withered_leaves"
+  }
+}

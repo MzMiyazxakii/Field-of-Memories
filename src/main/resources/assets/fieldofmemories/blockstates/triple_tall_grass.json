@@ -1,7 +1,0 @@
-{
-  "variants": {
-    "part=bottom": { "model": "fieldofmemories:block/triple_tall_grass_bottom" },
-    "part=middle": { "model": "fieldofmemories:block/triple_tall_grass_middle" },
-    "part=top": { "model": "fieldofmemories:block/triple_tall_grass_top" }
-  }
-}
