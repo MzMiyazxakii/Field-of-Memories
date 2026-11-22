@@ -29,7 +29,8 @@ jobs:
       - name: Import Blockbench camera and straw bed models
         run: |
           CAMERA_DIR=/tmp/WWW-assets/WWW/Camera
-          BED_DIR="$(find /tmp/WWW-assets/WWW -type f -name solomabad.json -printf '%h\\n' | head -n 1)"
+          BED_FILE="$(find /tmp/WWW-assets/WWW -type f -name solomabad.json -print -quit)"
+          BED_DIR="$(dirname "$BED_FILE")"
           mkdir -p src/main/resources/assets/fieldofmemories/models/block
           mkdir -p src/main/resources/assets/fieldofmemories/models/item
           mkdir -p src/main/resources/assets/fieldofmemories/blockstates
