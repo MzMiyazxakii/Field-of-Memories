@@ -26,6 +26,7 @@ import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.entity.ScarecrowEntity;
 import com.fieldofmemories.entity.SmileFaceEntity;
 import com.fieldofmemories.entity.PlayerEchoEntity;
+import com.fieldofmemories.entity.SpiritEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import com.fieldofmemories.worldgen.FieldDecorFeature;
@@ -45,6 +46,9 @@ public class FieldOfMemories {
     public static final RegistryObject<EntityType<PlayerEchoEntity>> PLAYER_ECHO_ENTITY = ENTITY_TYPES.register(
             "player_echo", () -> EntityType.Builder.of(PlayerEchoEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.8F).clientTrackingRange(64).updateInterval(2).build("player_echo"));
+    public static final RegistryObject<EntityType<SpiritEntity>> SPIRIT_ENTITY = ENTITY_TYPES.register(
+            "spirit", () -> EntityType.Builder.of(SpiritEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.8F).clientTrackingRange(64).updateInterval(2).build("spirit"));
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
     public static final RegistryObject<Block> BACKPACK_BLOCK = BLOCKS.register("backpack", () -> new LootContainerBlock(true));
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));
@@ -53,6 +57,7 @@ public class FieldOfMemories {
     public static final RegistryObject<Item> BATTERY = ITEMS.register("battery", () -> new BatteryItem(new Item.Properties()));
     public static final RegistryObject<Item> VIDEO_CAMERA = ITEMS.register("video_camera", () -> new VideoCameraItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> OLD_CAMERA = ITEMS.register("old_camera", () -> new OldCameraItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> OLD_BOOK = ITEMS.register("old_book", () -> new Item(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> ADMIN_TOOL = ITEMS.register("admin_tool", () -> new AdminToolItem(new Item.Properties()));
     public static final RegistryObject<Item> MEMORY_DISC_1 = registerMemoryDisc("memory_disc_1", 0);
     public static final RegistryObject<Item> MEMORY_DISC_2 = registerMemoryDisc("memory_disc_2", 1);
@@ -108,6 +113,10 @@ public class FieldOfMemories {
     public static final RegistryObject<SoundEvent> SMILE_FACE_SCREAM_2 = SOUND_EVENTS.register(
             "smile_face_scream_2",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "smile_face_scream_2"))
+    );
+    public static final RegistryObject<SoundEvent> SPIRIT_PRESENCE_SOUND = SOUND_EVENTS.register(
+            "spirit_presence",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "spirit_presence"))
     );
 
     public static final DeferredRegister<Feature<?>> FEATURES =
