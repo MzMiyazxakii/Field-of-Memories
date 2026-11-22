@@ -97,6 +97,20 @@ public final class HorrorNetwork {
                     }
                     context.get().setPacketHandled(true);
                 }).add();
+
+        CHANNEL.messageBuilder(UseStrawBedPacket.class, 6)
+                .encoder((packet, buffer) -> buffer.writeBlockPos(packet.pos()))
+                .decoder(buffer -> new UseStrawBedPacket(buffer.readBlockPos()))
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null && player.distanceToSqr(
+                            packet.pos().getX() + 0.5D, packet.pos().getY() + 0.5D, packet.pos().getZ() + 0.5D) <= 36.0D
+                            && player.level().getBlockState(packet.pos()).is(FieldOfMemories.STRAW_BED_BLOCK.get())
+                            && !player.isSleeping()) {
+                        player.startSleeping(packet.pos());
+                    }
+                    context.get().setPacketHandled(true);
+                }).add();
     }
 
     public static void triggerScream(ServerPlayer target) {
@@ -126,6 +140,10 @@ public final class HorrorNetwork {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new GiveAdminItemPacket(itemId));
     }
 
+    public static void requestUseStrawBed(net.minecraft.core.BlockPos pos) {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new UseStrawBedPacket(pos));
+    }
+
     public static void adjust(int setting, int amount) {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new AdjustPacket(setting, amount));
     }
@@ -136,4 +154,5 @@ public final class HorrorNetwork {
     private record ScreamPacket() {}
     private record ForceScreamRequestPacket(UUID target) {}
     private record GiveAdminItemPacket(String itemId) {}
+    private record UseStrawBedPacket(net.minecraft.core.BlockPos pos) {}
 }
