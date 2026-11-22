@@ -1,6 +1,13 @@
 package com.fieldofmemories.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.Level;
+import com.fieldofmemories.network.NetworkHandler;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -13,6 +20,16 @@ public class AnomalousStoolBlock extends Block {
 
     public AnomalousStoolBlock() {
         super(Properties.of().strength(0.4F).sound(SoundType.WOOD).noOcclusion().randomTicks());
+    }
+
+    @Override
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
+                                 InteractionHand hand, BlockHitResult hit) {
+        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
+        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+            NetworkHandler.startStoolMinigame(serverPlayer, pos);
+        }
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override
