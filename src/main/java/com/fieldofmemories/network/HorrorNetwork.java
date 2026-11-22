@@ -81,6 +81,22 @@ public final class HorrorNetwork {
                     }
                     context.get().setPacketHandled(true);
                 }).add();
+
+        CHANNEL.messageBuilder(GiveAdminItemPacket.class, 5)
+                .encoder((packet, buffer) -> buffer.writeUtf(packet.itemId()))
+                .decoder(buffer -> new GiveAdminItemPacket(buffer.readUtf(64)))
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null && player.hasPermissions(2)) {
+                        net.minecraft.world.item.ItemStack stack = switch (packet.itemId()) {
+                            case "video_camera" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.VIDEO_CAMERA.get());
+                            case "straw_bed" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.STRAW_BED_ITEM.get());
+                            default -> net.minecraft.world.item.ItemStack.EMPTY;
+                        };
+                        if (!stack.isEmpty() && !player.getInventory().add(stack)) player.drop(stack, false);
+                    }
+                    context.get().setPacketHandled(true);
+                }).add();
     }
 
     public static void triggerScream(ServerPlayer target) {
@@ -106,6 +122,10 @@ public final class HorrorNetwork {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new RequestDataPacket());
     }
 
+    public static void giveAdminItem(String itemId) {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new GiveAdminItemPacket(itemId));
+    }
+
     public static void adjust(int setting, int amount) {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new AdjustPacket(setting, amount));
     }
@@ -115,4 +135,5 @@ public final class HorrorNetwork {
     private record SyncDataPacket(int danger, int activity, int scarecrowChance, int faceChance) {}
     private record ScreamPacket() {}
     private record ForceScreamRequestPacket(UUID target) {}
+    private record GiveAdminItemPacket(String itemId) {}
 }
