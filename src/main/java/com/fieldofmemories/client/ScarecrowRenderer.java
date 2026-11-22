@@ -9,7 +9,6 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
-import com.mojang.math.Axis;
 
 public class ScarecrowRenderer extends EntityRenderer<ScarecrowEntity> {
     private static final ResourceLocation TEXTURE = new ResourceLocation("fieldofmemories", "textures/entity/scarecrow.png");
@@ -28,9 +27,8 @@ public class ScarecrowRenderer extends EntityRenderer<ScarecrowEntity> {
         // Match vanilla's upright model coordinate system: model pixels use +Y downward,
         // while world space uses +Y upward. EntityRenderer does not apply MobRenderer's flip.
         poseStack.translate(0.0D, 1.5D, 0.0D);
-        // The imported Blockbench scarecrow mesh is vertically reversed relative
-        // to the renderer's entity-space convention; turn the complete prop over.
-        poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
+        // Blockbench model coordinates have the head at negative Y and legs at
+        // positive Y. Flip the model vertically exactly once so the head is up.
         poseStack.scale(1.0F, -1.0F, 1.0F);
         model.setupAnim(entity, 0.0F, 0.0F, entity.tickCount + partialTick, 0.0F, 0.0F);
         model.renderToBuffer(poseStack, buffer.getBuffer(RenderType.entityCutoutNoCull(TEXTURE)),
