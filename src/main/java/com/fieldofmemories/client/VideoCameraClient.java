@@ -12,6 +12,7 @@ import net.minecraftforge.client.event.ComputeFovModifierEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -22,6 +23,8 @@ public final class VideoCameraClient {
     private static float viewBlend;
     private static int exitCooldown;
     private static int exitKickTicks;
+    private static int emptyBatteryShakeTicks;
+    private static int emptyBatteryShakePhase;
 
     private VideoCameraClient() {}
 
@@ -90,6 +93,8 @@ public final class VideoCameraClient {
             Minecraft mc = Minecraft.getInstance();
             if (exitCooldown > 0) exitCooldown--;
             if (exitKickTicks > 0) exitKickTicks--;
+            if (emptyBatteryShakeTicks > 0) emptyBatteryShakeTicks--;
+            emptyBatteryShakePhase++;
             viewBlend = viewing ? Math.min(1.0F, viewBlend + 0.125F)
                     : Math.max(0.0F, viewBlend - 0.125F);
             if (viewBlend <= 0.0F && !viewing && effectLoaded) {
@@ -108,6 +113,15 @@ public final class VideoCameraClient {
                         || (off.getItem() instanceof VideoCameraItem
                         && VideoCameraItem.isOpen(off) && VideoCameraItem.getBattery(off) > 0);
                 if (!hasOpenCamera) setViewing(false);
+            }
+        }
+
+        @SubscribeEvent
+        public static void emptyCameraUse(PlayerInteractEvent.RightClickItem event) {
+            if (!event.getLevel().isClientSide || !(event.getItemStack().getItem() instanceof VideoCameraItem)) return;
+            if (VideoCameraItem.getBattery(event.getItemStack()) <= 0) {
+                emptyBatteryShakeTicks = 14;
+                emptyBatteryShakePhase = 0;
             }
         }
 
@@ -153,6 +167,10 @@ public final class VideoCameraClient {
                 int barWidth = 64;
                 int x = w - barWidth - 10;
                 int y = h / 2 - 4;
+                if (emptyBatteryShakeTicks > 0 && charge <= 0) {
+                    x += Math.round((float) Math.sin(emptyBatteryShakePhase * 2.7F) * 3.0F
+                            * (emptyBatteryShakeTicks / 14.0F));
+                }
                 gui.fill(x - 1, y - 1, x + barWidth + 1, y + 7, 0xCC080808);
                 gui.fill(x, y, x + barWidth, y + 5, 0xFF282828);
                 int filled = Math.round(barWidth * charge / (float) VideoCameraItem.MAX_BATTERY);
