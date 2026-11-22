@@ -49,6 +49,7 @@ public final class HorrorEvents {
 
         manageScarecrow(level, players, random, danger, activity);
         maybeSpawnFace(level, players, random, danger, activity);
+        HorrorSignEvent.tryTrigger(level, players, random, danger, activity);
 
         List<ServerPlayer> darkPlayers = new ArrayList<>();
         for (ServerPlayer player : players) {
