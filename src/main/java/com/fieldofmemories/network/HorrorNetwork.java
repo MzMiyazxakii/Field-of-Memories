@@ -90,10 +90,33 @@ public final class HorrorNetwork {
                     if (player != null && player.hasPermissions(2)) {
                         net.minecraft.world.item.ItemStack stack = switch (packet.itemId()) {
                             case "video_camera" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.VIDEO_CAMERA.get());
-                            case "straw_bed" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.STRAW_BED_ITEM.get());
                             default -> net.minecraft.world.item.ItemStack.EMPTY;
                         };
                         if (!stack.isEmpty() && !player.getInventory().add(stack)) player.drop(stack, false);
+                    }
+                    context.get().setPacketHandled(true);
+                }).add();
+
+        CHANNEL.messageBuilder(ForceMimicRequestPacket.class, 11)
+                .encoder((packet, buffer) -> {})
+                .decoder(buffer -> new ForceMimicRequestPacket())
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer sender = context.get().getSender();
+                    if (sender != null && sender.hasPermissions(2)) {
+                        var level = sender.serverLevel();
+                        var random = level.random;
+                        for (int attempt = 0; attempt < 8; attempt++) {
+                            double angle = random.nextDouble() * Math.PI * 2.0D;
+                            double distance = 6.0D + random.nextDouble() * 4.0D;
+                            int x = (int) Math.floor(sender.getX() + Math.cos(angle) * distance);
+                            int z = (int) Math.floor(sender.getZ() + Math.sin(angle) * distance);
+                            int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                            var echo = FieldOfMemories.PLAYER_ECHO_ENTITY.get().create(level);
+                            if (echo == null) break;
+                            echo.setSkinOwner(sender.getUUID());
+                            echo.moveTo(x + 0.5D, y, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
+                            if (level.noCollision(echo) && level.addFreshEntity(echo)) break;
+                        }
                     }
                     context.get().setPacketHandled(true);
                 }).add();
@@ -165,26 +188,6 @@ public final class HorrorNetwork {
                     context.get().setPacketHandled(true);
                 }).add();
 
-        CHANNEL.messageBuilder(UseStrawBedPacket.class, 6)
-                .encoder((packet, buffer) -> buffer.writeBlockPos(packet.pos()))
-                .decoder(buffer -> new UseStrawBedPacket(buffer.readBlockPos()))
-                .consumerMainThread((packet, context) -> {
-                    ServerPlayer player = context.get().getSender();
-                    if (player != null && !player.isSleeping()) {
-                        var bedState = player.level().getBlockState(packet.pos());
-                        if (bedState.is(FieldOfMemories.STRAW_BED_BLOCK.get())) {
-                            var headPos = com.fieldofmemories.block.StrawBedBlock.getHeadPos(bedState, packet.pos());
-                            var headState = player.level().getBlockState(headPos);
-                            if (player.distanceToSqr(headPos.getX() + 0.5D, headPos.getY() + 0.5D,
-                                    headPos.getZ() + 0.5D) <= 36.0D
-                                    && headState.is(FieldOfMemories.STRAW_BED_BLOCK.get())
-                                    && !headState.getValue(net.minecraft.world.level.block.BedBlock.OCCUPIED)) {
-                                player.startSleeping(headPos);
-                            }
-                        }
-                    }
-                    context.get().setPacketHandled(true);
-                }).add();
     }
 
 
@@ -238,6 +241,10 @@ public final class HorrorNetwork {
                         net.minecraft.world.effect.MobEffects.CONFUSION, 35, 0, false, false, true));
             }
         }
+    }
+
+    public static void requestMimic() {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForceMimicRequestPacket());
     }
 
     public static void requestOldCameraFlash() {
@@ -297,10 +304,6 @@ public final class HorrorNetwork {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new CameraViewStopPacket());
     }
 
-    public static void requestUseStrawBed(net.minecraft.core.BlockPos pos) {
-        CHANNEL.send(PacketDistributor.SERVER.noArg(), new UseStrawBedPacket(pos));
-    }
-
     public static void adjust(int setting, int amount) {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new AdjustPacket(setting, amount));
     }
@@ -311,9 +314,9 @@ public final class HorrorNetwork {
     private record ScreamPacket() {}
     private record ForceScreamRequestPacket(UUID target) {}
     private record GiveAdminItemPacket(String itemId) {}
-    private record UseStrawBedPacket(net.minecraft.core.BlockPos pos) {}
     private record CameraBatterySlotPacket(int slot, boolean remove) {}
     private record CameraViewPacket(boolean viewing) {}
     private record CameraViewStopPacket() {}
     private record OldCameraFlashPacket() {}
+    private record ForceMimicRequestPacket() {}
 }
