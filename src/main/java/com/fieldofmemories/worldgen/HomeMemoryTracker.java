@@ -34,6 +34,13 @@ public final class HomeMemoryTracker {
         return player.getPersistentData().getCompound(DATA_KEY).getInt("ActiveTicks");
     }
 
+    public static BlockPos getHorrorAnchor(ServerPlayer player) {
+        if (!hasRecognizedHome(player)) return null;
+        if (!player.serverLevel().dimension().location().toString().equals(getRecognizedHomeDimension(player))) return null;
+        BlockPos home = getRecognizedHome(player);
+        return player.distanceToSqr(home.getX() + 0.5D, home.getY(), home.getZ() + 0.5D) <= 96.0D * 96.0D ? home : null;
+    }
+
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
@@ -80,6 +87,9 @@ public final class HomeMemoryTracker {
                 data.putInt("HomeZ", respawn.getZ());
                 data.putLong("HomeRecognizedAt", player.serverLevel().getGameTime());
             }
+        } else if (!nearHome) {
+            data.putInt("ActiveTicks", Math.max(0, data.getInt("ActiveTicks") - 2));
+            if (data.getInt("ActiveTicks") == 0 && data.getBoolean("HomeRecognized")) data.putBoolean("HomeRecognized", false);
         }
 
         data.putDouble("LastX", player.getX());
