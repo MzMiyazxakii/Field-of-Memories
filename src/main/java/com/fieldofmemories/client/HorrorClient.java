@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import com.fieldofmemories.entity.SpiritEntity;
 import java.util.Random;
 import net.minecraft.resources.ResourceLocation;
@@ -74,6 +75,17 @@ public final class HorrorClient {
 
         int alpha = (int)(3 + strength * 9);
         gui.fill(0, 0, width, height, (alpha << 24) | 0x00303030);
+
+        // A short warning appears just above the hotbar while the spirit's presence is felt.
+        if (strength > 0.12F) {
+            String warning = ((interferenceTicks / 100) & 1) == 0
+                    ? "вам тяжело дышать" : "вы чувствуете тяжесть на душе";
+            int textAlpha = Math.min(255, (int)(90 + strength * 165));
+            int color = (textAlpha << 24) | 0x00F2E6A0;
+            int textWidth = Minecraft.getInstance().font.width(warning);
+            gui.drawString(Minecraft.getInstance().font, Component.literal(warning),
+                    (width - textWidth) / 2, height - 58, color, true);
+        }
         Random random = new Random(interferenceTicks * 31L + 7L);
         int lines = 1 + (int)(strength * 5.0F);
         for (int i = 0; i < lines; i++) {
