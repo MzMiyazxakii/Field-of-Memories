@@ -63,7 +63,7 @@ public final class HorrorEvents {
 
         // One shared world cooldown: danger and activity make all world events happen more often.
         double dangerFactor = 1.0D - danger * 0.006D;
-        long interval = Math.max(600L, (long) (6000.0D * dangerFactor * 100.0D / activity));
+        long interval = Math.max(400L, (long) (1800.0D * dangerFactor * 100.0D / activity));
         HorrorWorldData.setNextAmbientEvent(level, now + interval);
     }
 
@@ -108,7 +108,7 @@ public final class HorrorEvents {
         int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
         SmileFaceEntity face = FieldOfMemories.SMILE_FACE_ENTITY.get().create(level);
         if (face != null) {
-            face.moveTo(x + 0.5D, ground + 1.5D + random.nextDouble() * 2.0D,
+            face.moveTo(x + 0.5D, ground + 3.0D + random.nextDouble() * 2.0D,
                     z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
             level.addFreshEntity(face);
         }
