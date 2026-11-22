@@ -2,21 +2,31 @@ package com.fieldofmemories.client;
 
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.item.VideoCameraItem;
+import com.fieldofmemories.network.HorrorNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.item.ItemProperties;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ComputeFovModifierEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 
 public final class VideoCameraClient {
     private static boolean viewing;
+    private static boolean effectLoaded;
+    private static int blendTicks;
+    private static int exitCooldown;
 
     private VideoCameraClient() {}
+
+    public static boolean isViewing() {
+        return viewing;
+    }
 
     public static void toggleView() {
         Minecraft mc = Minecraft.getInstance();
@@ -27,8 +37,10 @@ public final class VideoCameraClient {
         if (mc.player == null) return;
         var main = mc.player.getMainHandItem();
         var off = mc.player.getOffhandItem();
-        if ((main.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(main))
-                || (off.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(off))) {
+        var camera = main.getItem() instanceof VideoCameraItem ? main
+                : off.getItem() instanceof VideoCameraItem ? off : net.minecraft.world.item.ItemStack.EMPTY;
+        if (!camera.isEmpty() && VideoCameraItem.isOpen(camera)
+                && VideoCameraItem.getBattery(camera) > 0 && exitCooldown <= 0) {
             setViewing(true);
         }
     }
@@ -36,12 +48,28 @@ public final class VideoCameraClient {
     private static void setViewing(boolean active) {
         if (viewing == active) return;
         viewing = active;
-        Minecraft mc = Minecraft.getInstance();
+        blendTicks = active ? 0 : 8;
         if (active) {
-            mc.gameRenderer.loadEffect(new ResourceLocation(FieldOfMemories.MOD_ID, "shaders/post/video_camera.json"));
+            exitCooldown = 0;
+            loadCameraEffect();
         } else {
-            mc.gameRenderer.shutdownEffect();
+            exitCooldown = 12;
         }
+        HorrorNetwork.requestCameraViewing(active);
+    }
+
+    private static void loadCameraEffect() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.gameRenderer != null && !effectLoaded) {
+            mc.gameRenderer.loadEffect(new ResourceLocation(FieldOfMemories.MOD_ID, "shaders/post/video_camera.json"));
+            effectLoaded = true;
+        }
+    }
+
+    public static void forceStopFromServer() {
+        viewing = false;
+        blendTicks = 8;
+        exitCooldown = 12;
     }
 
     @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -60,30 +88,77 @@ public final class VideoCameraClient {
         public static void tick(TickEvent.ClientTickEvent event) {
             if (event.phase != TickEvent.Phase.END) return;
             Minecraft mc = Minecraft.getInstance();
+            if (exitCooldown > 0) exitCooldown--;
+            if (blendTicks > 0) {
+                blendTicks--;
+                if (blendTicks == 0 && !viewing && effectLoaded) {
+                    mc.gameRenderer.shutdownEffect();
+                    effectLoaded = false;
+                }
+            }
             if (mc.player == null) {
-                setViewing(false);
+                if (viewing) setViewing(false);
                 return;
             }
             if (viewing) {
                 var main = mc.player.getMainHandItem();
                 var off = mc.player.getOffhandItem();
-                boolean hasOpenCamera = (main.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(main))
-                        || (off.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(off));
+                boolean hasOpenCamera = (main.getItem() instanceof VideoCameraItem
+                        && VideoCameraItem.isOpen(main) && VideoCameraItem.getBattery(main) > 0)
+                        || (off.getItem() instanceof VideoCameraItem
+                        && VideoCameraItem.isOpen(off) && VideoCameraItem.getBattery(off) > 0);
                 if (!hasOpenCamera) setViewing(false);
             }
         }
 
         @SubscribeEvent
         public static void fov(ComputeFovModifierEvent event) {
-            if (viewing) event.setNewFovModifier(event.getNewFovModifier() * 0.68F);
+            if (viewing || blendTicks > 0) {
+                float progress = viewing ? Math.min(1.0F, (8.0F - blendTicks) / 8.0F)
+                        : Math.max(0.0F, blendTicks / 8.0F);
+                float multiplier = 1.0F - 0.32F * progress;
+                event.setNewFovModifier(event.getNewFovModifier() * multiplier);
+            }
+        }
+
+        @SubscribeEvent
+        public static void hideCameraHand(RenderHandEvent event) {
+            if (!viewing) return;
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null) return;
+            var stack = mc.player.getItemInHand(event.getHand());
+            if (stack.getItem() instanceof VideoCameraItem) event.setCanceled(true);
         }
 
         @SubscribeEvent
         public static void render(RenderGuiEvent.Post event) {
-            if (!viewing || Minecraft.getInstance().player == null) return;
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null) return;
             var gui = event.getGuiGraphics();
             int w = gui.guiWidth();
             int h = gui.guiHeight();
+            var main = mc.player.getMainHandItem();
+            var off = mc.player.getOffhandItem();
+            boolean hasCamera = main.getItem() instanceof VideoCameraItem || off.getItem() instanceof VideoCameraItem;
+            if (hasCamera && !viewing) {
+                String prompt = "Нажмите U, чтобы посмотреть";
+                gui.drawString(mc.font, prompt, w - mc.font.width(prompt) - 8, h - 30, 0xFFFFFFFF, true);
+            }
+            if (hasCamera) {
+                var stack = main.getItem() instanceof VideoCameraItem ? main : off;
+                int charge = VideoCameraItem.getBattery(stack);
+                int barWidth = 64;
+                int x = w - barWidth - 10;
+                int y = h / 2 - 4;
+                gui.fill(x - 1, y - 1, x + barWidth + 1, y + 7, 0xCC080808);
+                gui.fill(x, y, x + barWidth, y + 5, 0xFF282828);
+                int filled = Math.round(barWidth * charge / (float) VideoCameraItem.MAX_BATTERY);
+                int color = charge > 360 ? 0xFFB7D48A : charge > 120 ? 0xFFE0B34F : 0xFFCC5148;
+                gui.fill(x, y, x + filled, y + 5, color);
+                String percent = (charge * 100 / VideoCameraItem.MAX_BATTERY) + "%";
+                gui.drawString(mc.font, percent, x + barWidth - mc.font.width(percent), y - 12, 0xFFFFFFFF, true);
+            }
+            if (!viewing) return;
             gui.fill(0, 0, w, h, 0x26000000);
             int cx = w / 2;
             int cy = h / 2;
