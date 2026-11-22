@@ -3,6 +3,7 @@ package com.fieldofmemories.network;
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.client.MovementClient;
 import com.fieldofmemories.data.MemoryDiscWorldData;
+import com.fieldofmemories.data.FogWorldData;
 import com.fieldofmemories.item.MemoryDiscItem;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.nbt.CompoundTag;
@@ -28,7 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class NetworkHandler {
-    private static final String PROTOCOL = "4";
+    private static final String PROTOCOL = "5";
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(FieldOfMemories.MOD_ID, "main"),
             () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
@@ -154,6 +155,29 @@ public final class NetworkHandler {
                                     packet.state(), packet.discId(), packet.fragmentIndex()));
                     context.get().setPacketHandled(true);
                 }).add();
+
+        CHANNEL.messageBuilder(FogAdjustPacket.class, 8)
+                .encoder((packet, buffer) -> buffer.writeInt(packet.amount()))
+                .decoder(buffer -> new FogAdjustPacket(buffer.readInt()))
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null && player.hasPermissions(2)) {
+                        int distance = FogWorldData.changeDistance(player.serverLevel(), packet.amount());
+                        for (ServerPlayer online : player.server.getPlayerList().getPlayers()) {
+                            CHANNEL.send(PacketDistributor.PLAYER.with(() -> online), new FogSyncPacket(distance));
+                        }
+                    }
+                    context.get().setPacketHandled(true);
+                }).add();
+
+        CHANNEL.messageBuilder(FogSyncPacket.class, 9)
+                .encoder((packet, buffer) -> buffer.writeInt(packet.distance()))
+                .decoder(buffer -> new FogSyncPacket(buffer.readInt()))
+                .consumerMainThread((packet, context) -> {
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
+                            () -> () -> com.fieldofmemories.client.FogClient.setDistance(packet.distance()));
+                    context.get().setPacketHandled(true);
+                }).add();
     }
 
     private static void sendMemoryDiscStats(ServerPlayer player) {
@@ -252,6 +276,14 @@ public final class NetworkHandler {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForceFallPacket(target));
     }
 
+    public static void changeFogDistance(int amount) {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new FogAdjustPacket(amount));
+    }
+
+    public static void sendFogSetting(ServerPlayer player) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new FogSyncPacket(FogWorldData.getDistance(player.serverLevel())));
+    }
+
     public static void sendMemoryDiscAction(int action, int discId) {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new MemoryDiscActionPacket(action, discId));
     }
@@ -272,7 +304,10 @@ public final class NetworkHandler {
     public static final class ServerEvents {
         @SubscribeEvent
         public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
-            if (event.getEntity() instanceof ServerPlayer player) restorePendingMemoryDisc(player);
+            if (event.getEntity() instanceof ServerPlayer player) {
+                restorePendingMemoryDisc(player);
+                sendFogSetting(player);
+            }
         }
 
         @SubscribeEvent
@@ -315,5 +350,7 @@ public final class NetworkHandler {
     private record MemoryDiscStatsPacket(int readMask, boolean spawnEnabled, int spawnChance) {}
     private record MemoryDiscRequestPacket(boolean next, int expectedFragmentIndex) {}
     private record MemoryDiscStatePacket(int state, int discId, int fragmentIndex) {}
+    private record FogAdjustPacket(int amount) {}
+    private record FogSyncPacket(int distance) {}
     private record ActiveMemoryDisc(int discId, ItemStack stack, InteractionHand hand, int fragmentIndex) {}
 }
