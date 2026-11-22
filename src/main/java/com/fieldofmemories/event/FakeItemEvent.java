@@ -81,13 +81,12 @@ public final class FakeItemEvent {
                         CompoundTag persistent = chest.getPersistentData();
                         if (persistent.getBoolean(CHEST_CHECKED_TAG)) continue;
 
-                        // Leave unopened structure loot tables untouched. They will be checked
-                        // again after vanilla has generated their contents on the first opening.
-                        if (chest.getLootTable() != null) continue;
+                        // Wait until a loot-table chest has been opened and vanilla has filled it.
+                        if (chest.isEmpty()) continue;
 
                         persistent.putBoolean(CHEST_CHECKED_TAG, true);
                         chest.setChanged();
-                        if (random.nextInt(100) >= chance || chest.isEmpty()) continue;
+                        if (random.nextInt(100) >= chance) continue;
 
                         int size = chest.getContainerSize();
                         int start = random.nextInt(Math.max(1, size));
@@ -137,7 +136,7 @@ public final class FakeItemEvent {
             if (stack.isEmpty() || !stack.hasTag() || !stack.getTag().getBoolean(FAKE_TAG)) continue;
 
             player.getInventory().setItem(slot, ItemStack.EMPTY);
-            triggerForPlayer(player);
+            if (!com.fieldofmemories.item.CrossItem.tryProtect(player, true)) triggerForPlayer(player);
             return;
         }
     }

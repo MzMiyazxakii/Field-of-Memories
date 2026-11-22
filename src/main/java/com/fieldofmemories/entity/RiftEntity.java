@@ -49,6 +49,7 @@ public class RiftEntity extends Entity {
                 player.hurtMarked = true;
             }
             if (distance < 1.35D) {
+                if (com.fieldofmemories.item.CrossItem.tryProtect(player, true)) { discard(); return; }
                 if (isBlackRift()) {
                     player.kill();
                 } else {

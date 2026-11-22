@@ -22,6 +22,7 @@ import com.fieldofmemories.item.MemoryDiscItem;
 import com.fieldofmemories.item.VideoCameraItem;
 import com.fieldofmemories.item.OldCameraItem;
 import com.fieldofmemories.item.BatteryItem;
+import com.fieldofmemories.item.CrossItem;
 import com.fieldofmemories.network.NetworkHandler;
 import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.entity.ScarecrowEntity;
@@ -62,6 +63,7 @@ public class FieldOfMemories {
     public static final RegistryObject<Item> ANOMALOUS_STOOL = ITEMS.register("anomalous_stool", () -> new BlockItem(ANOMALOUS_STOOL_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> CARDBOARD_BOX_ITEM = ITEMS.register("cardboard_box", () -> new BlockItem(CARDBOARD_BOX_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> BATTERY = ITEMS.register("battery", () -> new BatteryItem(new Item.Properties()));
+    public static final RegistryObject<Item> CROSS = ITEMS.register("cross", () -> new CrossItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> VIDEO_CAMERA = ITEMS.register("video_camera", () -> new VideoCameraItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> OLD_CAMERA = ITEMS.register("old_camera", () -> new OldCameraItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> OLD_BOOK = ITEMS.register("old_book", () -> new Item(new Item.Properties().stacksTo(1)));

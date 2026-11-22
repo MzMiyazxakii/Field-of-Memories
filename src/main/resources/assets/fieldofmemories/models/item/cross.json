@@ -1,0 +1,20 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "fieldofmemories:item/crossvill"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "fieldofmemories:item/cross_dead"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2
+      },
+      "model": "fieldofmemories:item/cross_soul"
+    }
+  ]
+}

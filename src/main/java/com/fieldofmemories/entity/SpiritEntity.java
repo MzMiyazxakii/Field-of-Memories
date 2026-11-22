@@ -47,6 +47,7 @@ public class SpiritEntity extends PathfinderMob {
 
     private void attackPlayer(ServerPlayer player) {
         if (player == null || !player.isAlive() || player.isCreative() || player.isSpectator()) return;
+        if (com.fieldofmemories.item.CrossItem.tryProtect(player, false)) { discard(); return; }
         level().playSound(null, player.blockPosition(), com.fieldofmemories.FieldOfMemories.SMILE_FACE_SCREAM_1.get(), net.minecraft.sounds.SoundSource.HOSTILE, 1.0F, 0.82F);
         if (player.getHealth() > 1.0F) player.setHealth(1.0F);
         com.fieldofmemories.network.NetworkHandler.forceFall(player);

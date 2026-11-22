@@ -62,7 +62,7 @@ public class SmileFaceEntity extends Entity {
                 gazeTicks.put(player.getUUID(), ticks);
                 if (ticks >= 12) {
                     triggered = true;
-                    HorrorNetwork.triggerScream(player);
+                    if (!com.fieldofmemories.item.CrossItem.tryProtect(player, false)) HorrorNetwork.triggerScream(player);
                     discard();
                     return;
                 }

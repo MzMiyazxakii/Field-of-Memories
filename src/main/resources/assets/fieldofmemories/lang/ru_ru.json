@@ -93,5 +93,10 @@
   "death.fell.killer": "Переродился",
   "death.fell.assist": "Переродился",
   "death.fell.finish": "Переродился",
-  "death.fell.finish.item": "Переродился"
+  "death.fell.finish.item": "Переродился",
+  "item.fieldofmemories.cross": "Крест",
+  "item.fieldofmemories.cross.dead": "Пустой крест",
+  "item.fieldofmemories.cross.soul": "Крест с воспоминаниями",
+  "tooltip.fieldofmemories.cross.dead": "Кристалл в центре теперь пуст",
+  "tooltip.fieldofmemories.cross.soul": "Вы заполнили центр чужими воспоминаниями"
 }
