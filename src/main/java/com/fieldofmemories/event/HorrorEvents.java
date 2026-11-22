@@ -133,7 +133,9 @@ public final class HorrorEvents {
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
         RiftEntity rift = FieldOfMemories.RIFT_ENTITY.get().create(level);
         if (rift == null) return;
-        boolean pink = random.nextInt(4) == 0;\n        rift.setPinkRift(pink);\n        rift.setBlackRift(!pink && random.nextBoolean());
+        boolean pink = random.nextInt(4) == 0;
+        rift.setPinkRift(pink);
+        rift.setBlackRift(!pink && random.nextBoolean());
         rift.moveTo(x + 0.5D, y + 0.1D, z + 0.5D, 0.0F, 0.0F);
         rift.setLifetime(pink ? 240 + random.nextInt(361) : 240 + random.nextInt(361));
         if (level.noCollision(rift)) level.addFreshEntity(rift);
