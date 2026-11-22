@@ -7,6 +7,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.sounds.SoundEvent;
@@ -43,7 +44,7 @@ public class FieldOfMemories {
     public static final RegistryObject<Block> BACKPACK_BLOCK = BLOCKS.register("backpack", () -> new LootContainerBlock(true));
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));
     public static final RegistryObject<Item> CARDBOARD_BOX_ITEM = ITEMS.register("cardboard_box", () -> new BlockItem(CARDBOARD_BOX_BLOCK.get(), new Item.Properties()));
-    public static final RegistryObject<Block> STRAW_BED_BLOCK = BLOCKS.register("straw_bed", () -> new StrawBedBlock(BlockBehaviour.Properties.of().strength(0.2F).sound(net.minecraft.world.level.block.SoundType.WOOL).noOcclusion()));
+    public static final RegistryObject<Block> STRAW_BED_BLOCK = BLOCKS.register("straw_bed", () -> new StrawBedBlock(DyeColor.BROWN, BlockBehaviour.Properties.of().strength(0.2F).sound(net.minecraft.world.level.block.SoundType.WOOL).noOcclusion()));
     public static final RegistryObject<Item> STRAW_BED_ITEM = ITEMS.register("straw_bed", () -> new BlockItem(STRAW_BED_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> VIDEO_CAMERA = ITEMS.register("video_camera", () -> new VideoCameraItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> ADMIN_TOOL = ITEMS.register("admin_tool", () -> new AdminToolItem(new Item.Properties()));
