@@ -320,7 +320,12 @@ public class AdminToolScreen extends Screen {
             drawRightInfo(gui, String.format("Цена выносливости: %.0f", MovementClient.getAdminLongJumpCost()), height / 2 - 40);
         }
         if (page.equals("fog")) drawRightInfo(gui, "Дальность: " + FogClient.getDistance() + " блоков", height / 2 + 12);
-        if (page.equals("stool_loot")) {\n            String[] names = {"Алмаз", "Незеритовый слиток", "Случайная броня", "Железные слитки", "Золотые яблоки", "Тотем", "Звезда Незера", "Диск: Отец святой", "Блок угля", "Золотые слитки", "Рог козы", "Эндер-жемчуг", "Огненный стержень"};\n            gui.drawCenteredString(font, names[selectedStoolLoot], width / 2, height / 2 - 58, 0xFFFFD08A);\n            drawRightInfo(gui, stoolLootDetails(), height / 2 + 12);\n        }\n        if (page.equals("box_loot")) {
+        if (page.equals("stool_loot")) {
+            String[] names = {"Алмаз", "Незеритовый слиток", "Случайная броня", "Железные слитки", "Золотые яблоки", "Тотем", "Звезда Незера", "Диск: Отец святой", "Блок угля", "Золотые слитки", "Рог козы", "Эндер-жемчуг", "Огненный стержень"};
+            gui.drawCenteredString(font, names[selectedStoolLoot], width / 2, height / 2 - 58, 0xFFFFD08A);
+            drawRightInfo(gui, stoolLootDetails(), height / 2 + 12);
+        }
+        if (page.equals("box_loot")) {
             gui.drawCenteredString(font, LOOT_ITEM_NAMES[selectedLootItem], width / 2, height / 2 - 58, 0xFFFFD08A);
             drawRightInfo(gui, selectedLootDetails(), height / 2 + 12);
         }
