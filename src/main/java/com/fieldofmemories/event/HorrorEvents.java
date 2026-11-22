@@ -94,7 +94,9 @@ public final class HorrorEvents {
 
     private static void maybeSpawnFace(ServerLevel level, List<ServerPlayer> players,
                                        RandomSource random, int danger, int activity) {
-        int chance = scaleChance(HorrorWorldData.getFaceChance(level), danger, activity, 10);
+        int configuredChance = HorrorWorldData.getFaceChance(level);
+        int chance = configuredChance == 0 ? 0
+                : Math.min(100, (configuredChance + 10 + danger / 3) * activity / 100);
         if (random.nextInt(100) >= chance) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
