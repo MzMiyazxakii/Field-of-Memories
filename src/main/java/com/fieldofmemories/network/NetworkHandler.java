@@ -4,6 +4,7 @@ import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.client.MovementClient;
 import com.fieldofmemories.data.MemoryDiscWorldData;
 import com.fieldofmemories.data.FogWorldData;
+import com.fieldofmemories.data.BoxLootData;
 import com.fieldofmemories.item.MemoryDiscItem;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.nbt.CompoundTag;
@@ -29,7 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class NetworkHandler {
-    private static final String PROTOCOL = "5";
+    private static final String PROTOCOL = "6";
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(FieldOfMemories.MOD_ID, "main"),
             () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
@@ -178,6 +179,39 @@ public final class NetworkHandler {
                             () -> () -> com.fieldofmemories.client.FogClient.setDistance(packet.distance()));
                     context.get().setPacketHandled(true);
                 }).add();
+
+        CHANNEL.messageBuilder(BoxLootRequestPacket.class, 10)
+                .encoder((packet, buffer) -> {})
+                .decoder(buffer -> new BoxLootRequestPacket())
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null && player.hasPermissions(2)) sendBoxLootTable(player);
+                    context.get().setPacketHandled(true);
+                }).add();
+
+        CHANNEL.messageBuilder(BoxLootEditPacket.class, 11)
+                .encoder((packet, buffer) -> {
+                    buffer.writeInt(packet.action());
+                    buffer.writeUtf(packet.itemId());
+                })
+                .decoder(buffer -> new BoxLootEditPacket(buffer.readInt(), buffer.readUtf()))
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null && player.hasPermissions(2)) {
+                        BoxLootData.get(player.serverLevel()).edit(packet.itemId(), packet.action());
+                        sendBoxLootTable(player);
+                    }
+                    context.get().setPacketHandled(true);
+                }).add();
+
+        CHANNEL.messageBuilder(BoxLootSyncPacket.class, 12)
+                .encoder((packet, buffer) -> buffer.writeUtf(packet.entries()))
+                .decoder(buffer -> new BoxLootSyncPacket(buffer.readUtf()))
+                .consumerMainThread((packet, context) -> {
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
+                            () -> () -> com.fieldofmemories.client.AdminToolScreen.updateBoxLootData(packet.entries()));
+                    context.get().setPacketHandled(true);
+                }).add();
     }
 
     private static void sendMemoryDiscStats(ServerPlayer player) {
@@ -276,6 +310,19 @@ public final class NetworkHandler {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForceFallPacket(target));
     }
 
+    private static void sendBoxLootTable(ServerPlayer player) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new BoxLootSyncPacket(BoxLootData.get(player.serverLevel()).serializeForClient()));
+    }
+
+    public static void requestBoxLootTable() {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new BoxLootRequestPacket());
+    }
+
+    public static void editBoxLoot(String itemId, int action) {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new BoxLootEditPacket(action, itemId));
+    }
+
     public static void changeFogDistance(int amount) {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new FogAdjustPacket(amount));
     }
@@ -352,5 +399,8 @@ public final class NetworkHandler {
     private record MemoryDiscStatePacket(int state, int discId, int fragmentIndex) {}
     private record FogAdjustPacket(int amount) {}
     private record FogSyncPacket(int distance) {}
+    private record BoxLootRequestPacket() {}
+    private record BoxLootEditPacket(int action, String itemId) {}
+    private record BoxLootSyncPacket(String entries) {}
     private record ActiveMemoryDisc(int discId, ItemStack stack, InteractionHand hand, int fragmentIndex) {}
 }
