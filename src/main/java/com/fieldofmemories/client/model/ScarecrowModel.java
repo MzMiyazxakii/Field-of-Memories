@@ -80,9 +80,10 @@ public class ScarecrowModel<T extends Entity> extends EntityModel<T> {
 
 	@Override
 	public void setupAnim(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        Head.yRot = netHeadYaw * ((float) Math.PI / 180.0F);
-        Head.xRot = headPitch * ((float) Math.PI / 180.0F);
-        Tors.yRot = Mth.sin(ageInTicks * 0.035F) * 0.025F;
+        // Static prop: no head tracking, sway, or idle movement.
+        Head.yRot = 0.0F;
+        Head.xRot = 0.0F;
+        Tors.yRot = 0.0F;
 	}
 
 	@Override
