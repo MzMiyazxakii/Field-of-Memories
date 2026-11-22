@@ -49,10 +49,25 @@ public class AdminToolScreen extends Screen {
 
     private static String selectedLootDetails() {
         String selected = LOOT_ITEM_IDS[selectedLootItem];
-        for (String entry : boxLootData.split(";")) {
+        int totalWeight = 0;
+        String[] entries = boxLootData.split(";");
+        for (String entry : entries) {
+            String[] parts = entry.split(",");
+            if (parts.length == 4) {
+                try { totalWeight += Integer.parseInt(parts[3]); } catch (NumberFormatException ignored) {}
+            }
+        }
+        for (String entry : entries) {
             String[] parts = entry.split(",");
             if (parts.length == 4 && parts[0].equals(selected)) {
-                return "В таблице | мин: " + parts[1] + " | макс: " + parts[2] + " | вес: " + parts[3];
+                try {
+                    int weight = Integer.parseInt(parts[3]);
+                    double chance = totalWeight <= 0 ? 0.0D : 100.0D * weight / totalWeight;
+                    return String.format("Шанс за выбор: %.1f%% | мин: %s | макс: %s | вес: %s",
+                            chance, parts[1], parts[2], parts[3]);
+                } catch (NumberFormatException ignored) {
+                    return "Ошибка данных таблицы";
+                }
             }
         }
         return "Предмет не добавлен";
