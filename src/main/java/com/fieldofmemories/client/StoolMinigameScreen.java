@@ -25,6 +25,7 @@ public final class StoolMinigameScreen extends Screen {
         if (ticks >= 800) {
             finished = true;
             NetworkHandler.finishStoolMinigame(progress);
+            if (minecraft != null) minecraft.setScreen(null);
         }
     }
 

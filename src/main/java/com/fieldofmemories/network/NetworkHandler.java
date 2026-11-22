@@ -268,7 +268,16 @@ public final class NetworkHandler {
         String[] directions = {"U", "D", "L", "R"};
         for (int i = 0; i < 20; i++) sequence.append(directions[player.serverLevel().random.nextInt(4)]);
         String pattern = sequence.toString();
-        STOOL_SESSIONS.put(player.getUUID(), new StoolSession(pos.immutable(), player.serverLevel().getGameTime(), pattern));
+        var level = player.serverLevel();
+        net.minecraft.world.entity.decoration.ArmorStand seat = new net.minecraft.world.entity.decoration.ArmorStand(
+                level, pos.getX() + 0.5D, pos.getY() + 0.55D, pos.getZ() + 0.5D);
+        seat.setInvisible(true);
+        seat.setMarker(true);
+        seat.setNoGravity(true);
+        seat.setInvulnerable(true);
+        level.addFreshEntity(seat);
+        player.startRiding(seat, true);
+        STOOL_SESSIONS.put(player.getUUID(), new StoolSession(pos.immutable(), level.getGameTime(), pattern, seat.getUUID()));
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new StoolStartPacket(pattern));
     }
 
@@ -285,9 +294,12 @@ public final class NetworkHandler {
     private static void finishStoolMinigameServer(ServerPlayer player, int progress) {
         StoolSession session = STOOL_SESSIONS.remove(player.getUUID());
         if (session == null) return;
-        long elapsed = player.serverLevel().getGameTime() - session.startedAt();
-        if (elapsed < 780 || progress < 20 || !player.blockPosition().closerThan(session.pos(), 5.0D)) return;
         var level = player.serverLevel();
+        net.minecraft.world.entity.Entity seat = level.getEntity(session.seatId());
+        if (player.isPassenger()) player.stopRiding();
+        if (seat != null) seat.discard();
+        long elapsed = level.getGameTime() - session.startedAt();
+        if (elapsed < 780 || progress < 20 || !player.blockPosition().closerThan(session.pos(), 5.0D)) return;
         if (!level.getBlockState(session.pos()).is(FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get())) return;
         level.destroyBlock(session.pos(), false);
         net.minecraft.world.item.ItemStack reward = StoolLootData.get(level).roll(level.random);
@@ -473,7 +485,14 @@ public final class NetworkHandler {
         @SubscribeEvent
         public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
             PRONE_PLAYERS.remove(event.getEntity().getUUID());
-            if (event.getEntity() instanceof ServerPlayer player) cancelMemoryDisc(player);
+            if (event.getEntity() instanceof ServerPlayer player) {
+                cancelMemoryDisc(player);
+                StoolSession stool = STOOL_SESSIONS.remove(player.getUUID());
+                if (stool != null) {
+                    var seat = player.serverLevel().getEntity(stool.seatId());
+                    if (seat != null) seat.discard();
+                }
+            }
         }
     }
 
@@ -495,6 +514,6 @@ public final class NetworkHandler {
     private record StoolLootRequestPacket() {}
     private record StoolLootEditPacket(int index,int action) {}
     private record StoolLootSyncPacket(String entries) {}
-    private record StoolSession(net.minecraft.core.BlockPos pos, long startedAt, String sequence) {}
+    private record StoolSession(net.minecraft.core.BlockPos pos, long startedAt, String sequence, UUID seatId) {}
     private record ActiveMemoryDisc(int discId, ItemStack stack, InteractionHand hand, int fragmentIndex) {}
 }

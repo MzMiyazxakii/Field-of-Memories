@@ -30,6 +30,7 @@ public class StoolLootData extends SavedData {
     public void edit(int index,int action) {
         if(index<0 || index>=entries.size()) return;
         Entry e=entries.get(index); int min=e.min(), max=e.max(), weight=e.weight();
+        boolean single = e.key().equals("netherite") || e.key().equals("armor") || e.key().equals("totem") || e.key().equals("nether_star") || e.key().equals("memory_disc") || e.key().equals("goat_horn");
         switch(action){
             case 0 -> weight=Math.min(100,weight+1);
             case 1 -> weight=Math.max(0,weight-1);
