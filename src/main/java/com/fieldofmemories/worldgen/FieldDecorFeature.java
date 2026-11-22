@@ -107,7 +107,7 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
         for (int x = minX; x < minX + 16; x++) {
             for (int z = minZ; z < minZ + 16; z++) {
                 int topY = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z);
-                int bottomY = Math.max(level.getMinBuildHeight(), topY - 28);
+                int bottomY = Math.max(level.getMinBuildHeight(), topY - 64);
                 for (int y = bottomY; y < topY; y++) {
                     BlockPos logPos = new BlockPos(x, y, z);
                     if (!level.getBiome(logPos).is(FOREST_BIOME) && !level.getBiome(logPos).is(EDGE_BIOME)) continue;
@@ -120,7 +120,7 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
                         placeHangingMemoryDisc(level, logPos, random);
                     }
 
-                    if (random.nextFloat() > 0.22F) continue;
+                    if (random.nextFloat() > 0.55F) continue;
                     Direction start = Direction.Plane.HORIZONTAL.getRandomDirection(random);
                     for (int offset = 0; offset < 4; offset++) {
                         Direction facing = Direction.from2DDataValue((start.get2DDataValue() + offset) & 3);
