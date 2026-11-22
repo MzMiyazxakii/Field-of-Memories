@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/spyglass",
+  "overrides": [
+    { "predicate": { "fieldofmemories:open": 1.0 }, "model": "fieldofmemories:item/video_camera_open" }
+  ]
+}
