@@ -72,7 +72,7 @@ public final class VideoCameraClient {
             exitCooldown = 12;
             exitKickTicks = 7;
             if (cameraMovementSound != null) {
-                cameraMovementSound.stop();
+                Minecraft.getInstance().getSoundManager().stop(cameraMovementSound);
                 cameraMovementSound = null;
             }
         }
