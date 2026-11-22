@@ -21,6 +21,7 @@ import net.minecraft.world.item.BlockItem;
 import com.fieldofmemories.item.AdminToolItem;
 import com.fieldofmemories.item.MemoryDiscItem;
 import com.fieldofmemories.item.VideoCameraItem;
+import com.fieldofmemories.item.OldCameraItem;
 import com.fieldofmemories.item.BatteryItem;
 import com.fieldofmemories.network.NetworkHandler;
 import com.fieldofmemories.network.HorrorNetwork;
@@ -55,6 +56,7 @@ public class FieldOfMemories {
     public static final RegistryObject<Item> STRAW_BED_ITEM = ITEMS.register("straw_bed", () -> new BlockItem(STRAW_BED_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> BATTERY = ITEMS.register("battery", () -> new BatteryItem(new Item.Properties()));
     public static final RegistryObject<Item> VIDEO_CAMERA = ITEMS.register("video_camera", () -> new VideoCameraItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> OLD_CAMERA = ITEMS.register("old_camera", () -> new OldCameraItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> ADMIN_TOOL = ITEMS.register("admin_tool", () -> new AdminToolItem(new Item.Properties()));
     public static final RegistryObject<Item> MEMORY_DISC_1 = registerMemoryDisc("memory_disc_1", 0);
     public static final RegistryObject<Item> MEMORY_DISC_2 = registerMemoryDisc("memory_disc_2", 1);
