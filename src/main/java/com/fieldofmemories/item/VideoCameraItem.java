@@ -2,6 +2,8 @@ package com.fieldofmemories.item;
 
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -27,6 +29,28 @@ public class VideoCameraItem extends Item {
 
     public static void setBattery(ItemStack stack, int value) {
         stack.getOrCreateTag().putInt(BATTERY_TAG, Math.max(0, Math.min(MAX_BATTERY, value)));
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity,
+                              int slot, boolean selected) {
+        super.inventoryTick(stack, level, entity, slot, selected);
+        if (level.isClientSide || !(entity instanceof ServerPlayer player)) return;
+        if (!player.getPersistentData().getBoolean("FOMCameraViewing")) return;
+        boolean held = player.getItemInHand(InteractionHand.MAIN_HAND) == stack
+                || player.getItemInHand(InteractionHand.OFF_HAND) == stack;
+        if (!held) return;
+        int remaining = getBattery(stack);
+        if (remaining > 0) {
+            setBattery(stack, remaining - 1);
+            if (remaining == 1) {
+                player.getPersistentData().remove("FOMCameraViewing");
+                com.fieldofmemories.network.HorrorNetwork.stopCameraViewing(player);
+            }
+        } else {
+            player.getPersistentData().remove("FOMCameraViewing");
+            com.fieldofmemories.network.HorrorNetwork.stopCameraViewing(player);
+        }
     }
 
     @Override
