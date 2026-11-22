@@ -23,7 +23,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import java.util.List;
 
 public class LootContainerBlock extends Block {
-    private static final VoxelShape BAG = Block.box(1, 0, 1, 15, 7, 15);
     private static final VoxelShape BOX = Block.box(2, 0, 1, 14, 8, 16);
     private final boolean legacyBackpack;
 
