@@ -18,6 +18,10 @@ import com.fieldofmemories.item.AdminToolItem;
 import com.fieldofmemories.item.MemoryDiscItem;
 import com.fieldofmemories.network.NetworkHandler;
 import com.fieldofmemories.network.HorrorNetwork;
+import com.fieldofmemories.entity.ScarecrowEntity;
+import com.fieldofmemories.entity.SmileFaceEntity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import com.fieldofmemories.worldgen.FieldDecorFeature;
 import com.fieldofmemories.worldgen.AbandonedSettlementFeature;
 
@@ -25,6 +29,13 @@ import com.fieldofmemories.worldgen.AbandonedSettlementFeature;
 public class FieldOfMemories {
     public static final String MOD_ID = "fieldofmemories";
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
+    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MOD_ID);
+    public static final RegistryObject<EntityType<ScarecrowEntity>> SCARECROW_ENTITY = ENTITY_TYPES.register(
+            "scarecrow", () -> EntityType.Builder.of(ScarecrowEntity::new, MobCategory.MISC)
+                    .sized(0.9F, 2.1F).clientTrackingRange(64).updateInterval(2).build("scarecrow"));
+    public static final RegistryObject<EntityType<SmileFaceEntity>> SMILE_FACE_ENTITY = ENTITY_TYPES.register(
+            "smile_face", () -> EntityType.Builder.of(SmileFaceEntity::new, MobCategory.MISC)
+                    .sized(1.0F, 1.2F).clientTrackingRange(64).updateInterval(2).build("smile_face"));
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
     public static final RegistryObject<Block> BACKPACK_BLOCK = BLOCKS.register("backpack", () -> new LootContainerBlock(true));
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));
@@ -72,6 +83,7 @@ public class FieldOfMemories {
     public FieldOfMemories() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ITEMS.register(modBus);
+        ENTITY_TYPES.register(modBus);
         BLOCKS.register(modBus);
         SOUND_EVENTS.register(modBus);
         FEATURES.register(modBus);

@@ -9,6 +9,7 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
+import java.util.UUID;
 
 public final class HorrorNetwork {
     private static final String PROTOCOL = "1";
@@ -59,6 +60,37 @@ public final class HorrorNetwork {
                                     packet.danger(), packet.activity(), packet.scarecrowChance(), packet.faceChance()));
                     context.get().setPacketHandled(true);
                 }).add();
+
+        CHANNEL.messageBuilder(ScreamPacket.class, 3)
+                .encoder((packet, buffer) -> {})
+                .decoder(buffer -> new ScreamPacket())
+                .consumerMainThread((packet, context) -> {
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
+                            com.fieldofmemories.client.HorrorClient.startScream());
+                    context.get().setPacketHandled(true);
+                }).add();
+
+        CHANNEL.messageBuilder(ForceScreamRequestPacket.class, 4)
+                .encoder((packet, buffer) -> buffer.writeUUID(packet.target()))
+                .decoder(buffer -> new ForceScreamRequestPacket(buffer.readUUID()))
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer sender = context.get().getSender();
+                    if (sender != null && sender.hasPermissions(2)) {
+                        ServerPlayer target = sender.server.getPlayerList().getPlayer(packet.target());
+                        if (target != null) triggerScream(target);
+                    }
+                    context.get().setPacketHandled(true);
+                }).add();
+    }
+
+    public static void triggerScream(ServerPlayer target) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> target), new ScreamPacket());
+        target.hurt(target.damageSources().magic(), 4.0F);
+        target.setDeltaMovement(0.0D, 0.0D, 0.0D);
+    }
+
+    public static void requestScream(UUID target) {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForceScreamRequestPacket(target));
     }
 
     private static void sendData(ServerPlayer player) {
@@ -81,4 +113,6 @@ public final class HorrorNetwork {
     private record RequestDataPacket() {}
     private record AdjustPacket(int setting, int amount) {}
     private record SyncDataPacket(int danger, int activity, int scarecrowChance, int faceChance) {}
+    private record ScreamPacket() {}
+    private record ForceScreamRequestPacket(UUID target) {}
 }

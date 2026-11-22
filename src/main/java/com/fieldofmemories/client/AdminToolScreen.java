@@ -113,6 +113,20 @@ public class AdminToolScreen extends Screen {
         } else if (page.equals("events")) {
             add("Заставить игрока упасть", cx, y, () -> go("players"));
             add("Назад", cx, y + 52, () -> go("home"));
+        } else if (page.equals("scream_players")) {
+            int row = 0;
+            if (Minecraft.getInstance().level != null) {
+                for (var player : Minecraft.getInstance().level.players()) {
+                    if (row >= 6) break;
+                    final var targetId = player.getUUID();
+                    add(player.getGameProfile().getName(), cx, y + row * 24, () -> {
+                        HorrorNetwork.requestScream(targetId);
+                        go("events");
+                    });
+                    row++;
+                }
+            }
+            add("Назад", cx, y + 6 * 24, () -> go("events"));
         } else if (page.equals("players")) {
             int row = 0;
             if (Minecraft.getInstance().level != null) {
@@ -271,6 +285,7 @@ public class AdminToolScreen extends Screen {
             case "events" -> "СОБЫТИЯ";
             case "activity" -> "РЕГУЛИРОВКА АКТИВНОСТИ";
             case "players" -> "ВЫБЕРИТЕ ИГРОКА";
+            case "scream_players" -> "ВЫБЕРИТЕ ЦЕЛЬ СКРИМЕРА";
             case "movement" -> "ДВИЖЕНИЕ";
             case "stamina" -> "ВЫНОСЛИВОСТЬ";
             case "jumps" -> "ПРЫЖКИ";

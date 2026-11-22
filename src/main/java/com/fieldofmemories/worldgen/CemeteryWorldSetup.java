@@ -1,6 +1,8 @@
 package com.fieldofmemories.worldgen;
 
 import com.fieldofmemories.FieldOfMemories;
+import com.fieldofmemories.entity.ScarecrowEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
@@ -33,6 +35,15 @@ public final class CemeteryWorldSetup {
         }
         // Keep the starting position inside the cemetery gate.
         level.setDefaultSpawnPos(new BlockPos(x, y + 1, z + 12), 180.0F);
+
+        AABB centerArea = new AABB(x - 2, y + 1, z - 2, x + 3, y + 4, z + 3);
+        if (level.getEntitiesOfClass(ScarecrowEntity.class, centerArea).isEmpty()) {
+            ScarecrowEntity scarecrow = FieldOfMemories.SCARECROW_ENTITY.get().create(level);
+            if (scarecrow != null) {
+                scarecrow.moveTo(x + 0.5D, y + 1.0D, z + 0.5D, 0.0F, 0.0F);
+                level.addFreshEntity(scarecrow);
+            }
+        }
     }
 
     private static BlockPos findCemeteryCenter(ServerLevel level, BlockPos spawn) {
