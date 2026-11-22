@@ -3,6 +3,8 @@ package com.fieldofmemories.client;
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.item.VideoCameraItem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ComputeFovModifierEvent;
@@ -33,6 +35,13 @@ public final class VideoCameraClient {
 
     @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, value = Dist.CLIENT)
     public static final class Events {
+        @SubscribeEvent
+        public static void setup(FMLClientSetupEvent event) {
+            event.enqueueWork(() -> ItemProperties.register(FieldOfMemories.VIDEO_CAMERA.get(),
+                    new ResourceLocation(FieldOfMemories.MOD_ID, "open"),
+                    (stack, level, entity, seed) -> VideoCameraItem.isOpen(stack) ? 1.0F : 0.0F));
+        }
+
         @SubscribeEvent
         public static void tick(TickEvent.ClientTickEvent event) {
             if (event.phase != TickEvent.Phase.END) return;
