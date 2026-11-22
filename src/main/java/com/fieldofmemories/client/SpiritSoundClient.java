@@ -48,7 +48,7 @@ public final class SpiritSoundClient {
         // Play at the listener rather than at the Spirit: this avoids positional
         // attenuation making the proximity cue inaudible at the edge of its range.
         mc.level.playLocalSound(mc.player.getX(), mc.player.getY(), mc.player.getZ(),
-                FieldOfMemories.SPIRIT_PRESENCE_SOUND.get(), SoundSource.HOSTILE,
+                FieldOfMemories.SPIRIT_PRESENCE_SOUND.get(), SoundSource.MASTER,
                 volume, pitch, false);
         soundCooldown = 70 + mc.level.random.nextInt(31);
     }

@@ -9,6 +9,7 @@ import java.util.Random;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -39,7 +40,6 @@ public final class HorrorClient {
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getInstance();
-        if (mc.getMusicManager() != null) mc.getMusicManager().stopPlaying();
         if (screamTicks > 0) screamTicks--;
         float target = 0.0F;
         if (mc.level != null && mc.player != null) {
@@ -59,27 +59,29 @@ public final class HorrorClient {
 
     @SubscribeEvent
     public static void onSpiritInterference(RenderGuiOverlayEvent.Post event) {
+        // Render once per frame, not once for every HUD layer.
+        if (event.getOverlay() != VanillaGuiOverlay.CROSSHAIR.type()) return;
         if (spiritInterference < 0.015F || Minecraft.getInstance().player == null) return;
         int width = event.getWindow().getGuiScaledWidth();
         int height = event.getWindow().getGuiScaledHeight();
         float strength = Math.min(1.0F, spiritInterference);
-        int alpha = (int)(18 + strength * 62);
+        int alpha = (int)(3 + strength * 9);
         var gui = event.getGuiGraphics();
         gui.fill(0, 0, width, height, (alpha << 24) | 0x00303030);
         Random random = new Random(interferenceTicks * 31L + 7L);
-        int lines = 3 + (int)(strength * 22.0F);
+        int lines = 1 + (int)(strength * 5.0F);
         for (int i = 0; i < lines; i++) {
             int y = random.nextInt(Math.max(1, height));
-            int lineHeight = random.nextFloat() < strength * 0.25F ? 2 + random.nextInt(4) : 1;
-            int x = random.nextInt(Math.max(1, width / 3));
-            int lineWidth = Math.max(1, width - x - random.nextInt(Math.max(1, width / 3)));
-            int a = (int)(35 + strength * 105);
+            int lineHeight = random.nextFloat() < strength * 0.12F ? 2 : 1;
+            int lineWidth = Math.max(12, (int)(width * (0.08F + random.nextFloat() * 0.32F)));
+            int x = random.nextInt(Math.max(1, width - lineWidth + 1));
+            int a = (int)(12 + strength * 32);
             int color = (a << 24) | (random.nextBoolean() ? 0x00DADADA : 0x006B7777);
             gui.fill(x, y, Math.min(width, x + lineWidth), Math.min(height, y + lineHeight), color);
         }
-        if (strength > 0.55F && interferenceTicks % 7 < 2) {
+        if (strength > 0.72F && interferenceTicks % 11 == 0) {
             int bandY = random.nextInt(Math.max(1, height));
-            gui.fill(0, bandY, width, Math.min(height, bandY + 5), 0x44777777);
+            gui.fill(0, bandY, width, Math.min(height, bandY + 2), 0x18777777);
         }
     }
 
