@@ -1,7 +1,10 @@
 package com.fieldofmemories.client.model;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.animation.KeyframeAnimations;
+import com.fieldofmemories.entity.ScarecrowEntity;
+import org.joml.Vector3f;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -14,9 +17,10 @@ import net.minecraft.util.Mth;
 // Paste this class into your mod and generate all required imports
 
 
-public class ScarecrowModel<T extends Entity> extends EntityModel<T> {
+public class ScarecrowModel<T extends Entity> extends HierarchicalModel<T> {
 	// This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(new ResourceLocation("fieldofmemories", "scarecrow"), "main");
+	private final ModelPart root;
 	private final ModelPart Pug;
 	private final ModelPart Tors;
 	private final ModelPart LeftArm;
@@ -28,6 +32,7 @@ public class ScarecrowModel<T extends Entity> extends EntityModel<T> {
 	private final ModelPart RightH;
 
 	public ScarecrowModel(ModelPart root) {
+		this.root = root;
 		this.Pug = root.getChild("Pug");
 		this.Tors = this.Pug.getChild("Tors");
 		this.LeftArm = this.Pug.getChild("LeftArm");
@@ -37,6 +42,11 @@ public class ScarecrowModel<T extends Entity> extends EntityModel<T> {
 		this.RightLeg = this.Pug.getChild("RightLeg");
 		this.RightArm = this.Pug.getChild("RightArm");
 		this.RightH = this.RightArm.getChild("RightH");
+	}
+
+	@Override
+	public ModelPart root() {
+		return root;
 	}
 
 	public static LayerDefinition createBodyLayer() {
@@ -80,10 +90,16 @@ public class ScarecrowModel<T extends Entity> extends EntityModel<T> {
 
 	@Override
 	public void setupAnim(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        // Static prop: no head tracking, sway, or idle movement.
-        Head.yRot = 0.0F;
-        Head.xRot = 0.0F;
-        Tors.yRot = 0.0F;
+        root.getAllParts().forEach(ModelPart::resetPose);
+        if (entity instanceof ScarecrowEntity scarecrow) {
+            switch (scarecrow.getPoseVariant()) {
+                case 1 -> KeyframeAnimations.animate(this, ScarecrowAnimation.stalking,
+                        (long) (ageInTicks * 50.0F), 1.0F, new Vector3f());
+                case 2 -> KeyframeAnimations.animate(this, ScarecrowAnimation.stalking2,
+                        0L, 1.0F, new Vector3f());
+                default -> { }
+            }
+        }
 	}
 
 	@Override

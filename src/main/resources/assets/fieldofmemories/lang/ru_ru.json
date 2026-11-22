@@ -16,7 +16,9 @@
   "item.fieldofmemories.old_camera": "Старая фотокамера",
   "item.fieldofmemories.battery": "Батарейка",
   "tooltip.fieldofmemories.old_camera.charge": "Заряд: %1$s%%",
-  "tooltip.fieldofmemories.old_camera.battery_slot": "Ячейка батарейки: [ Батарейка ]",
   "tooltip.fieldofmemories.old_camera.charging": "Батарейка вставлена — заряд восполняется.",
-  "tooltip.fieldofmemories.old_camera.insert_hint": "Перетащите батарейку в ячейку справа от фотокамеры в инвентаре."
+  "screen.fieldofmemories.battery.title": "Вставить батарейку",
+  "screen.fieldofmemories.battery.video_camera": "Видеокамера",
+  "screen.fieldofmemories.battery.old_camera": "Фотокамера",
+  "screen.fieldofmemories.battery.none": "Нет камеры, которую можно зарядить."
 }

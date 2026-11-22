@@ -144,36 +144,32 @@ public final class HorrorNetwork {
                     context.get().setPacketHandled(true);
                 }).add();
 
-        CHANNEL.messageBuilder(CameraBatterySlotPacket.class, 9)
+        CHANNEL.messageBuilder(BatteryInsertPacket.class, 12)
                 .encoder((packet, buffer) -> {
-                    buffer.writeInt(packet.slot());
-                    buffer.writeBoolean(packet.remove());
+                    buffer.writeBoolean(packet.video());
+                    buffer.writeBoolean(packet.offHand());
                 })
-                .decoder(buffer -> new CameraBatterySlotPacket(buffer.readInt(), buffer.readBoolean()))
+                .decoder(buffer -> new BatteryInsertPacket(buffer.readBoolean(), buffer.readBoolean()))
                 .consumerMainThread((packet, context) -> {
                     ServerPlayer player = context.get().getSender();
-                    if (player != null && !packet.remove() && player.containerMenu == player.inventoryMenu
-                            && packet.slot() >= 0 && packet.slot() < player.inventoryMenu.slots.size()) {
-                        var slot = player.inventoryMenu.slots.get(packet.slot());
-                        var camera = slot.getItem();
-                        var carried = player.inventoryMenu.getCarried();
-                        boolean video = camera.getItem() instanceof com.fieldofmemories.item.VideoCameraItem;
-                        boolean oldCamera = camera.getItem() instanceof com.fieldofmemories.item.OldCameraItem;
-                        boolean inserted = video
-                                ? com.fieldofmemories.item.VideoCameraItem.hasInsertedBattery(camera)
-                                : oldCamera && com.fieldofmemories.item.OldCameraItem.hasInsertedBattery(camera);
-                        int charge = video ? com.fieldofmemories.item.VideoCameraItem.getBattery(camera)
-                                : oldCamera ? com.fieldofmemories.item.OldCameraItem.getCharge(camera) : 0;
-                        int max = video ? com.fieldofmemories.item.VideoCameraItem.MAX_BATTERY
-                                : oldCamera ? com.fieldofmemories.item.OldCameraItem.MAX_CHARGE : 0;
-                        if ((video || oldCamera) && carried.is(FieldOfMemories.BATTERY.get())
-                                && !inserted && charge < max) {
-                            carried.shrink(1);
-                            if (carried.isEmpty()) player.inventoryMenu.setCarried(net.minecraft.world.item.ItemStack.EMPTY);
-                            if (video) com.fieldofmemories.item.VideoCameraItem.setInsertedBattery(camera, true);
-                            else com.fieldofmemories.item.OldCameraItem.setInsertedBattery(camera, true);
-                            slot.setChanged();
-                            player.inventoryMenu.broadcastChanges();
+                    if (player != null) {
+                        var hand = packet.offHand()
+                                ? net.minecraft.world.InteractionHand.OFF_HAND
+                                : net.minecraft.world.InteractionHand.MAIN_HAND;
+                        var battery = player.getItemInHand(hand);
+                        if (battery.is(FieldOfMemories.BATTERY.get())) {
+                            var camera = findRechargeableCamera(player, packet.video());
+                            if (!camera.isEmpty()) {
+                                battery.shrink(1);
+                                if (battery.isEmpty()) player.setItemInHand(hand, net.minecraft.world.item.ItemStack.EMPTY);
+                                if (packet.video()) {
+                                    com.fieldofmemories.item.VideoCameraItem.setInsertedBattery(camera, true);
+                                } else {
+                                    com.fieldofmemories.item.OldCameraItem.setInsertedBattery(camera, true);
+                                }
+                                player.getInventory().setChanged();
+                                player.containerMenu.broadcastChanges();
+                            }
                         }
                     }
                     context.get().setPacketHandled(true);
@@ -307,8 +303,30 @@ public final class HorrorNetwork {
         return false;
     }
 
-    public static void requestCameraBatterySlot(int slot, boolean remove) {
-        CHANNEL.send(PacketDistributor.SERVER.noArg(), new CameraBatterySlotPacket(slot, remove));
+    public static void requestBatteryInsert(boolean video, net.minecraft.world.InteractionHand hand) {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(),
+                new BatteryInsertPacket(video, hand == net.minecraft.world.InteractionHand.OFF_HAND));
+    }
+
+    private static net.minecraft.world.item.ItemStack findRechargeableCamera(ServerPlayer player, boolean video) {
+        for (var stack : player.getInventory().items) {
+            if (canRecharge(stack, video)) return stack;
+        }
+        var offhand = player.getOffhandItem();
+        return canRecharge(offhand, video) ? offhand : net.minecraft.world.item.ItemStack.EMPTY;
+    }
+
+    private static boolean canRecharge(net.minecraft.world.item.ItemStack stack, boolean video) {
+        if (video) {
+            return stack.getItem() instanceof com.fieldofmemories.item.VideoCameraItem
+                    && !com.fieldofmemories.item.VideoCameraItem.hasInsertedBattery(stack)
+                    && com.fieldofmemories.item.VideoCameraItem.getBattery(stack)
+                    < com.fieldofmemories.item.VideoCameraItem.MAX_BATTERY;
+        }
+        return stack.getItem() instanceof com.fieldofmemories.item.OldCameraItem
+                && !com.fieldofmemories.item.OldCameraItem.hasInsertedBattery(stack)
+                && com.fieldofmemories.item.OldCameraItem.getCharge(stack)
+                < com.fieldofmemories.item.OldCameraItem.MAX_CHARGE;
     }
 
     public static void requestCameraViewing(boolean viewing) {
@@ -329,7 +347,7 @@ public final class HorrorNetwork {
     private record ScreamPacket() {}
     private record ForceScreamRequestPacket(UUID target) {}
     private record GiveAdminItemPacket(String itemId) {}
-    private record CameraBatterySlotPacket(int slot, boolean remove) {}
+    private record BatteryInsertPacket(boolean video, boolean offHand) {}
     private record CameraViewPacket(boolean viewing) {}
     private record CameraViewStopPacket() {}
     private record OldCameraFlashPacket() {}

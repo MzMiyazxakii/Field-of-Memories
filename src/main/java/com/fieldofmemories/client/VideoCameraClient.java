@@ -3,6 +3,7 @@ package com.fieldofmemories.client;
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.item.VideoCameraItem;
 import com.fieldofmemories.item.OldCameraItem;
+import com.fieldofmemories.item.BatteryItem;
 import com.fieldofmemories.network.HorrorNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -17,10 +18,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ComputeFovModifierEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -121,63 +118,13 @@ public final class VideoCameraClient {
 
     @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, value = Dist.CLIENT)
     public static final class Events {
-        private static Slot findCameraSlot(InventoryScreen screen, double mouseX, double mouseY) {
-            int left = screen.getGuiLeft();
-            int top = screen.getGuiTop();
-            for (Slot slot : Minecraft.getInstance().player.inventoryMenu.slots) {
-                if (!(slot.getItem().getItem() instanceof VideoCameraItem) && !(slot.getItem().getItem() instanceof OldCameraItem)) continue;
-                int x = left + slot.x;
-                int y = top + slot.y;
-                int panelX = x + 18;
-                if ((mouseX >= x && mouseX < x + 16 && mouseY >= y && mouseY < y + 16)
-                        || (mouseX >= panelX && mouseX < panelX + 18 && mouseY >= y && mouseY < y + 18)) {
-                    return slot;
-                }
-            }
-            return null;
-        }
-
         @SubscribeEvent
-        public static void renderBatterySlot(ScreenEvent.Render.Post event) {
-            if (!(event.getScreen() instanceof InventoryScreen screen)) return;
+        public static void batteryUse(PlayerInteractEvent.RightClickItem event) {
+            if (!event.getLevel().isClientSide || !(event.getItemStack().getItem() instanceof BatteryItem)) return;
             Minecraft mc = Minecraft.getInstance();
-            if (mc.player == null) return;
-            Slot slot = findCameraSlot(screen, event.getMouseX(), event.getMouseY());
-            if (slot == null) return;
-            int x = screen.getGuiLeft() + slot.x + 18;
-            int y = screen.getGuiTop() + slot.y;
-            var gui = event.getGuiGraphics();
-            gui.fill(x - 1, y - 1, x + 17, y + 17, 0xFF080808);
-            gui.fill(x, y, x + 16, y + 16, 0xFF555555);
-            gui.fill(x + 1, y + 1, x + 15, y + 15, 0xFF242424);
-            if ((slot.getItem().getItem() instanceof VideoCameraItem && VideoCameraItem.hasInsertedBattery(slot.getItem()))
-                    || (slot.getItem().getItem() instanceof OldCameraItem && OldCameraItem.hasInsertedBattery(slot.getItem()))) {
-                gui.renderItem(new ItemStack(FieldOfMemories.BATTERY.get()), x, y);
-            }
-        }
-
-        @SubscribeEvent
-        public static void clickBatterySlot(ScreenEvent.MouseButtonPressed.Pre event) {
-            if (event.getButton() != 0 || !(event.getScreen() instanceof InventoryScreen screen)) return;
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.player == null) return;
-            Slot slot = findCameraSlot(screen, event.getMouseX(), event.getMouseY());
-            if (slot == null) return;
-            int x = screen.getGuiLeft() + slot.x + 18;
-            int y = screen.getGuiTop() + slot.y;
-            boolean clickedBatteryCell = event.getMouseX() >= x && event.getMouseX() < x + 18
-                    && event.getMouseY() >= y && event.getMouseY() < y + 18;
-            if (!clickedBatteryCell) return;
+            if (mc.player == null || mc.screen != null) return;
+            mc.setScreen(new BatterySelectionScreen(event.getHand()));
             event.setCanceled(true);
-            ItemStack carried = mc.player.containerMenu.getCarried();
-            boolean inserted = slot.getItem().getItem() instanceof VideoCameraItem
-                    ? VideoCameraItem.hasInsertedBattery(slot.getItem()) : OldCameraItem.hasInsertedBattery(slot.getItem());
-            int charge = slot.getItem().getItem() instanceof VideoCameraItem
-                    ? VideoCameraItem.getBattery(slot.getItem()) : OldCameraItem.getCharge(slot.getItem());
-            int maxCharge = slot.getItem().getItem() instanceof VideoCameraItem
-                    ? VideoCameraItem.MAX_BATTERY : OldCameraItem.MAX_CHARGE;
-            if (inserted || !carried.is(FieldOfMemories.BATTERY.get()) || charge >= maxCharge) return;
-            HorrorNetwork.requestCameraBatterySlot(slot.index, false);
         }
 
         @SubscribeEvent

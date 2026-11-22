@@ -28,14 +28,9 @@ public final class OldCameraClientEvents {
         int charge = OldCameraItem.getCharge(stack);
         event.getToolTip().add(Component.translatable(
                 "tooltip.fieldofmemories.old_camera.charge", charge));
-        event.getToolTip().add(Component.translatable(
-                "tooltip.fieldofmemories.old_camera.battery_slot"));
         if (OldCameraItem.hasInsertedBattery(stack)) {
             event.getToolTip().add(Component.translatable(
                     "tooltip.fieldofmemories.old_camera.charging"));
-        } else if (charge < OldCameraItem.MAX_CHARGE) {
-            event.getToolTip().add(Component.translatable(
-                    "tooltip.fieldofmemories.old_camera.insert_hint"));
         }
     }
 

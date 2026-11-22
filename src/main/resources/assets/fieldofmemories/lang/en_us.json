@@ -13,5 +13,9 @@
   "key.categories.fieldofmemories": "Field of Memories",
   "block.minecraft.spruce_leaves": "Withered Leaves",
   "item.fieldofmemories.battery": "Battery",
-  "item.fieldofmemories.old_camera": "Old Camera"
+  "item.fieldofmemories.old_camera": "Old Camera",
+  "screen.fieldofmemories.battery.title": "Insert battery",
+  "screen.fieldofmemories.battery.video_camera": "Video camera",
+  "screen.fieldofmemories.battery.old_camera": "Photo camera",
+  "screen.fieldofmemories.battery.none": "No camera needs charging."
 }
