@@ -17,7 +17,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.event.TickEvent;
@@ -121,9 +120,6 @@ public final class MemoryDiscClient {
                 var offHand = mc.player.getItemInHand(InteractionHand.OFF_HAND);
                 if (mainHand.getItem() instanceof VideoCameraItem || offHand.getItem() instanceof VideoCameraItem) {
                     VideoCameraClient.toggleView();
-                } else if (mc.hitResult instanceof BlockHitResult hit && mc.level != null
-                        && mc.level.getBlockState(hit.getBlockPos()).is(FieldOfMemories.STRAW_BED_BLOCK.get())) {
-                    HorrorNetwork.requestUseStrawBed(hit.getBlockPos());
                 } else if (mainHand.getItem() instanceof MemoryDiscItem
                         || offHand.getItem() instanceof MemoryDiscItem) {
                     NetworkHandler.requestMemoryDiscStart();
