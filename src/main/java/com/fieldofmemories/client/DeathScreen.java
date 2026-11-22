@@ -17,6 +17,7 @@ public final class DeathScreen extends Screen {
     private int age;
     private boolean respawnHovered;
     private SoundInstance deathScreenSound;
+    private boolean respawnRequested;
 
     private static final int BUTTON_WIDTH = 184;
     private static final int BUTTON_HEIGHT = 30;
@@ -39,6 +40,12 @@ public final class DeathScreen extends Screen {
     @Override
     public void tick() {
         age++;
+        // Wait for the server's respawn response instead of closing the screen
+        // immediately; otherwise the client can reopen it and replay its sound.
+        if (respawnRequested && this.minecraft != null && this.minecraft.player != null
+                && !this.minecraft.player.isDeadOrDying()) {
+            this.minecraft.setScreen(null);
+        }
     }
 
     @Override
@@ -128,14 +135,14 @@ public final class DeathScreen extends Screen {
     }
 
     private void respawn() {
-        if (this.minecraft == null || this.minecraft.player == null) return;
+        if (this.minecraft == null || this.minecraft.player == null || respawnRequested) return;
+        respawnRequested = true;
         if (this.deathScreenSound != null) {
             this.minecraft.getSoundManager().stop(this.deathScreenSound);
             this.deathScreenSound = null;
         }
         this.minecraft.player.connection.send(new ServerboundClientCommandPacket(
                 ServerboundClientCommandPacket.Action.PERFORM_RESPAWN));
-        this.minecraft.setScreen(null);
     }
 
     @Override
