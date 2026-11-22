@@ -5,6 +5,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
 import com.fieldofmemories.block.TreeLeafletBlock;
+import com.fieldofmemories.data.HorrorWorldData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -102,6 +104,8 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
 
     private static void placeTreeLeaflets(WorldGenLevel level, RandomSource random, int minX, int minZ) {
         BlockState leaflet = FieldOfMemories.TREE_LEAFLET_BLOCK.get().defaultBlockState();
+        float memoryDiscChance = level.getLevel() instanceof ServerLevel serverLevel
+                ? HorrorWorldData.getTreeDiscChance(serverLevel) / 100.0F : 0.03F;
         for (int x = minX; x < minX + 16; x++) {
             for (int z = minZ; z < minZ + 16; z++) {
                 int topY = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z);
@@ -114,7 +118,7 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
                     // A rare collectible can hang from the upper end of a tree trunk.
                     // The invisible item frame keeps the disc visually attached to the bark.
                     if (!level.getBlockState(logPos.above()).is(BlockTags.LOGS)
-                            && random.nextFloat() < 0.025F) {
+                            && random.nextFloat() < memoryDiscChance) {
                         placeHangingMemoryDisc(level, logPos, random);
                     }
 
