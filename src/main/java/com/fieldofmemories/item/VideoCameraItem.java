@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 public class VideoCameraItem extends Item {
     private static final String OPEN_TAG = "FieldOfMemoriesCameraOpen";
     private static final String BATTERY_TAG = "FieldOfMemoriesCameraBattery";
+    private static final String INSERTED_BATTERY_TAG = "FieldOfMemoriesInsertedBattery";
     public static final int MAX_BATTERY = 1200;
 
     public VideoCameraItem(Properties properties) {
@@ -27,6 +28,14 @@ public class VideoCameraItem extends Item {
                 : MAX_BATTERY;
     }
 
+    public static boolean hasInsertedBattery(ItemStack stack) {
+        return stack.hasTag() && stack.getTag().getBoolean(INSERTED_BATTERY_TAG);
+    }
+
+    public static void setInsertedBattery(ItemStack stack, boolean inserted) {
+        stack.getOrCreateTag().putBoolean(INSERTED_BATTERY_TAG, inserted);
+    }
+
     public static void setBattery(ItemStack stack, int value) {
         stack.getOrCreateTag().putInt(BATTERY_TAG, Math.max(0, Math.min(MAX_BATTERY, value)));
     }
@@ -36,7 +45,7 @@ public class VideoCameraItem extends Item {
                               int slot, boolean selected) {
         super.inventoryTick(stack, level, entity, slot, selected);
         if (level.isClientSide || !(entity instanceof ServerPlayer player)) return;
-        if (!player.getPersistentData().getBoolean("FOMCameraViewing")) return;
+        if (hasInsertedBattery(stack)) {\n            int charge = getBattery(stack);\n            if (charge < MAX_BATTERY) {\n                setBattery(stack, Math.min(MAX_BATTERY, charge + 2));\n                if (getBattery(stack) >= MAX_BATTERY) setInsertedBattery(stack, false);\n            } else {\n                setInsertedBattery(stack, false);\n            }\n        }\n        if (!player.getPersistentData().getBoolean("FOMCameraViewing")) return;
         boolean held = player.getItemInHand(InteractionHand.MAIN_HAND) == stack
                 || player.getItemInHand(InteractionHand.OFF_HAND) == stack;
         if (!held) return;
