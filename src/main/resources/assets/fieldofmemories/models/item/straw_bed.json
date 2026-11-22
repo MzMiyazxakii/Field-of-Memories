@@ -1,3 +1,1 @@
-{
-  "parent": "fieldofmemories:block/straw_bed"
-}
+{"textures":{"0":"fieldofmemories:block/straw_bed_1","1":"fieldofmemories:block/straw_bed_2","particle":"fieldofmemories:block/straw_bed_3"},"elements":[{"from":[0,0,0],"to":[16,2,32],"faces":{"north":{"uv":[0,0,11,3],"texture":"#0"},"east":{"uv":[0,0,11,3],"texture":"#0"},"south":{"uv":[0,0,11,3],"texture":"#0"},"west":{"uv":[0,0,11,3],"texture":"#0"},"up":{"uv":[0,0,13,16],"texture":"#1"},"down":{"uv":[0,0,11,12],"texture":"#0"}}},{"from":[-1,2,25],"to":[17,2.5,32],"rotation":{"angle":0,"axis":"y","origin":[0,1,0]},"faces":{"north":{"uv":[0,10,16,12],"texture":"#1"},"east":{"uv":[0,10,16,12],"texture":"#1"},"south":{"uv":[0,10,16,12],"texture":"#1"},"west":{"uv":[0,10,16,12],"texture":"#1"},"up":{"uv":[0,4,16,12],"texture":"#1"},"down":{"uv":[0,4,16,12],"texture":"#1"}}}]}
