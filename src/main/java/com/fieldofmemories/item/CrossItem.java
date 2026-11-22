@@ -27,7 +27,7 @@ public class CrossItem extends Item {
     public static final int EMPTY = 1;
     public static final int FILLED = 2;
     private static final String STATE_TAG = "CustomModelData";
-    private static final int PROTECTION_CHANCE = 35;
+    private static final int ATTACK_DEPLETION_CHANCE = 15;
 
     public CrossItem(Properties properties) {
         super(properties.stacksTo(1));
@@ -51,16 +51,9 @@ public class CrossItem extends Item {
     }
 
     public static boolean tryProtect(ServerPlayer player, boolean guaranteed) {
-        ItemStack cross = findUsableCross(player);
-        if (cross.isEmpty()) return false;
-        RandomSource random = player.serverLevel().random;
-        if (!guaranteed && random.nextInt(100) >= PROTECTION_CHANCE) return false;
-
-        setState(cross, EMPTY);
-        player.playSound(SoundEvents.ITEM_BREAK, 1.0F, 0.85F + random.nextFloat() * 0.3F);
-        player.getInventory().setChanged();
-        player.containerMenu.broadcastChanges();
-        return true;
+        // A cross that protects against a rift or fake item stays usable.
+        // Protection itself never drains or empties the cross.
+        return !findUsableCrosses(player).isEmpty();
     }
 
     // Every usable cross in the player's inventory has its own chance to be drained.
@@ -69,7 +62,7 @@ public class CrossItem extends Item {
         RandomSource random = player.serverLevel().random;
         boolean depletedAny = false;
         for (ItemStack cross : findUsableCrosses(player)) {
-            if (random.nextInt(100) < PROTECTION_CHANCE) {
+            if (random.nextInt(100) < ATTACK_DEPLETION_CHANCE) {
                 setState(cross, EMPTY);
                 depletedAny = true;
             }
