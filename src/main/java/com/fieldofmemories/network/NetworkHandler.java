@@ -257,7 +257,7 @@ public final class NetworkHandler {
         if (!level.getBlockState(session.pos()).is(FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get())) return;
         level.destroyBlock(session.pos(), false);
         net.minecraft.world.item.ItemStack reward = rollStoolReward(level.random);
-        if (!reward.isEmpty()) Block.popResource(level, session.pos(), reward);
+        if (!reward.isEmpty()) net.minecraft.world.level.block.Block.popResource(level, session.pos(), reward);
     }
 
     private static ItemStack rollStoolReward(net.minecraft.util.RandomSource random) {
