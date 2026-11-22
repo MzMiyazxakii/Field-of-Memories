@@ -10,8 +10,6 @@ import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -52,18 +50,6 @@ public final class HorrorEvents {
         maybeSpawnFace(level, players, random, danger, activity);
         maybeSpawnPlayerEcho(level, players, random, danger, activity);
         HorrorSignEvent.tryTrigger(level, players, random, danger, activity);
-
-        List<ServerPlayer> darkPlayers = new ArrayList<>();
-        for (ServerPlayer player : players) {
-            if (level.isNight() && level.getMaxLocalRawBrightness(player.blockPosition()) <= 7
-                    && level.canSeeSky(player.blockPosition())) darkPlayers.add(player);
-        }
-        if (!darkPlayers.isEmpty()) {
-            int whisperChance = Math.min(90, (8 + danger / 2) * activity / 100);
-            if (random.nextInt(100) < whisperChance) {
-                triggerWorldWhisper(level, darkPlayers.get(random.nextInt(darkPlayers.size())), random);
-            }
-        }
 
         // One shared world cooldown: danger and activity make all world events happen more often.
         double dangerFactor = 1.0D - danger * 0.006D;
@@ -188,13 +174,4 @@ public final class HorrorEvents {
         return direction.dot(player.getLookAngle()) > 0.985D;
     }
 
-    private static void triggerWorldWhisper(ServerLevel level, ServerPlayer player, RandomSource random) {
-        double angle = random.nextDouble() * Math.PI * 2.0D;
-        double distance = 7.0D + random.nextDouble() * 5.0D;
-        double x = player.getX() + Math.cos(angle) * distance;
-        double z = player.getZ() + Math.sin(angle) * distance;
-        BlockPos soundPos = BlockPos.containing(x, player.getY(), z);
-        level.playSound(null, soundPos, SoundEvents.AMBIENT_CAVE.value(),
-                SoundSource.AMBIENT, 0.22F, 0.65F + random.nextFloat() * 0.25F);
-    }
 }
