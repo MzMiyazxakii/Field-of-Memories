@@ -112,8 +112,8 @@ public class RiftEntity extends Entity {
                 clearExamining();
                 if (!result.isEmpty()) {
                     double spitAngle = random.nextDouble() * Math.PI * 2.0D;
-                    ItemEntity output = new ItemEntity(level(), getX() + Math.cos(spitAngle) * 2.2D,
-                            getY() + 0.55D, getZ() + Math.sin(spitAngle) * 2.2D, result);
+                    ItemEntity output = new ItemEntity(level(), getX() + Math.cos(spitAngle) * 3.0D,
+                            getY() + 0.55D, getZ() + Math.sin(spitAngle) * 3.0D, result);
                     output.setDefaultPickUpDelay();
                     output.setDeltaMovement(0.0D, 0.18D, 0.0D);
                     level().addFreshEntity(output);
