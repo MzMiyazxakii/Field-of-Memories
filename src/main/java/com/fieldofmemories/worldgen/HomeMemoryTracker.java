@@ -37,6 +37,7 @@ public final class HomeMemoryTracker {
             data.putInt("CandidateY", respawn.getY());
             data.putInt("CandidateZ", respawn.getZ());
             data.putInt("ActiveTicks", 0);
+            data.putBoolean("HomeRecognized", false);
             data.putDouble("LastX", player.getX());
             data.putDouble("LastY", player.getY());
             data.putDouble("LastZ", player.getZ());
@@ -62,8 +63,6 @@ public final class HomeMemoryTracker {
                 data.putInt("HomeZ", respawn.getZ());
                 data.putLong("HomeRecognizedAt", player.serverLevel().getGameTime());
             }
-        } else if (!nearHome) {
-            data.putInt("ActiveTicks", Math.max(0, data.getInt("ActiveTicks") - 2));
         }
 
         data.putDouble("LastX", player.getX());
