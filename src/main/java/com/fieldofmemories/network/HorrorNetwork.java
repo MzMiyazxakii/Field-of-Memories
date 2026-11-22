@@ -234,6 +234,7 @@ public final class HorrorNetwork {
             if (direction.dot(toTarget.normalize()) < 0.70D || !player.hasLineOfSight(target)) continue;
 
             if (target instanceof com.fieldofmemories.entity.PlayerEchoEntity) {
+                sendBanishParticles(level, target);
                 target.discard();
                 continue;
             }
@@ -244,6 +245,7 @@ public final class HorrorNetwork {
                             new net.minecraft.world.item.ItemStack(FieldOfMemories.MEMORY_DISC_8.get()));
                     level.addFreshEntity(reward);
                 }
+                sendBanishParticles(level, spirit);
                 spirit.discard();
                 continue;
             }
@@ -260,6 +262,7 @@ public final class HorrorNetwork {
                 } else {
                     player.getPersistentData().putInt("FOMClosedDoorPhotoCount", photos);
                 }
+                sendBanishParticles(level, face);
                 face.discard();
                 continue;
             }
@@ -274,6 +277,17 @@ public final class HorrorNetwork {
 
     public static void requestMimic() {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForceMimicRequestPacket());
+    }
+
+    private static void sendBanishParticles(net.minecraft.server.level.ServerLevel level,
+                                             net.minecraft.world.entity.Entity entity) {
+        double x = entity.getX();
+        double y = entity.getY() + entity.getBbHeight() * 0.5D;
+        double z = entity.getZ();
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.SQUID_INK,
+                x, y, z, 42, 0.45D, 0.7D, 0.45D, 0.035D);
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE,
+                x, y, z, 22, 0.35D, 0.6D, 0.35D, 0.018D);
     }
 
     public static void requestOldCameraFlash() {
