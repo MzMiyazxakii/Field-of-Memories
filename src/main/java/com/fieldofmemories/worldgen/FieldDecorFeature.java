@@ -14,6 +14,8 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -108,8 +110,15 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
                     BlockPos logPos = new BlockPos(x, y, z);
                     if (!level.getBiome(logPos).is(FOREST_BIOME) && !level.getBiome(logPos).is(EDGE_BIOME)) continue;
                     if (!level.getBlockState(logPos).is(BlockTags.LOGS)) continue;
-                    if (random.nextFloat() > 0.22F) continue;
 
+                    // A rare collectible can hang from the upper end of a tree trunk.
+                    // The invisible item frame keeps the disc visually attached to the bark.
+                    if (!level.getBlockState(logPos.above()).is(BlockTags.LOGS)
+                            && random.nextFloat() < 0.025F) {
+                        placeHangingMemoryDisc(level, logPos, random);
+                    }
+
+                    if (random.nextFloat() > 0.22F) continue;
                     Direction start = Direction.Plane.HORIZONTAL.getRandomDirection(random);
                     for (int offset = 0; offset < 4; offset++) {
                         Direction facing = Direction.from2DDataValue((start.get2DDataValue() + offset) & 3);
@@ -122,6 +131,22 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
                     }
                 }
             }
+        }
+    }
+
+    private static void placeHangingMemoryDisc(WorldGenLevel level, BlockPos logPos, RandomSource random) {
+        Direction start = Direction.Plane.HORIZONTAL.getRandomDirection(random);
+        for (int offset = 0; offset < 4; offset++) {
+            Direction facing = Direction.from2DDataValue((start.get2DDataValue() + offset) & 3);
+            BlockPos framePos = logPos.relative(facing);
+            if (!level.getBlockState(framePos).isAir()) continue;
+            if (!level.getBlockState(logPos).isFaceSturdy(level, logPos, facing)) continue;
+
+            ItemFrame frame = new ItemFrame(level.getLevel(), framePos, facing);
+            frame.setInvisible(true);
+            frame.setFixed(true);
+            frame.setItem(new ItemStack(FieldOfMemories.MEMORY_DISC_4.get()), false);
+            if (level.addFreshEntity(frame)) return;
         }
     }
 
