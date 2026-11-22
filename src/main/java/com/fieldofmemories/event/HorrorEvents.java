@@ -14,6 +14,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -58,6 +65,9 @@ public final class HorrorEvents {
         maybeSpawnFace(level, players, random, danger, activity);
         maybeSpawnPlayerEcho(level, players, random, danger, activity);
         maybeSpawnRift(level, players, random, danger, activity);
+        maybePlayDistantDeath(level, players, random);
+        maybeTriggerHomeEvent(level, players, random);
+        maybeSpawnWindowStalker(level, players, random, danger, activity);
         manageAnomalousStool(level, players, random, activity);
         HorrorSignEvent.tryTrigger(level, players, random, danger, activity);
 
@@ -253,6 +263,138 @@ public final class HorrorEvents {
         if (scarecrow != null) {
             scarecrow.moveTo(x + 0.5D, y, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
             level.addFreshEntity(scarecrow);
+        }
+    }
+
+
+    private static void maybePlayDistantDeath(ServerLevel level, List<ServerPlayer> players, RandomSource random) {
+        if (random.nextInt(4) != 0) return;
+        ServerPlayer target = players.get(random.nextInt(players.size()));
+        double angle = random.nextDouble() * Math.PI * 2.0D;
+        double distance = 10.0D + random.nextDouble() * 18.0D;
+        BlockPos soundPos = BlockPos.containing(target.getX() + Math.cos(angle) * distance,
+                target.getY(), target.getZ() + Math.sin(angle) * distance);
+        var sound = random.nextBoolean() ? SoundEvents.COW_DEATH : SoundEvents.VILLAGER_DEATH;
+        level.playSound(null, soundPos, sound, SoundSource.AMBIENT, 1.2F, 0.85F + random.nextFloat() * 0.3F);
+    }
+
+    private static void maybeTriggerHomeEvent(ServerLevel level, List<ServerPlayer> players, RandomSource random) {
+        List<ServerPlayer> atHome = new ArrayList<>();
+        for (ServerPlayer player : players) {
+            if (HomeMemoryTracker.getHorrorAnchor(player) != null) atHome.add(player);
+        }
+        if (atHome.isEmpty()) return;
+        ServerPlayer target = atHome.get(random.nextInt(atHome.size()));
+        BlockPos home = HomeMemoryTracker.getHorrorAnchor(target);
+        if (home == null) return;
+
+        if (random.nextInt(100) < 34) {
+            BlockPos doorPos = BlockPos.findClosestMatch(home, 14, 6, pos -> {
+                BlockState state = level.getBlockState(pos);
+                return state.getBlock() instanceof DoorBlock && !state.getValue(DoorBlock.OPEN);
+            }).orElse(null);
+            if (doorPos != null) {
+                BlockState state = level.getBlockState(doorPos);
+                if (random.nextInt(100) < 72) {
+                    level.playSound(null, doorPos, random.nextBoolean()
+                                    ? FieldOfMemories.KNOCK_1.get() : FieldOfMemories.KNOCK_2.get(),
+                            SoundSource.BLOCKS, 2.2F, 0.9F + random.nextFloat() * 0.2F);
+                } else if (state.getBlock() instanceof DoorBlock door) {
+                    door.setOpen(null, level, state, doorPos, true);
+                    level.playSound(null, doorPos, SoundEvents.WOODEN_DOOR_OPEN,
+                            SoundSource.BLOCKS, 2.0F, 0.8F + random.nextFloat() * 0.25F);
+                }
+            }
+        }
+        if (random.nextInt(100) < 18) moveHouseWorkstation(level, home, random);
+    }
+
+    private static void moveHouseWorkstation(ServerLevel level, BlockPos home, RandomSource random) {
+        List<BlockPos> candidates = new ArrayList<>();
+        for (BlockPos pos : BlockPos.betweenClosed(home.offset(-12, -5, -12), home.offset(12, 5, 12))) {
+            BlockState state = level.getBlockState(pos);
+            if (state.is(Blocks.FURNACE) || state.is(Blocks.SMOKER) || state.is(Blocks.BLAST_FURNACE)
+                    || state.is(Blocks.CRAFTING_TABLE) || state.is(Blocks.CARTOGRAPHY_TABLE)
+                    || state.is(Blocks.FLETCHING_TABLE) || state.is(Blocks.LOOM)
+                    || state.is(Blocks.SMITHING_TABLE) || state.is(Blocks.GRINDSTONE)
+                    || state.is(Blocks.STONECUTTER) || state.is(Blocks.LECTERN)
+                    || state.is(Blocks.BREWING_STAND)) {
+                candidates.add(pos.immutable());
+            }
+        }
+        if (candidates.isEmpty()) return;
+        BlockPos source = candidates.get(random.nextInt(candidates.size()));
+        BlockState state = level.getBlockState(source);
+        BlockEntity sourceEntity = level.getBlockEntity(source);
+        CompoundTag saved = sourceEntity == null ? null : sourceEntity.saveWithFullMetadata();
+
+        for (int attempt = 0; attempt < 24; attempt++) {
+            BlockPos destination = source.offset(random.nextInt(9) - 4,
+                    random.nextInt(3) - 1, random.nextInt(9) - 4);
+            if (destination.equals(source) || !level.isLoaded(destination)
+                    || !level.getBlockState(destination).isAir()
+                    || !level.getBlockState(destination.below()).isSolidRender(level, destination.below())) continue;
+            if (!level.getBlockState(destination.above()).isAir()) continue;
+
+            if (!level.setBlock(destination, state, 3)) continue;
+            if (saved != null) {
+                BlockEntity moved = level.getBlockEntity(destination);
+                if (moved == null) {
+                    level.setBlock(destination, Blocks.AIR.defaultBlockState(), 3);
+                    return;
+                }
+                saved.putInt("x", destination.getX());
+                saved.putInt("y", destination.getY());
+                saved.putInt("z", destination.getZ());
+                moved.load(saved);
+                moved.setChanged();
+            }
+            level.setBlock(source, Blocks.AIR.defaultBlockState(), 3);
+            level.playSound(null, destination, SoundEvents.BLOCK_PORTAL_AMBIENT,
+                    SoundSource.BLOCKS, 0.35F, 1.7F);
+            return;
+        }
+    }
+
+    private static void maybeSpawnWindowStalker(ServerLevel level, List<ServerPlayer> players,
+                                                 RandomSource random, int danger, int activity) {
+        if (!getLoadedEntities(level, com.fieldofmemories.entity.WindowStalkerEntity.class).isEmpty()) return;
+        int chance = Math.min(14, (2 + danger / 18) * activity / 100);
+        if (random.nextInt(100) >= chance) return;
+        List<ServerPlayer> atHome = new ArrayList<>();
+        for (ServerPlayer player : players) {
+            if (HomeMemoryTracker.getHorrorAnchor(player) != null) atHome.add(player);
+        }
+        if (atHome.isEmpty()) return;
+        ServerPlayer target = atHome.get(random.nextInt(atHome.size()));
+        BlockPos home = HomeMemoryTracker.getHorrorAnchor(target);
+        if (home == null) return;
+
+        for (int attempt = 0; attempt < 16; attempt++) {
+            double angle = random.nextDouble() * Math.PI * 2.0D;
+            double distance = 10.0D + random.nextDouble() * 7.0D;
+            int x = (int) Math.floor(home.getX() + 0.5D + Math.cos(angle) * distance);
+            int z = (int) Math.floor(home.getZ() + 0.5D + Math.sin(angle) * distance);
+            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            BlockPos spawn = new BlockPos(x, y, z);
+            boolean tooClose = false;
+            for (ServerPlayer player : players) {
+                if (player.distanceToSqr(spawn.getX() + 0.5D, spawn.getY(), spawn.getZ() + 0.5D) < 9.0D * 9.0D) {
+                    tooClose = true;
+                    break;
+                }
+            }
+            if (tooClose || !level.getBlockState(spawn).isAir()
+                    || !level.getBlockState(spawn.below()).isSolidRender(level, spawn.below())) continue;
+            com.fieldofmemories.entity.WindowStalkerEntity stalker =
+                    FieldOfMemories.WINDOW_STALKER_ENTITY.get().create(level);
+            if (stalker == null) return;
+            stalker.moveTo(spawn.getX() + 0.5D, spawn.getY(), spawn.getZ() + 0.5D,
+                    random.nextFloat() * 360.0F, 0.0F);
+            if (level.noCollision(stalker)) {
+                level.addFreshEntity(stalker);
+                return;
+            }
         }
     }
 

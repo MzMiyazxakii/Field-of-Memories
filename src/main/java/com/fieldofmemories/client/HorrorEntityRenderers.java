@@ -25,5 +25,6 @@ public final class HorrorEntityRenderers {
         event.registerEntityRenderer(FieldOfMemories.PLAYER_ECHO_ENTITY.get(), PlayerEchoRenderer::new);
         event.registerEntityRenderer(FieldOfMemories.SPIRIT_ENTITY.get(), SpiritRenderer::new);
         event.registerEntityRenderer(FieldOfMemories.RIFT_ENTITY.get(), RiftRenderer::new);
+        event.registerEntityRenderer(FieldOfMemories.WINDOW_STALKER_ENTITY.get(), WindowStalkerRenderer::new);
     }
 }

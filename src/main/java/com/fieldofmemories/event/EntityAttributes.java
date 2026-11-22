@@ -27,5 +27,11 @@ public final class EntityAttributes {
                 .add(Attributes.FOLLOW_RANGE, 32.0D);
 
         event.put(FieldOfMemories.PLAYER_ECHO_ENTITY.get(), echoAttributes.build());
+
+        AttributeSupplier.Builder stalkerAttributes = Monster.createMonsterAttributes()
+                .add(Attributes.MAX_HEALTH, 20.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.42D)
+                .add(Attributes.FOLLOW_RANGE, 40.0D);
+        event.put(FieldOfMemories.WINDOW_STALKER_ENTITY.get(), stalkerAttributes.build());
     }
 }

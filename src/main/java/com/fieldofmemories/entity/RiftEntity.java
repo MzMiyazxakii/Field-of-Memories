@@ -12,6 +12,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.inventory.CraftingMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingRecipe;
@@ -167,7 +168,7 @@ public class RiftEntity extends Entity {
             return input.copy();
         }
         for (ServerPlayer player : serverLevel.getEntitiesOfClass(ServerPlayer.class, getBoundingBox().inflate(12.0D))) {
-            CraftingContainer grid = new CraftingContainer(player.inventoryMenu, 3, 3);
+            CraftingContainer grid = new CraftingContainer(new CraftingMenu(0, player.getInventory()), 3, 3);
             for (int i = 0; i < 9; i++) grid.setItem(i, ItemStack.EMPTY);
             boolean valid = true;
             List<net.minecraft.world.item.crafting.Ingredient> ingredients = null;
@@ -195,7 +196,14 @@ public class RiftEntity extends Entity {
                 }
                 int returned = count / 2;
                 if (returned <= 0) return input.copy();
-                ItemStack material = input.copy();
+                ItemStack material = ItemStack.EMPTY;
+                for (net.minecraft.world.item.crafting.Ingredient ingredient : ingredients) {
+                    if (!ingredient.isEmpty() && ingredient.test(input)) {
+                        ItemStack[] choices = ingredient.getItems();
+                        if (choices.length > 0) { material = choices[0].copy(); break; }
+                    }
+                }
+                if (material.isEmpty()) return input.copy();
                 material.setCount(returned);
                 return material;
             }
