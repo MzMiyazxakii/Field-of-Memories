@@ -11,5 +11,6 @@
   "item.fieldofmemories.memory_disc_8": "Evening",
   "key.fieldofmemories.read_memory_disc": "Press U to read",
   "key.categories.fieldofmemories": "Field of Memories",
-  "block.minecraft.spruce_leaves": "Withered Leaves"
+  "block.minecraft.spruce_leaves": "Withered Leaves",
+  "item.fieldofmemories.battery": "Battery"
 }
