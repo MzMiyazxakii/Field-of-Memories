@@ -229,6 +229,16 @@ public final class HorrorNetwork {
                 target.discard();
                 continue;
             }
+            if (target instanceof com.fieldofmemories.entity.SpiritEntity spirit) {
+                if (HorrorWorldData.rollSpiritDiscDrop(level)) {
+                    net.minecraft.world.entity.item.ItemEntity reward = new net.minecraft.world.entity.item.ItemEntity(
+                            level, spirit.getX(), spirit.getY() + 0.35D, spirit.getZ(),
+                            new net.minecraft.world.item.ItemStack(FieldOfMemories.MEMORY_DISC_8.get()));
+                    level.addFreshEntity(reward);
+                }
+                spirit.discard();
+                continue;
+            }
             if (target instanceof com.fieldofmemories.entity.SmileFaceEntity face) {
                 int photos = player.getPersistentData().getInt("FOMClosedDoorPhotoCount") + 1;
                 boolean guaranteed = photos >= 20;
