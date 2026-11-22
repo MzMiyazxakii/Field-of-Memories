@@ -98,6 +98,29 @@ public final class HorrorNetwork {
                     context.get().setPacketHandled(true);
                 }).add();
 
+        CHANNEL.messageBuilder(CameraViewPacket.class, 7)
+                .encoder((packet, buffer) -> buffer.writeBoolean(packet.viewing()))
+                .decoder(buffer -> new CameraViewPacket(buffer.readBoolean()))
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null) {
+                        boolean allowed = packet.viewing()
+                                && hasUsableCamera(player);
+                        player.getPersistentData().putBoolean("FOMCameraViewing", allowed);
+                        if (!allowed) player.getPersistentData().remove("FOMCameraViewing");
+                    }
+                    context.get().setPacketHandled(true);
+                }).add();
+
+        CHANNEL.messageBuilder(CameraViewStopPacket.class, 8)
+                .encoder((packet, buffer) -> {})
+                .decoder(buffer -> new CameraViewStopPacket())
+                .consumerMainThread((packet, context) -> {
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
+                            com.fieldofmemories.client.VideoCameraClient.forceStopFromServer());
+                    context.get().setPacketHandled(true);
+                }).add();
+
         CHANNEL.messageBuilder(UseStrawBedPacket.class, 6)
                 .encoder((packet, buffer) -> buffer.writeBlockPos(packet.pos()))
                 .decoder(buffer -> new UseStrawBedPacket(buffer.readBlockPos()))
@@ -151,6 +174,24 @@ public final class HorrorNetwork {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new GiveAdminItemPacket(itemId));
     }
 
+    private static boolean hasUsableCamera(ServerPlayer player) {
+        for (var hand : net.minecraft.world.InteractionHand.values()) {
+            var stack = player.getItemInHand(hand);
+            if (stack.getItem() instanceof com.fieldofmemories.item.VideoCameraItem
+                    && com.fieldofmemories.item.VideoCameraItem.isOpen(stack)
+                    && com.fieldofmemories.item.VideoCameraItem.getBattery(stack) > 0) return true;
+        }
+        return false;
+    }
+
+    public static void requestCameraViewing(boolean viewing) {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new CameraViewPacket(viewing));
+    }
+
+    public static void stopCameraViewing(ServerPlayer player) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new CameraViewStopPacket());
+    }
+
     public static void requestUseStrawBed(net.minecraft.core.BlockPos pos) {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new UseStrawBedPacket(pos));
     }
@@ -166,4 +207,6 @@ public final class HorrorNetwork {
     private record ForceScreamRequestPacket(UUID target) {}
     private record GiveAdminItemPacket(String itemId) {}
     private record UseStrawBedPacket(net.minecraft.core.BlockPos pos) {}
+    private record CameraViewPacket(boolean viewing) {}
+    private record CameraViewStopPacket() {}
 }
