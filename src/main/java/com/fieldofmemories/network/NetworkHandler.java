@@ -310,6 +310,14 @@ public final class NetworkHandler {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForceFallPacket(target));
     }
 
+    public static void forceFall(ServerPlayer target) {
+        if (target == null || !target.isAlive() || target.isCreative() || target.isSpectator()) return;
+        PRONE_PLAYERS.put(target.getUUID(), 40);
+        target.setPose(Pose.SWIMMING);
+        target.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> target), new ForcedFallClientPacket());
+    }
+
     private static void sendBoxLootTable(ServerPlayer player) {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new BoxLootSyncPacket(BoxLootData.get(player.serverLevel()).serializeForClient()));
