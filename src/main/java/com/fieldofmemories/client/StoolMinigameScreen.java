@@ -24,7 +24,7 @@ public final class StoolMinigameScreen extends Screen {
         super.tick();
         if (finished) return;
         ticks++;
-        if (ticks - progress * 30 >= 30) loseAttempt();
+        if (ticks - progress * 40 >= 40) loseAttempt();
     }
 
     private void loseAttempt() {
@@ -35,7 +35,7 @@ public final class StoolMinigameScreen extends Screen {
             NetworkHandler.finishStoolMinigame(-1);
             if (minecraft != null) minecraft.setScreen(null);
         } else {
-            ticks = progress * 30;
+            ticks = progress * 40;
         }
     }
 
@@ -57,7 +57,7 @@ public final class StoolMinigameScreen extends Screen {
     public void render(GuiGraphics gui, int mouseX, int mouseY, float partialTick) {
         renderBackground(gui);
         gui.drawCenteredString(font, "НЕ ОТВОДИ РУКИ", width / 2, height / 2 - 55, 0xFFE5E5E5);
-        gui.drawCenteredString(font, "Нажми нужную стрелку за 1,5 секунды", width / 2, height / 2 - 35, 0xFFAAAAAA);
+        gui.drawCenteredString(font, "Нажми нужную стрелку за 2 секунды", width / 2, height / 2 - 35, 0xFFAAAAAA);
         String arrow = sequence.substring(Math.min(progress, sequence.length() - 1), Math.min(progress, sequence.length() - 1) + 1);
         String symbol = switch (arrow) {
             case "U" -> "↑";
