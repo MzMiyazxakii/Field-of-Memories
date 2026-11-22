@@ -13,6 +13,7 @@ import java.util.List;
 public class StoolLootData extends SavedData {
     private static final String DATA_NAME = "fieldofmemories_stool_loot";
     private final List<Entry> entries = new ArrayList<>();
+    private int successfulGamesWithoutHolyFather;
 
     public StoolLootData() {
         add("diamond",1,3,10); add("netherite",1,1,5); add("armor",1,1,7);
@@ -43,6 +44,21 @@ public class StoolLootData extends SavedData {
         }
         entries.set(index,new Entry(e.key(),min,max,weight)); setDirty();
     }
+    public ItemStack rollForStool(net.minecraft.util.RandomSource random) {
+        if (successfulGamesWithoutHolyFather >= 12) {
+            successfulGamesWithoutHolyFather = 0;
+            setDirty();
+            return new ItemStack(FieldOfMemories.MEMORY_DISC_6.get());
+        }
+        successfulGamesWithoutHolyFather++;
+        ItemStack reward = roll(random);
+        if (!reward.isEmpty() && reward.is(FieldOfMemories.MEMORY_DISC_6.get())) {
+            successfulGamesWithoutHolyFather = 0;
+        }
+        setDirty();
+        return reward;
+    }
+
     public ItemStack roll(net.minecraft.util.RandomSource random) {
         int total=entries.stream().mapToInt(Entry::weight).sum();
         if(total<=0) return ItemStack.EMPTY;
@@ -83,6 +99,7 @@ public class StoolLootData extends SavedData {
     }
     private static StoolLootData load(CompoundTag tag){
         StoolLootData d=new StoolLootData();
+        d.successfulGamesWithoutHolyFather = Math.max(0, tag.getInt("SuccessfulGamesWithoutHolyFather"));
         if(tag.contains("Entries",9)){
             d.entries.clear(); ListTag list=tag.getList("Entries",10);
             for(int i=0;i<list.size();i++){CompoundTag e=list.getCompound(i);String key=e.getString("Key");
@@ -94,6 +111,7 @@ public class StoolLootData extends SavedData {
         return d;
     }
     @Override public CompoundTag save(CompoundTag tag){
+        tag.putInt("SuccessfulGamesWithoutHolyFather", successfulGamesWithoutHolyFather);
         ListTag list=new ListTag();for(Entry e:entries){CompoundTag n=new CompoundTag();n.putString("Key",e.key());n.putInt("Min",e.min());n.putInt("Max",e.max());n.putInt("Weight",e.weight());list.add(n);}tag.put("Entries",list);return tag;
     }
     public record Entry(String key,int min,int max,int weight){}
