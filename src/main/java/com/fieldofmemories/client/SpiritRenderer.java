@@ -11,10 +11,10 @@ import net.minecraft.client.renderer.MultiBufferSource;
 
 public class SpiritRenderer extends MobRenderer<SpiritEntity, PlayerModel<SpiritEntity>> {
     private static final ResourceLocation TEXTURE =
-            new ResourceLocation("fieldofmemories", "textures/entity/evilsould.png");
+            new ResourceLocation("fieldofmemories", "textures/entity/soulwon.png");
 
     public SpiritRenderer(EntityRendererProvider.Context context) {
-        super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false), 0.0F);
+        super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), true), 0.0F);
         this.shadowRadius = 0.0F;
     }
 
