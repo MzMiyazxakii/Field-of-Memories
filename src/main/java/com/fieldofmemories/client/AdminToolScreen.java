@@ -136,7 +136,8 @@ public class AdminToolScreen extends Screen {
             add("Вызвать скример на игроке", cx, y + 25, () -> go("scream_players"));
             add("Вызвать мимика", cx, y + 50, HorrorNetwork::requestMimic);
             add("Призвать оба разлома рядом", cx, y + 75, HorrorNetwork::requestRifts);
-            add("Назад", cx, y + 102, () -> go("home"));
+            add("Призвать розовый разлом", cx, y + 100, HorrorNetwork::requestPinkRift);
+            add("Назад", cx, y + 127, () -> go("home"));
         } else if (page.equals("activity")) {
             HorrorNetwork.requestData();
             add("Шанс пугала −", cx - 82, y, () -> HorrorNetwork.adjust(0, -5));

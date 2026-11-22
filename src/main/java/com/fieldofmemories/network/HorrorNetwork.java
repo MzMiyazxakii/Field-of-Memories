@@ -131,6 +131,30 @@ public final class HorrorNetwork {
                     context.get().setPacketHandled(true);
                 }).add();
 
+        CHANNEL.messageBuilder(ForcePinkRiftPacket.class, 14)
+                .encoder((packet, buffer) -> {})
+                .decoder(buffer -> new ForcePinkRiftPacket())
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer sender = context.get().getSender();
+                    if (sender != null && sender.hasPermissions(2)) {
+                        var level = sender.serverLevel();
+                        double angle = level.random.nextDouble() * Math.PI * 2.0D;
+                        double distance = 5.0D + level.random.nextDouble() * 3.0D;
+                        int x = (int) Math.floor(sender.getX() + Math.cos(angle) * distance);
+                        int z = (int) Math.floor(sender.getZ() + Math.sin(angle) * distance);
+                        int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                        var rift = FieldOfMemories.RIFT_ENTITY.get().create(level);
+                        if (rift != null) {
+                            rift.setPinkRift(true);
+                            rift.setBlackRift(false);
+                            rift.setLifetime(600);
+                            rift.moveTo(x + 0.5D, y, z + 0.5D, level.random.nextFloat() * 360.0F, 0.0F);
+                            if (level.noCollision(rift)) level.addFreshEntity(rift);
+                        }
+                    }
+                    context.get().setPacketHandled(true);
+                }).add();
+
         CHANNEL.messageBuilder(ForceMimicRequestPacket.class, 11)
                 .encoder((packet, buffer) -> {})
                 .decoder(buffer -> new ForceMimicRequestPacket())
@@ -349,6 +373,10 @@ public final class HorrorNetwork {
 
     public static void requestRifts() { CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForceRiftsPacket()); }
 
+    public static void requestPinkRift() {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForcePinkRiftPacket());
+    }
+
     public static void requestData() {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new RequestDataPacket());
     }
@@ -418,4 +446,5 @@ public final class HorrorNetwork {
     private record OldCameraFlashPacket() {}
     private record ForceMimicRequestPacket() {}
     private record ForceRiftsPacket() {}
+    private record ForcePinkRiftPacket() {}
 }
