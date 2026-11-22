@@ -72,7 +72,9 @@ public final class HorrorEvents {
         HorrorSignEvent.tryTrigger(level, players, random, danger, activity);
 
         double dangerFactor = 1.0D - danger * 0.006D;
-        long interval = Math.max(300L, (long) (600.0D * dangerFactor * 100.0D / activity));
+        // A world event window every 2-3 minutes: enough downtime between scares,
+        // without making ordinary play wait tens of real-world minutes for a roll.
+        long interval = 2400L + random.nextInt(1201);
         HorrorWorldData.setNextAmbientEvent(level, now + interval);
     }
 
@@ -90,16 +92,12 @@ public final class HorrorEvents {
         ScarecrowEntity existing = all.isEmpty() ? null : all.get(0);
         for (int i = 1; i < all.size(); i++) all.get(i).discard();
 
-        int chance = scaleChance(HorrorWorldData.getScarecrowChance(level), danger, activity, 35);
-        if (existing != null) {
-            for (ServerPlayer player : players) {
-                if (isLookingAt(player, existing, 80.0D)) return;
-            }
-            existing.discard();
-            if (random.nextInt(100) < chance) {
-                spawnScarecrow(level, players.get(random.nextInt(players.size())), random);
-            }
-        } else if (random.nextInt(100) < chance) {
+        int configuredChance = HorrorWorldData.getScarecrowChance(level);
+        int chance = configuredChance == 0 ? 0
+                : Math.min(70, 10 + scaleChance(configuredChance, danger, activity, 65));
+        // Let a spawned scarecrow remain as a distant watcher for up to 90 seconds.
+        if (existing != null) return;
+        if (random.nextInt(100) < chance) {
             spawnScarecrow(level, players.get(random.nextInt(players.size())), random);
         }
     }
@@ -114,7 +112,7 @@ public final class HorrorEvents {
 
         int configuredChance = HorrorWorldData.getSpiritChance(level);
         int chance = configuredChance == 0 ? 0
-                : Math.min(8, (configuredChance + danger / 25) * activity / 100);
+                : Math.min(10, (configuredChance + danger / 20) * activity / 100);
         if (random.nextInt(100) >= chance) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
@@ -133,7 +131,7 @@ public final class HorrorEvents {
     private static void maybeSpawnRift(ServerLevel level, List<ServerPlayer> players,
                                        RandomSource random, int danger, int activity) {
         if (!getLoadedEntities(level, RiftEntity.class).isEmpty()) return;
-        int chance = Math.min(18, (2 + danger / 12) * activity / 100);
+        int chance = Math.min(12, (2 + danger / 18) * activity / 100);
         if (random.nextInt(100) >= chance) return;
         ServerPlayer target = players.get(random.nextInt(players.size()));
         double angle = random.nextDouble() * Math.PI * 2.0D;
@@ -288,7 +286,7 @@ public final class HorrorEvents {
         BlockPos home = HomeMemoryTracker.getHorrorAnchor(target);
         if (home == null) return;
 
-        if (random.nextInt(100) < 34) {
+        if (random.nextInt(100) < 18) {
             BlockPos doorPos = BlockPos.findClosestMatch(home, 14, 6, pos -> {
                 BlockState state = level.getBlockState(pos);
                 return state.getBlock() instanceof DoorBlock && !state.getValue(DoorBlock.OPEN);
@@ -306,7 +304,7 @@ public final class HorrorEvents {
                 }
             }
         }
-        if (random.nextInt(100) < 18) moveHouseWorkstation(level, home, random);
+        if (random.nextInt(100) < 9) moveHouseWorkstation(level, home, random);
     }
 
     private static void moveHouseWorkstation(ServerLevel level, BlockPos home, RandomSource random) {
@@ -357,7 +355,7 @@ public final class HorrorEvents {
     private static void maybeSpawnWindowStalker(ServerLevel level, List<ServerPlayer> players,
                                                  RandomSource random, int danger, int activity) {
         if (!getLoadedEntities(level, com.fieldofmemories.entity.WindowStalkerEntity.class).isEmpty()) return;
-        int chance = Math.min(14, (2 + danger / 18) * activity / 100);
+        int chance = Math.min(16, (3 + danger / 16) * activity / 100);
         if (random.nextInt(100) >= chance) return;
         List<ServerPlayer> atHome = new ArrayList<>();
         for (ServerPlayer player : players) {
