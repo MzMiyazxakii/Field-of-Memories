@@ -95,7 +95,9 @@ public final class HorrorEvents {
             return;
         }
 
-        int chance = Math.min(8, Math.max(1, (2 + danger / 25) * activity / 100));
+        int configuredChance = HorrorWorldData.getSpiritChance(level);
+        int chance = configuredChance == 0 ? 0
+                : Math.min(8, (configuredChance + danger / 25) * activity / 100);
         if (random.nextInt(100) >= chance) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
@@ -146,7 +148,9 @@ public final class HorrorEvents {
     private static void maybeSpawnPlayerEcho(ServerLevel level, List<ServerPlayer> players,
                                              RandomSource random, int danger, int activity) {
         if (players.size() < 2) return;
-        int chance = Math.min(40, (3 + danger / 10) * activity / 100);
+        int configuredChance = HorrorWorldData.getMimicChance(level);
+        int chance = configuredChance == 0 ? 0
+                : Math.min(40, (configuredChance + danger / 10) * activity / 100);
         if (random.nextInt(100) >= chance) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
