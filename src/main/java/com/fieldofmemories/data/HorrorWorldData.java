@@ -1,0 +1,101 @@
+package com.fieldofmemories.data;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.SavedData;
+
+public class HorrorWorldData extends SavedData {
+    private static final String DATA_NAME = "fieldofmemories_horror_world";
+    private static final String ACTIVITY_KEY = "ActivityMultiplier";
+    private static final String SCARECROW_CHANCE_KEY = "ScarecrowChance";
+    private static final String FACE_CHANCE_KEY = "FaceChance";
+    private static final String NEXT_EVENT_KEY = "NextAmbientEvent";
+
+    private int activityMultiplier = 100;
+    private int scarecrowChance = 10;
+    private int faceChance = 10;
+    private long nextAmbientEvent;
+
+    public static HorrorWorldData get(ServerLevel level) {
+        ServerLevel overworld = level.getServer().overworld();
+        return overworld.getDataStorage().computeIfAbsent(
+                HorrorWorldData::load, HorrorWorldData::new, DATA_NAME);
+    }
+
+    public static int getDangerLevel(ServerLevel level) {
+        ServerLevel overworld = level.getServer().overworld();
+        long worldDays = Math.max(0L, overworld.getGameTime()) / 24000L;
+        int storyProgress = com.fieldofmemories.data.MemoryDiscWorldData.getReadCount(overworld);
+        // World age and read story discs contribute to one shared danger value.
+        return Math.min(100, (int) (worldDays * 1.2D) + storyProgress * 5);
+    }
+
+    public static int getActivityMultiplier(ServerLevel level) {
+        return get(level).activityMultiplier;
+    }
+
+    public static int getScarecrowChance(ServerLevel level) {
+        return get(level).scarecrowChance;
+    }
+
+    public static int getFaceChance(ServerLevel level) {
+        return get(level).faceChance;
+    }
+
+    public static long getNextAmbientEvent(ServerLevel level) {
+        return get(level).nextAmbientEvent;
+    }
+
+    public static void setNextAmbientEvent(ServerLevel level, long tick) {
+        HorrorWorldData data = get(level);
+        if (data.nextAmbientEvent != tick) {
+            data.nextAmbientEvent = tick;
+            data.setDirty();
+        }
+    }
+
+    public static void changeSetting(ServerLevel level, int setting, int amount) {
+        HorrorWorldData data = get(level);
+        int old;
+        int updated;
+        if (setting == 0) {
+            old = data.scarecrowChance;
+            updated = clamp(old + amount, 0, 100);
+            data.scarecrowChance = updated;
+        } else if (setting == 1) {
+            old = data.faceChance;
+            updated = clamp(old + amount, 0, 100);
+            data.faceChance = updated;
+        } else if (setting == 2) {
+            old = data.activityMultiplier;
+            updated = clamp(old + amount, 10, 300);
+            data.activityMultiplier = updated;
+        } else {
+            return;
+        }
+        if (old != updated) data.setDirty();
+    }
+
+    private static int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private static HorrorWorldData load(CompoundTag tag) {
+        HorrorWorldData data = new HorrorWorldData();
+        data.activityMultiplier = clamp(tag.getInt(ACTIVITY_KEY) == 0 ? 100 : tag.getInt(ACTIVITY_KEY), 10, 300);
+        data.scarecrowChance = clamp(tag.contains(SCARECROW_CHANCE_KEY) ? tag.getInt(SCARECROW_CHANCE_KEY) : 10, 0, 100);
+        data.faceChance = clamp(tag.contains(FACE_CHANCE_KEY) ? tag.getInt(FACE_CHANCE_KEY) : 10, 0, 100);
+        data.nextAmbientEvent = Math.max(0L, tag.getLong(NEXT_EVENT_KEY));
+        return data;
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        tag.putInt(ACTIVITY_KEY, activityMultiplier);
+        tag.putInt(SCARECROW_CHANCE_KEY, scarecrowChance);
+        tag.putInt(FACE_CHANCE_KEY, faceChance);
+        tag.putLong(NEXT_EVENT_KEY, nextAmbientEvent);
+        return tag;
+    }
+}

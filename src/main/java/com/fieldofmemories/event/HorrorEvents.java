@@ -1,59 +1,69 @@
 package com.fieldofmemories.event;
 
+import com.fieldofmemories.data.HorrorWorldData;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Early-gameplay foundation: rare, server-authoritative ambient disturbances.
- * The events are intentionally subtle and only occur in dark outdoor places at night.
- */
+@Mod.EventBusSubscriber(modid = "fieldofmemories")
 public final class HorrorEvents {
-    private static final Map<UUID, Integer> PLAYER_COOLDOWNS = new ConcurrentHashMap<>();
-    private static final int CHECK_INTERVAL = 100;
-
     private HorrorEvents() {}
 
     @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
-        if (player.isCreative() || player.isSpectator()) return;
+    public static void onLevelTick(TickEvent.LevelTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level)
+                || level.dimension() != Level.OVERWORLD) return;
 
-        UUID id = player.getUUID();
-        int cooldown = PLAYER_COOLDOWNS.getOrDefault(id, 0);
-        if (cooldown > 0) {
-            PLAYER_COOLDOWNS.put(id, cooldown - 1);
-            return;
+        long now = level.getGameTime();
+        if (now % 100L != 0L || now < HorrorWorldData.getNextAmbientEvent(level)) return;
+
+        List<ServerPlayer> candidates = new ArrayList<>();
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.serverLevel() == level && !player.isCreative() && !player.isSpectator()
+                    && level.isNight() && level.getMaxLocalRawBrightness(player.blockPosition()) <= 7
+                    && level.canSeeSky(player.blockPosition())) {
+                candidates.add(player);
+            }
         }
 
-        Level level = player.level();
-        if (level.isClientSide || !level.isNight() || level.getMaxLocalRawBrightness(player.blockPosition()) > 7) return;
-        if (level.canSeeSky(player.blockPosition()) && level.random.nextInt(CHECK_INTERVAL) == 0) {
-            triggerWhisper(player);
-            PLAYER_COOLDOWNS.put(id, 20 * (45 + level.random.nextInt(90)));
+        if (candidates.isEmpty()) return;
+
+        int danger = HorrorWorldData.getDangerLevel(level);
+        int activity = HorrorWorldData.getActivityMultiplier(level);
+        RandomSource random = level.getRandom();
+        int eventChance = Math.min(85, 8 + danger / 2);
+        eventChance = Math.min(100, eventChance * activity / 100);
+
+        if (random.nextInt(100) < eventChance) {
+            ServerPlayer target = candidates.get(random.nextInt(candidates.size()));
+            triggerWorldWhisper(level, target, random);
         }
+
+        // One shared world cooldown: higher danger and activity shorten the interval for everyone.
+        double dangerFactor = 1.0D - danger * 0.006D;
+        long interval = Math.max(600L, (long) (6000.0D * dangerFactor * 100.0D / activity));
+        HorrorWorldData.setNextAmbientEvent(level, now + interval);
     }
 
-    private static void triggerWhisper(ServerPlayer player) {
-        RandomSource random = player.getRandom();
-        double angle = random.nextDouble() * Math.PI * 2.0;
-        double distance = 7.0 + random.nextDouble() * 5.0;
+    private static void triggerWorldWhisper(ServerLevel level, ServerPlayer player, RandomSource random) {
+        double angle = random.nextDouble() * Math.PI * 2.0D;
+        double distance = 7.0D + random.nextDouble() * 5.0D;
         double x = player.getX() + Math.cos(angle) * distance;
         double z = player.getZ() + Math.sin(angle) * distance;
         BlockPos soundPos = BlockPos.containing(x, player.getY(), z);
 
-        // A barely audible environmental cue, positioned away from the player.
-        player.level().playSound(null, soundPos, SoundEvents.AMBIENT_CAVE.value(),
+        // The sound is emitted by the world, so nearby players can hear the same event.
+        level.playSound(null, soundPos, SoundEvents.AMBIENT_CAVE.value(),
                 SoundSource.AMBIENT, 0.22F, 0.65F + random.nextFloat() * 0.25F);
     }
 }

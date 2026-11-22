@@ -17,6 +17,7 @@ import net.minecraft.world.item.BlockItem;
 import com.fieldofmemories.item.AdminToolItem;
 import com.fieldofmemories.item.MemoryDiscItem;
 import com.fieldofmemories.network.NetworkHandler;
+import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.worldgen.FieldDecorFeature;
 import com.fieldofmemories.worldgen.AbandonedSettlementFeature;
 
@@ -75,5 +76,6 @@ public class FieldOfMemories {
         SOUND_EVENTS.register(modBus);
         FEATURES.register(modBus);
         NetworkHandler.register();
+        HorrorNetwork.register();
     }
 }

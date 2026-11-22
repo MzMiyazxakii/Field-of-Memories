@@ -1,6 +1,7 @@
 package com.fieldofmemories.client;
 
 import com.fieldofmemories.network.NetworkHandler;
+import com.fieldofmemories.network.HorrorNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -15,6 +16,10 @@ public class AdminToolScreen extends Screen {
     private static int memorySpawnChance = 10;
     private static String boxLootData = "";
     private static int selectedLootItem;
+    private static int worldDanger;
+    private static int horrorActivity = 100;
+    private static int scarecrowChance = 10;
+    private static int faceChance = 10;
 
     private static final String[] LOOT_ITEM_IDS = {
             "minecraft:iron_ingot", "minecraft:iron_nugget", "minecraft:gold_ingot",
@@ -42,6 +47,13 @@ public class AdminToolScreen extends Screen {
     };
 
     public AdminToolScreen() { super(Component.literal("Field of Memories — Admin Tool")); }
+
+    public static void updateHorrorData(int danger, int activity, int scarecrow, int face) {
+        worldDanger = Math.max(0, Math.min(100, danger));
+        horrorActivity = Math.max(10, Math.min(300, activity));
+        scarecrowChance = Math.max(0, Math.min(100, scarecrow));
+        faceChance = Math.max(0, Math.min(100, face));
+    }
 
     public static void updateBoxLootData(String data) {
         boxLootData = data == null ? "" : data;
@@ -91,6 +103,7 @@ public class AdminToolScreen extends Screen {
         int y = height / 2 - 65;
         if (page.equals("home")) {
             add("События", cx, y, () -> go("events")); y += 25;
+            add("Регулировка активности", cx, y, () -> go("activity")); y += 25;
             add("Движение", cx, y, () -> go("movement")); y += 25;
             add("Выносливость", cx, y, () -> go("stamina")); y += 25;
             add("Прыжки", cx, y, () -> go("jumps")); y += 25;
@@ -202,7 +215,7 @@ public class AdminToolScreen extends Screen {
         renderBackground(gui);
         gui.drawCenteredString(font, Component.literal("АДМИН-ПАНЕЛЬ"), width / 2, height / 2 - 94, 0xFFFF9A38);
         gui.drawCenteredString(font, Component.literal(pageName()), width / 2, height / 2 - 81, 0xFFE0E0E0);
-        if (page.equals("movement")) drawRightInfo(gui, String.format("Бонус скорости: %.2f", MovementClient.getAdminSpeed()), height / 2 + 12);
+        if (page.equals("events")) {\n            drawRightInfo(gui, "Опасность мира: " + worldDanger + " / 100", height / 2 + 18);\n            drawRightInfo(gui, "Шанс пугала: " + scarecrowChance + "%", height / 2 + 30);\n            drawRightInfo(gui, "Шанс лица: " + faceChance + "%", height / 2 + 42);\n        }\n        if (page.equals("activity")) {\n            drawRightInfo(gui, "Уровень опасности мира: " + worldDanger + " / 100", height / 2 + 8);\n            drawRightInfo(gui, "Общая активность: " + horrorActivity + "%", height / 2 + 20);\n            drawRightInfo(gui, "Шанс пугала: " + scarecrowChance + "%", height / 2 + 32);\n            drawRightInfo(gui, "Шанс лица: " + faceChance + "%", height / 2 + 44);\n        }\n        if (page.equals("movement")) drawRightInfo(gui, String.format("Бонус скорости: %.2f", MovementClient.getAdminSpeed()), height / 2 + 12);
         if (page.equals("stamina")) {
             drawRightInfo(gui, "Максимум: " + (int) MovementClient.getAdminMaxStamina(), height / 2 + 2);
             drawRightInfo(gui, String.format("Восстановление: %.2f / тик", MovementClient.getAdminRecovery()), height / 2 + 14);
@@ -244,7 +257,7 @@ public class AdminToolScreen extends Screen {
 
     private String pageName() {
         return switch (page) {
-            case "events" -> "СОБЫТИЯ";
+            case "events" -> "СОБЫТИЯ";\n            case "activity" -> "РЕГУЛИРОВКА АКТИВНОСТИ";
             case "players" -> "ВЫБЕРИТЕ ИГРОКА";
             case "movement" -> "ДВИЖЕНИЕ";
             case "stamina" -> "ВЫНОСЛИВОСТЬ";
