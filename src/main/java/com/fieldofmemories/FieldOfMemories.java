@@ -89,6 +89,22 @@ public class FieldOfMemories {
             "opensoundisk",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "opensoundisk"))
     );
+    public static final RegistryObject<SoundEvent> CAMERA_OPEN_SOUND = SOUND_EVENTS.register(
+            "camera_open",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "camera_open"))
+    );
+    public static final RegistryObject<SoundEvent> CAMERA_MOVEMENT_SOUND = SOUND_EVENTS.register(
+            "camera_movement",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "camera_movement"))
+    );
+    public static final RegistryObject<SoundEvent> SMILE_FACE_SCREAM_1 = SOUND_EVENTS.register(
+            "smile_face_scream_1",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "smile_face_scream_1"))
+    );
+    public static final RegistryObject<SoundEvent> SMILE_FACE_SCREAM_2 = SOUND_EVENTS.register(
+            "smile_face_scream_2",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "smile_face_scream_2"))
+    );
 
     public static final DeferredRegister<Feature<?>> FEATURES =
             DeferredRegister.create(ForgeRegistries.FEATURES, MOD_ID);
