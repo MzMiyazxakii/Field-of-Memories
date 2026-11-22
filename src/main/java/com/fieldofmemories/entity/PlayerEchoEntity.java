@@ -78,14 +78,14 @@ public class PlayerEchoEntity extends PathfinderMob {
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag tag) {
+    public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         UUID owner = getSkinOwner();
         if (owner != null) tag.putUUID("SkinOwner", owner);
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag tag) {
+    public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         setSkinOwner(tag.hasUUID("SkinOwner") ? tag.getUUID("SkinOwner") : null);
     }
