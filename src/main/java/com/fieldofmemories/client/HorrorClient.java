@@ -33,7 +33,10 @@ public final class HorrorClient {
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && screamTicks > 0) screamTicks--;
+        if (event.phase != TickEvent.Phase.END) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.getMusicManager() != null) mc.getMusicManager().stopPlaying();
+        if (screamTicks > 0) screamTicks--;
     }
 
     @SubscribeEvent
