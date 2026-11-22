@@ -21,6 +21,8 @@ public final class StoolMinigameScreen extends Screen {
     private int hallucinationTimer = 35;
     private String hallucination = "";
     private int hallucinationLife;
+    private int arrowKickTicks;
+    private float arrowKick;
 
     public StoolMinigameScreen(String sequence) {
         super(Component.literal("Аномальный табурет"));
@@ -41,6 +43,8 @@ public final class StoolMinigameScreen extends Screen {
             hallucinationTimer = 45 + hallucinationRandom.nextInt(55);
         }
         if (hallucinationLife > 0) hallucinationLife--;
+        if (arrowKickTicks > 0) arrowKickTicks--;
+        arrowKick *= 0.78F;
         if (ticks - progress * 40 >= 40) loseAttempt();
     }
 
@@ -92,7 +96,15 @@ public final class StoolMinigameScreen extends Screen {
             case "L" -> "←";
             default -> "→";
         };
+        if (arrowKickTicks > 0 || arrowKick > 0.02F) {
+            float kick = arrowKick * (arrowKickTicks % 2 == 0 ? 1.0F : -0.65F);
+            gui.pose().translate(kick, arrowKickTicks % 3 == 0 ? -kick * 0.45F : kick * 0.25F, 0);
+        }
         gui.drawCenteredString(font, symbol, width / 2, height / 2 - 4, 0xFFFFFFFF);
+        if (arrowKickTicks > 0 || arrowKick > 0.02F) {
+            float kick = arrowKick * (arrowKickTicks % 2 == 0 ? 1.0F : -0.65F);
+            gui.pose().translate(-kick, arrowKickTicks % 3 == 0 ? kick * 0.45F : -kick * 0.25F, 0);
+        }
         gui.drawCenteredString(font, "Попытки: " + attempts + " / 3", width / 2, height / 2 + 30, 0xFFFF7777);
         gui.drawCenteredString(font, "Успешно: " + progress + " / " + sequence.length(), width / 2, height / 2 + 46, 0xFFFFC078);
         gui.drawCenteredString(font, "ESC × " + escapePresses + " / 5 — слезть", width / 2, height / 2 + 62, 0xFFAAAAAA);
@@ -127,9 +139,13 @@ public final class StoolMinigameScreen extends Screen {
         };
         if (pressed.isEmpty()) return true;
         if (pressed.equals(sequence.substring(progress, progress + 1))) {
+            arrowKick = 7.0F;
+            arrowKickTicks = 5;
             progress++;
             if (progress >= sequence.length()) succeed();
         } else {
+            arrowKick = 17.0F;
+            arrowKickTicks = 9;
             loseAttempt();
         }
         return true;
