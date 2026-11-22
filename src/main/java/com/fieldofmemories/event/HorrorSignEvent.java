@@ -53,7 +53,7 @@ public final class HorrorSignEvent {
                                   RandomSource random, int danger, int activity) {
         if (players.isEmpty()) return;
 
-        int chance = Math.min(90, (28 + danger / 2) * activity / 100);
+        int chance = Math.min(55, (16 + danger / 3) * activity / 100);
         if (random.nextInt(100) >= chance) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
