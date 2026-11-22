@@ -98,8 +98,13 @@ public final class HorrorEvents {
 
     private static void maybeSpawnFace(ServerLevel level, List<ServerPlayer> players,
                                        RandomSource random, int danger, int activity) {
-        // The face is a night-only event and requires elevated world horror activity.
-        if (!level.isNight() || activity < 150) return;
+        // Normally the face appears at night. During the day it can break through
+        // only when the world's horror activity reaches an extreme level (200%+).
+        if (level.isNight()) {
+            if (activity < 150) return;
+        } else if (activity < 200) {
+            return;
+        }
         int configuredChance = HorrorWorldData.getFaceChance(level);
         int chance = configuredChance == 0 ? 0
                 : Math.min(90, (configuredChance + 5 + danger / 4) * (activity - 100) / 100);
