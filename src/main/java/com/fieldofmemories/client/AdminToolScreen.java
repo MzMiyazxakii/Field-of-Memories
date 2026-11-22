@@ -105,6 +105,10 @@ public class AdminToolScreen extends Screen {
                 });
             }
             add("Назад", cx, y + 8 * 23, () -> go("memory_items"));
+        } else if (page.equals("fog")) {
+            add("Дальность −", cx - 82, y, () -> NetworkHandler.changeFogDistance(-8));
+            add("Дальность +", cx + 82, y, () -> NetworkHandler.changeFogDistance(8));
+            add("Назад", cx, y + 52, () -> go("home"));
         } else if (page.equals("story")) {
             NetworkHandler.requestMemoryDiscStats();
             add("Назад", cx, height - 35, () -> go("home"));
@@ -135,6 +139,7 @@ public class AdminToolScreen extends Screen {
             drawRightInfo(gui, String.format("Длинный прыжок: %.2f | Высота: %.2f", MovementClient.getAdminLongJumpDistance(), MovementClient.getAdminLongJumpHeight()), height / 2 - 52);
             drawRightInfo(gui, String.format("Цена выносливости: %.0f", MovementClient.getAdminLongJumpCost()), height / 2 - 40);
         }
+        if (page.equals("fog")) drawRightInfo(gui, "Дальность: " + FogClient.getDistance() + " блоков", height / 2 + 12);
         if (page.equals("memory_items")) {
             drawRightInfo(gui, "Спавн: " + (memorySpawnEnabled ? "включён" : "отключён"), height / 2 + 8);
             drawRightInfo(gui, "Шанс: " + memorySpawnChance + "%", height / 2 + 20);
