@@ -39,6 +39,8 @@
       "minecraft:patch_pumpkin",
       "fieldofmemories:field_decor"
     ],
-    []
+    [
+      "fieldofmemories:abandoned_settlement"
+    ]
   ]
 }

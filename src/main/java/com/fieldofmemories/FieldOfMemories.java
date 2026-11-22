@@ -15,6 +15,7 @@ import com.fieldofmemories.item.AdminToolItem;
 import com.fieldofmemories.item.MemoryDiscItem;
 import com.fieldofmemories.network.NetworkHandler;
 import com.fieldofmemories.worldgen.FieldDecorFeature;
+import com.fieldofmemories.worldgen.AbandonedSettlementFeature;
 
 @Mod(FieldOfMemories.MOD_ID)
 public class FieldOfMemories {
@@ -57,6 +58,8 @@ public class FieldOfMemories {
             DeferredRegister.create(ForgeRegistries.FEATURES, MOD_ID);
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> FIELD_DECOR =
             FEATURES.register("field_decor", () -> new FieldDecorFeature(NoneFeatureConfiguration.CODEC));
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> ABANDONED_SETTLEMENT =
+            FEATURES.register("abandoned_settlement", () -> new AbandonedSettlementFeature(NoneFeatureConfiguration.CODEC));
 
     public FieldOfMemories() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();

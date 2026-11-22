@@ -33,6 +33,8 @@
       "fieldofmemories:gloomy_mud_patches",
       "fieldofmemories:field_decor"
     ],
-    []
+    [
+      "fieldofmemories:abandoned_settlement"
+    ]
   ]
 }

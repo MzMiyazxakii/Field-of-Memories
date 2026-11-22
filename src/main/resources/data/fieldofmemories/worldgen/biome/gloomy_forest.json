@@ -38,6 +38,9 @@
       "minecraft:patch_large_fern",
       "minecraft:patch_pumpkin"
     ],
-    []
+    [],
+    [
+      "fieldofmemories:abandoned_settlement"
+    ]
   ]
 }
