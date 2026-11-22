@@ -1,8 +1,68 @@
 package com.fieldofmemories.block;
-import com.fieldofmemories.FieldOfMemories;import net.minecraft.core.BlockPos;import net.minecraft.server.level.ServerLevel;import net.minecraft.world.entity.player.Player;import net.minecraft.world.item.Item;import net.minecraft.world.item.ItemStack;import net.minecraft.world.item.Items;import net.minecraft.world.level.Level;import net.minecraft.world.level.block.Block;import net.minecraft.world.level.block.SoundType;import net.minecraft.world.level.block.state.BlockBehaviour;import net.minecraft.world.level.block.state.BlockState;import net.minecraft.world.level.storage.loot.LootParams;import net.minecraft.world.phys.shapes.CollisionContext;import net.minecraft.world.phys.shapes.VoxelShape;import net.minecraft.world.level.BlockGetter;import net.minecraft.world.level.block.entity.BlockEntity;import net.minecraft.util.RandomSource;import net.minecraft.world.entity.item.ItemEntity;import java.util.ArrayList;import java.util.List;
-public class LootContainerBlock extends Block{private static final VoxelShape BAG=Block.box(1,0,1,15,7,15),BOX=Block.box(2,0,1,14,8,16);private final boolean backpack;
-public LootContainerBlock(boolean b){super(BlockBehaviour.Properties.of().strength(.8F).sound(SoundType.WOOD).noOcclusion());backpack=b;}
-@Override public VoxelShape getShape(BlockState s,BlockGetter l,BlockPos p,CollisionContext c){return backpack?BAG:BOX;}@Override public VoxelShape getCollisionShape(BlockState s,BlockGetter l,BlockPos p,CollisionContext c){return getShape(s,l,p,c);}@Override public List<ItemStack> getDrops(BlockState s,LootParams.Builder b){return List.of();}
-@Override public void playerDestroy(Level l,Player p,BlockPos pos,BlockState s,BlockEntity be,ItemStack tool){super.playerDestroy(l,p,pos,s,be,tool);if(l instanceof ServerLevel server)dropLoot(server,pos,server.random);}
-private static void dropLoot(ServerLevel l,BlockPos p,RandomSource r){List<Entry>a=new ArrayList<>();add(a,Items.IRON_INGOT,1,3,10);add(a,Items.IRON_NUGGET,5,15,12);add(a,Items.GOLD_INGOT,1,3,7);add(a,Items.CARROT,1,5,9);add(a,Items.POTATO,1,5,9);add(a,Items.REDSTONE,2,8,8);add(a,Items.LAPIS_LAZULI,2,8,6);add(a,Items.AMETHYST_SHARD,2,8,6);add(a,Items.COPPER_INGOT,2,8,8);add(a,Items.BONE,1,4,7);add(a,Items.STICK,1,5,10);add(a,Items.SPRUCE_PLANKS,1,5,8);add(a,Items.STRING,1,5,6);add(a,Items.FEATHER,1,5,5);add(a,Items.LEATHER,1,5,5);add(a,Items.FLINT,1,5,5);add(a,Items.BEEF,1,7,3);add(a,Items.PORKCHOP,1,7,3);add(a,Items.CHICKEN,1,7,3);add(a,Items.MUTTON,1,7,3);add(a,Items.RABBIT,1,7,2);int total=a.stream().mapToInt(Entry::w).sum();for(int i=0,n=3+r.nextInt(4);i<n;i++){int v=r.nextInt(total);Entry e=a.get(0);for(Entry q:a){v-=q.w();if(v<0){e=q;break;}}ItemStack st=new ItemStack(e.item(),e.min()+r.nextInt(e.max()-e.min()+1));ItemEntity it=new ItemEntity(l,p.getX()+.5,p.getY()+.35,p.getZ()+.5,st);it.setDefaultPickUpDelay();l.addFreshEntity(it);}if(r.nextFloat()<.012F)Block.popResource(l,p,new ItemStack(FieldOfMemories.MEMORY_DISCS[r.nextBoolean()?0:1].get()));}
-private static void add(List<Entry>a,Item i,int mn,int mx,int w){a.add(new Entry(i,mn,mx,w));}private record Entry(Item item,int min,int max,int w){}}
+
+import com.fieldofmemories.data.BoxLootData;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.BlockEntity;
+
+import java.util.List;
+
+public class LootContainerBlock extends Block {
+    private static final VoxelShape BAG = Block.box(1, 0, 1, 15, 7, 15);
+    private static final VoxelShape BOX = Block.box(2, 0, 1, 14, 8, 16);
+    private final boolean legacyBackpack;
+
+    public LootContainerBlock(boolean legacyBackpack) {
+        super(BlockBehaviour.Properties.of().strength(0.8F).sound(SoundType.WOOD).noOcclusion());
+        this.legacyBackpack = legacyBackpack;
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return legacyBackpack ? BAG : BOX;
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return getShape(state, level, pos, context);
+    }
+
+    @Override
+    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+        return List.of();
+    }
+
+    @Override
+    public void playerDestroy(Level level, Player player, BlockPos pos, BlockState state,
+                              BlockEntity blockEntity, ItemStack tool) {
+        super.playerDestroy(level, player, pos, state, blockEntity, tool);
+        if (level instanceof ServerLevel server && !legacyBackpack) {
+            dropLoot(server, pos);
+        }
+    }
+
+    private static void dropLoot(ServerLevel level, BlockPos pos) {
+        BoxLootData table = BoxLootData.get(level);
+        int rolls = 3 + level.random.nextInt(4);
+        for (int i = 0; i < rolls; i++) {
+            ItemStack stack = table.roll(level.random);
+            if (stack.isEmpty()) continue;
+            ItemEntity entity = new ItemEntity(level, pos.getX() + 0.5D,
+                    pos.getY() + 0.35D, pos.getZ() + 0.5D, stack);
+            entity.setDefaultPickUpDelay();
+            level.addFreshEntity(entity);
+        }
+    }
+}
