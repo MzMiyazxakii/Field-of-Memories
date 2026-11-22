@@ -128,10 +128,10 @@ public final class HorrorEvents {
 
     private static void maybeSpawnPlayerEcho(ServerLevel level, List<ServerPlayer> players,
                                              RandomSource random, int danger, int activity) {
-        // This event only exists in multiplayer and becomes possible at high world activity.
-        if (players.size() < 2 || activity < 140) return;
+        // A rare multiplayer-only event; world danger and activity both raise its chance.
+        if (players.size() < 2) return;
 
-        int chance = Math.min(45, Math.max(0, (activity - 140) / 3 + danger / 8));
+        int chance = Math.min(40, (3 + danger / 10) * activity / 100);
         if (random.nextInt(100) >= chance) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
