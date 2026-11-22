@@ -14,8 +14,6 @@
   "block.minecraft.spruce_leaves": "Исхудавшая листва",
   "item.fieldofmemories.video_camera": "Видеокамера",
   "item.fieldofmemories.old_camera": "Старая фотокамера",
-  "item.fieldofmemories.old_book": "Старая книга",
-  "entity.fieldofmemories.spirit": "Дух",
   "item.fieldofmemories.battery": "Батарейка",
   "tooltip.fieldofmemories.old_camera.charge": "Заряд: %1$s%%",
   "tooltip.fieldofmemories.old_camera.charging": "Батарейка вставлена — заряд восполняется.",

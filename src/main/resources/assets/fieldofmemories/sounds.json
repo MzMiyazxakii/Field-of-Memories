@@ -1,33 +1,75 @@
 {
   "death_screen": {
     "subtitle": "subtitles.fieldofmemories.death_screen",
-    "sounds": [{"name": "fieldofmemories:death_screen", "stream": false}]
+    "sounds": [
+      {
+        "name": "fieldofmemories:death_screen",
+        "stream": false
+      }
+    ]
   },
   "diskmemorysound": {
-    "sounds": [{"name": "fieldofmemories:diskmemorysound", "stream": true}]
+    "sounds": [
+      {
+        "name": "fieldofmemories:diskmemorysound",
+        "stream": true
+      }
+    ]
   },
   "opensoundisk": {
-    "sounds": [{"name": "fieldofmemories:opensoundisk", "stream": false}]
+    "sounds": [
+      {
+        "name": "fieldofmemories:opensoundisk",
+        "stream": false
+      }
+    ]
   },
   "camera_open": {
-    "sounds": [{"name": "fieldofmemories:camera_open", "stream": false}]
+    "sounds": [
+      {
+        "name": "fieldofmemories:camera_open",
+        "stream": false
+      }
+    ]
   },
   "camera_movement": {
-    "sounds": [{"name": "fieldofmemories:camera_movement", "stream": true}]
+    "sounds": [
+      {
+        "name": "fieldofmemories:camera_movement",
+        "stream": true
+      }
+    ]
   },
   "smile_face_scream_1": {
-    "sounds": [{"name": "fieldofmemories:smile_face_scream_1", "stream": false}]
+    "sounds": [
+      {
+        "name": "fieldofmemories:smile_face_scream_1",
+        "stream": false
+      }
+    ]
   },
   "smile_face_scream_2": {
-    "sounds": [{"name": "fieldofmemories:smile_face_scream_2", "stream": false}]
+    "sounds": [
+      {
+        "name": "fieldofmemories:smile_face_scream_2",
+        "stream": false
+      }
+    ]
   },
   "knock_1": {
-    "sounds": [{"name": "fieldofmemories:knock_1", "stream": false}]
+    "sounds": [
+      {
+        "name": "fieldofmemories:knock_1",
+        "stream": false
+      }
+    ]
   },
   "knock_2": {
-    "sounds": [{"name": "fieldofmemories:knock_2", "stream": false}]
-  },
-  "spirit_presence": {
-    "sounds": [{"name": "fieldofmemories:nostalgiyanarezki", "stream": true}]
+    "sounds": [
+      {
+        "name": "fieldofmemories:knock_2",
+        "stream": false
+      }
+    ]
   }
 }

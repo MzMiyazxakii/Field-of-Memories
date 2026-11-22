@@ -12,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
@@ -58,15 +59,17 @@ public final class HorrorEvents {
         HorrorWorldData.setNextAmbientEvent(level, now + interval);
     }
 
-    private static AABB worldBounds(ServerLevel level) {
-        var border = level.getWorldBorder();
-        return new AABB(border.getMinX(), level.getMinBuildHeight(), border.getMinZ(),
-                border.getMaxX(), level.getMaxBuildHeight(), border.getMaxZ());
+    private static <T extends Entity> List<T> getLoadedEntities(ServerLevel level, Class<T> type) {
+        List<T> found = new ArrayList<>();
+        for (Entity entity : level.getAllEntities()) {
+            if (type.isInstance(entity) && entity.isAlive()) found.add(type.cast(entity));
+        }
+        return found;
     }
 
     private static void manageScarecrow(ServerLevel level, List<ServerPlayer> players,
                                         RandomSource random, int danger, int activity) {
-        List<ScarecrowEntity> all = level.getEntitiesOfClass(ScarecrowEntity.class, worldBounds(level));
+        List<ScarecrowEntity> all = getLoadedEntities(level, ScarecrowEntity.class);
         ScarecrowEntity existing = all.isEmpty() ? null : all.get(0);
         for (int i = 1; i < all.size(); i++) all.get(i).discard();
 
@@ -86,7 +89,7 @@ public final class HorrorEvents {
 
     private static void maybeSpawnSpirit(ServerLevel level, List<ServerPlayer> players,
                                          RandomSource random, int danger, int activity) {
-        List<SpiritEntity> existing = level.getEntitiesOfClass(SpiritEntity.class, worldBounds(level));
+        List<SpiritEntity> existing = getLoadedEntities(level, SpiritEntity.class);
         if (!existing.isEmpty()) {
             for (int i = 1; i < existing.size(); i++) existing.get(i).discard();
             return;

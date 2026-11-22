@@ -3,6 +3,8 @@ package com.fieldofmemories.client;
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.client.model.ScarecrowModel;
 import com.fieldofmemories.client.model.SmileFaceModel;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -23,6 +25,5 @@ public final class HorrorEntityRenderers {
         event.registerEntityRenderer(FieldOfMemories.SCARECROW_ENTITY.get(), ScarecrowRenderer::new);
         event.registerEntityRenderer(FieldOfMemories.SMILE_FACE_ENTITY.get(), SmileFaceRenderer::new);
         event.registerEntityRenderer(FieldOfMemories.PLAYER_ECHO_ENTITY.get(), PlayerEchoRenderer::new);
-        event.registerEntityRenderer(FieldOfMemories.SPIRIT_ENTITY.get(), SpiritRenderer::new);
     }
 }
