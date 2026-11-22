@@ -21,7 +21,7 @@ public final class VideoCameraClient {
     public static void toggleView() {
         Minecraft mc = Minecraft.getInstance();
         if (viewing) {
-            viewing = false;
+            setViewing(false);
             return;
         }
         if (mc.player == null) return;
@@ -29,7 +29,18 @@ public final class VideoCameraClient {
         var off = mc.player.getOffhandItem();
         if ((main.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(main))
                 || (off.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(off))) {
-            viewing = true;
+            setViewing(true);
+        }
+    }
+
+    private static void setViewing(boolean active) {
+        if (viewing == active) return;
+        viewing = active;
+        Minecraft mc = Minecraft.getInstance();
+        if (active) {
+            mc.gameRenderer.loadEffect(new ResourceLocation("minecraft", "shaders/post/desaturate.json"));
+        } else {
+            mc.gameRenderer.shutdownEffect();
         }
     }
 
@@ -50,7 +61,7 @@ public final class VideoCameraClient {
             if (event.phase != TickEvent.Phase.END) return;
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) {
-                viewing = false;
+                setViewing(false);
                 return;
             }
             if (viewing) {
@@ -58,20 +69,13 @@ public final class VideoCameraClient {
                 var off = mc.player.getOffhandItem();
                 boolean hasOpenCamera = (main.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(main))
                         || (off.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(off));
-                if (!hasOpenCamera) viewing = false;
+                if (!hasOpenCamera) setViewing(false);
             }
         }
 
         @SubscribeEvent
         public static void fov(ComputeFovModifierEvent event) {
             if (viewing) event.setNewFovModifier(event.getNewFovModifier() * 0.68F);
-        }
-
-        @SubscribeEvent
-        public static void tintWorld(RenderGuiEvent.Pre event) {
-            if (!viewing || Minecraft.getInstance().player == null) return;
-            var gui = event.getGuiGraphics();
-            gui.fill(0, 0, gui.guiWidth(), gui.guiHeight(), 0xA0808080);
         }
 
         @SubscribeEvent
