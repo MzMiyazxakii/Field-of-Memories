@@ -97,6 +97,14 @@ public class FieldOfMemories {
             "camera_movement",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "camera_movement"))
     );
+    public static final RegistryObject<SoundEvent> KNOCK_1 = SOUND_EVENTS.register(
+            "knock_1",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "knock_1"))
+    );
+    public static final RegistryObject<SoundEvent> KNOCK_2 = SOUND_EVENTS.register(
+            "knock_2",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "knock_2"))
+    );
     public static final RegistryObject<SoundEvent> SMILE_FACE_SCREAM_1 = SOUND_EVENTS.register(
             "smile_face_scream_1",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "smile_face_scream_1"))
