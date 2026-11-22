@@ -38,7 +38,7 @@ public final class VideoCameraClient {
         viewing = active;
         Minecraft mc = Minecraft.getInstance();
         if (active) {
-            mc.gameRenderer.loadEffect(new ResourceLocation("minecraft", "shaders/post/desaturate.json"));
+            mc.gameRenderer.loadEffect(new ResourceLocation(FieldOfMemories.MOD_ID, "shaders/post/video_camera.json"));
         } else {
             mc.gameRenderer.shutdownEffect();
         }
