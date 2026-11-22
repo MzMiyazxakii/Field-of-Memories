@@ -4,6 +4,7 @@ import com.fieldofmemories.data.HorrorWorldData;
 import com.fieldofmemories.entity.ScarecrowEntity;
 import com.fieldofmemories.entity.SmileFaceEntity;
 import com.fieldofmemories.network.HorrorNetwork;
+import com.fieldofmemories.worldgen.HomeMemoryTracker;
 import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -103,10 +104,13 @@ public final class HorrorEvents {
         if (!level.getEntitiesOfClass(SmileFaceEntity.class,
                 target.getBoundingBox().inflate(56.0D, 32.0D, 56.0D)).isEmpty()) return;
 
+        BlockPos anchor = HomeMemoryTracker.getHorrorAnchor(target);
+        double centerX = anchor == null ? target.getX() : anchor.getX() + 0.5D;
+        double centerZ = anchor == null ? target.getZ() : anchor.getZ() + 0.5D;
         double angle = random.nextDouble() * Math.PI * 2.0D;
         double distance = 20.0D + random.nextDouble() * 12.0D;
-        int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
-        int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
+        int x = (int) Math.floor(centerX + Math.cos(angle) * distance);
+        int z = (int) Math.floor(centerZ + Math.sin(angle) * distance);
         int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
         SmileFaceEntity face = FieldOfMemories.SMILE_FACE_ENTITY.get().create(level);
         if (face != null) {
@@ -117,10 +121,13 @@ public final class HorrorEvents {
     }
 
     private static void spawnScarecrow(ServerLevel level, ServerPlayer target, RandomSource random) {
+        BlockPos anchor = HomeMemoryTracker.getHorrorAnchor(target);
+        double centerX = anchor == null ? target.getX() : anchor.getX() + 0.5D;
+        double centerZ = anchor == null ? target.getZ() : anchor.getZ() + 0.5D;
         double angle = random.nextDouble() * Math.PI * 2.0D;
         double distance = 24.0D + random.nextDouble() * 18.0D;
-        int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
-        int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
+        int x = (int) Math.floor(centerX + Math.cos(angle) * distance);
+        int z = (int) Math.floor(centerZ + Math.sin(angle) * distance);
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
         ScarecrowEntity scarecrow = FieldOfMemories.SCARECROW_ENTITY.get().create(level);
         if (scarecrow != null) {
