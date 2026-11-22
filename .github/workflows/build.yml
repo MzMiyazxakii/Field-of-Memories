@@ -57,6 +57,11 @@ jobs:
                   element.pop("name", None)
                   if element.get("rotation", {}).get("angle") == 0:
                       element.pop("rotation", None)
+              if target == "video_camera.json":
+                  model["overrides"] = [{
+                      "predicate": {"fieldofmemories:open": 1.0},
+                      "model": "fieldofmemories:item/video_camera_open"
+                  }]
               with open(os.path.join(item_models, target), "w", encoding="utf-8") as out:
                   json.dump(model, out, separators=(",", ":"))
           bed = json.load(open(os.path.join(bed_dir, "solomabad.json"), encoding="utf-8"))
