@@ -53,6 +53,9 @@ public final class HorrorEvents {
         }
         if (players.isEmpty()) return;
 
+        // A distant scarecrow may disappear when nobody is watching it.
+        updateScarecrowPresence(level, players, level.random);
+
         int danger = HorrorWorldData.getDangerLevel(level);
         int activity = HorrorWorldData.getActivityMultiplier(level);
         RandomSource random = level.random;
@@ -86,17 +89,33 @@ public final class HorrorEvents {
         return found;
     }
 
+    private static void updateScarecrowPresence(ServerLevel level, List<ServerPlayer> players,
+                                                 RandomSource random) {
+        List<ScarecrowEntity> scarecrows = getLoadedEntities(level, ScarecrowEntity.class);
+        for (int i = 1; i < scarecrows.size(); i++) scarecrows.get(i).discard();
+        if (scarecrows.isEmpty()) return;
+
+        ScarecrowEntity scarecrow = scarecrows.get(0);
+        boolean watched = false;
+        for (ServerPlayer player : players) {
+            if (isLookingAt(player, scarecrow, 96.0D)) {
+                watched = true;
+                break;
+            }
+        }
+        if (!watched && random.nextInt(100) < 8) {
+            scarecrow.discard();
+        }
+    }
+
     private static void manageScarecrow(ServerLevel level, List<ServerPlayer> players,
                                         RandomSource random, int danger, int activity) {
         List<ScarecrowEntity> all = getLoadedEntities(level, ScarecrowEntity.class);
-        ScarecrowEntity existing = all.isEmpty() ? null : all.get(0);
-        for (int i = 1; i < all.size(); i++) all.get(i).discard();
+        if (!all.isEmpty()) return;
 
         int configuredChance = HorrorWorldData.getScarecrowChance(level);
         int chance = configuredChance == 0 ? 0
                 : Math.min(70, 18 + scaleChance(configuredChance, danger, activity, 65));
-        // Let a spawned scarecrow remain as a distant watcher for up to 90 seconds.
-        if (existing != null) return;
         if (random.nextInt(100) < chance) {
             spawnScarecrow(level, players.get(random.nextInt(players.size())), random);
         }
@@ -249,19 +268,49 @@ public final class HorrorEvents {
     }
 
     private static void spawnScarecrow(ServerLevel level, ServerPlayer target, RandomSource random) {
-        BlockPos anchor = HomeMemoryTracker.getHorrorAnchor(target);
-        double centerX = anchor == null ? target.getX() : anchor.getX() + 0.5D;
-        double centerZ = anchor == null ? target.getZ() : anchor.getZ() + 0.5D;
-        double angle = random.nextDouble() * Math.PI * 2.0D;
-        double distance = 24.0D + random.nextDouble() * 18.0D;
-        int x = (int) Math.floor(centerX + Math.cos(angle) * distance);
-        int z = (int) Math.floor(centerZ + Math.sin(angle) * distance);
-        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        ScarecrowEntity scarecrow = FieldOfMemories.SCARECROW_ENTITY.get().create(level);
-        if (scarecrow != null) {
-            scarecrow.moveTo(x + 0.5D, y, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
-            level.addFreshEntity(scarecrow);
+        for (int attempt = 0; attempt < 32; attempt++) {
+            double angle = random.nextDouble() * Math.PI * 2.0D;
+            // Keep it well outside the immediate play area, regardless of the home anchor.
+            double distance = 48.0D + random.nextDouble() * 24.0D;
+            int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
+            int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
+            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            BlockPos ground = new BlockPos(x, y - 1, z);
+            BlockPos feet = new BlockPos(x, y, z);
+
+            boolean tooClose = false;
+            for (ServerPlayer player : playersInLevel(level)) {
+                if (player.distanceToSqr(x + 0.5D, y, z + 0.5D) < 40.0D * 40.0D) {
+                    tooClose = true;
+                    break;
+                }
+            }
+            if (tooClose || !level.getBlockState(ground).isSolidRender(level, ground)
+                    || !level.getBlockState(feet).isAir()
+                    || !level.getBlockState(feet.above()).isAir()
+                    || !level.getFluidState(feet).isEmpty()
+                    || !level.getFluidState(feet.above()).isEmpty()) continue;
+
+            ScarecrowEntity scarecrow = FieldOfMemories.SCARECROW_ENTITY.get().create(level);
+            if (scarecrow == null) return;
+            // The model's feet extend slightly below the entity origin; lift it clear of the ground.
+            scarecrow.moveTo(x + 0.5D, y + 0.18D, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
+            if (level.noCollision(scarecrow)) {
+                level.addFreshEntity(scarecrow);
+                return;
+            }
+            scarecrow.discard();
         }
+    }
+
+    private static List<ServerPlayer> playersInLevel(ServerLevel level) {
+        List<ServerPlayer> players = new ArrayList<>();
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.serverLevel() == level && !player.isCreative() && !player.isSpectator()) {
+                players.add(player);
+            }
+        }
+        return players;
     }
 
 
