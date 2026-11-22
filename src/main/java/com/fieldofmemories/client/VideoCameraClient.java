@@ -159,10 +159,8 @@ public final class VideoCameraClient {
         @SubscribeEvent
         public static void cameraOpenSound(PlayerInteractEvent.RightClickItem event) {
             if (!event.getLevel().isClientSide || !(event.getItemStack().getItem() instanceof VideoCameraItem)) return;
-            if (!VideoCameraItem.isOpen(event.getItemStack())) {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(
-                        FieldOfMemories.CAMERA_OPEN_SOUND.get(), 1.0F, 1.0F));
-            }
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(
+                    FieldOfMemories.CAMERA_OPEN_SOUND.get(), 1.0F, 1.0F));
         }
 
         @SubscribeEvent
