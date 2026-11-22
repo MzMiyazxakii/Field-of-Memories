@@ -3,6 +3,7 @@ package com.fieldofmemories.client;
 import com.fieldofmemories.client.model.ScarecrowModel;
 import com.fieldofmemories.entity.ScarecrowEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -24,6 +25,7 @@ public class ScarecrowRenderer extends EntityRenderer<ScarecrowEntity> {
     public void render(ScarecrowEntity entity, float entityYaw, float partialTick, PoseStack poseStack,
                        MultiBufferSource buffer, int packedLight) {
         poseStack.pushPose();
+        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw));
         model.setupAnim(entity, 0.0F, 0.0F, entity.tickCount + partialTick, 0.0F, 0.0F);
         model.renderToBuffer(poseStack, buffer.getBuffer(RenderType.entityCutoutNoCull(TEXTURE)),
                 packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);

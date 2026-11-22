@@ -20,6 +20,15 @@ public class ScarecrowEntity extends Entity {
         super.tick();
         setDeltaMovement(Vec3.ZERO);
         this.noPhysics = true;
+        if (!level().isClientSide) {
+            var target = level().getNearestPlayer(this, 64.0D);
+            if (target != null) {
+                float yaw = (float) (Math.atan2(target.getZ() - getZ(), target.getX() - getX())
+                        * (180.0D / Math.PI)) - 90.0F;
+                setYRot(yaw);
+                yRotO = yaw;
+            }
+        }
     }
 
     @Override protected void defineSynchedData() {}
