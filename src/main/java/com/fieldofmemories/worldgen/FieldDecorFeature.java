@@ -2,6 +2,9 @@ package com.fieldofmemories.worldgen;
 
 import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
+import com.fieldofmemories.block.TreeLeafletBlock;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -22,6 +25,8 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
             ResourceKey.create(Registries.BIOME, new ResourceLocation(FieldOfMemories.MOD_ID, "gloomy_field"));
     private static final ResourceKey<Biome> EDGE_BIOME =
             ResourceKey.create(Registries.BIOME, new ResourceLocation(FieldOfMemories.MOD_ID, "gloomy_edge"));
+    private static final ResourceKey<Biome> FOREST_BIOME =
+            ResourceKey.create(Registries.BIOME, new ResourceLocation(FieldOfMemories.MOD_ID, "gloomy_forest"));
 
     public FieldDecorFeature(com.mojang.serialization.Codec<NoneFeatureConfiguration> codec) {
         super(codec);
@@ -86,7 +91,38 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
         if (random.nextFloat() < 0.12F * (edgeChunk ? 1.4F : 1.0F)) {
             placeLoosePumpkins(level, random, minX, minZ);
         }
+
+        // Leaflets are attached after the forest trees have generated.
+        placeTreeLeaflets(level, random, minX, minZ);
         return true;
+    }
+
+
+    private static void placeTreeLeaflets(WorldGenLevel level, RandomSource random, int minX, int minZ) {
+        BlockState leaflet = FieldOfMemories.TREE_LEAFLET_BLOCK.get().defaultBlockState();
+        for (int x = minX; x < minX + 16; x++) {
+            for (int z = minZ; z < minZ + 16; z++) {
+                int topY = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z);
+                int bottomY = Math.max(level.getMinBuildHeight(), topY - 28);
+                for (int y = bottomY; y < topY; y++) {
+                    BlockPos logPos = new BlockPos(x, y, z);
+                    if (!level.getBiome(logPos).is(FOREST_BIOME)) continue;
+                    if (!level.getBlockState(logPos).is(BlockTags.LOGS)) continue;
+                    if (random.nextFloat() > 0.10F) continue;
+
+                    Direction start = Direction.Plane.HORIZONTAL.getRandomDirection(random);
+                    for (int offset = 0; offset < 4; offset++) {
+                        Direction facing = Direction.from2DDataValue((start.get2DDataValue() + offset) & 3);
+                        BlockPos leafletPos = logPos.relative(facing);
+                        if (!level.getBlockState(leafletPos).isAir()) continue;
+                        BlockState state = leaflet.setValue(TreeLeafletBlock.FACING, facing);
+                        if (!state.canSurvive(level, leafletPos)) continue;
+                        level.setBlock(leafletPos, state, 2);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     private static double roadCenterX(int z) {
