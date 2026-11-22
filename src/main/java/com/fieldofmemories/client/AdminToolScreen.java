@@ -114,6 +114,16 @@ public class AdminToolScreen extends Screen {
             add("Заставить игрока упасть", cx, y, () -> go("players"));
             add("Вызвать скример на игроке", cx, y + 25, () -> go("scream_players"));
             add("Назад", cx, y + 77, () -> go("home"));
+        } else if (page.equals("activity")) {
+            HorrorNetwork.requestData();
+            add("Шанс пугала −", cx - 82, y, () -> HorrorNetwork.adjust(0, -5));
+            add("Шанс пугала +", cx + 82, y, () -> HorrorNetwork.adjust(0, 5));
+            add("Шанс лица −", cx - 82, y + 25, () -> HorrorNetwork.adjust(1, -5));
+            add("Шанс лица +", cx + 82, y + 25, () -> HorrorNetwork.adjust(1, 5));
+            add("Общая активность −", cx - 82, y + 50, () -> HorrorNetwork.adjust(2, -10));
+            add("Общая активность +", cx + 82, y + 50, () -> HorrorNetwork.adjust(2, 10));
+            add("Обновить данные", cx, y + 77, HorrorNetwork::requestData);
+            add("Назад", cx, y + 102, () -> go("home"));
         } else if (page.equals("scream_players")) {
             int row = 0;
             if (Minecraft.getInstance().level != null) {
