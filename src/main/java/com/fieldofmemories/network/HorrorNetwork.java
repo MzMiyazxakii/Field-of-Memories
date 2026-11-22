@@ -106,7 +106,7 @@ public final class HorrorNetwork {
                     context.get().setPacketHandled(true);
                 }).add();
 
-        CHANNEL.messageBuilder(ForceRiftsPacket.class, 12)
+        CHANNEL.messageBuilder(ForceRiftsPacket.class, 13)
                 .encoder((packet, buffer) -> {})
                 .decoder(buffer -> new ForceRiftsPacket())
                 .consumerMainThread((packet, context) -> {
