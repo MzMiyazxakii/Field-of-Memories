@@ -315,12 +315,11 @@ public final class NetworkHandler {
             if (result < 0) player.kill();
             return;
         }
-        long elapsed = level.getGameTime() - session.startedAt();
-        if (elapsed < 480 || !player.blockPosition().closerThan(session.pos(), 5.0D)) return;
         if (!level.getBlockState(session.pos()).is(FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get())) return;
         level.destroyBlock(session.pos(), false);
         net.minecraft.world.item.ItemStack reward = StoolLootData.get(level).roll(level.random);
-        if (!reward.isEmpty()) net.minecraft.world.level.block.Block.popResource(level, session.pos(), reward);
+        if (reward.isEmpty()) reward = new ItemStack(net.minecraft.world.item.Items.DIAMOND);
+        net.minecraft.world.level.block.Block.popResource(level, session.pos(), reward);
         dropBrokenStoolParts(level, session.pos());
     }
 

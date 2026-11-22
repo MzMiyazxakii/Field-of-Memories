@@ -2,6 +2,7 @@ package com.fieldofmemories.client;
 
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.client.MemoryDiscClient;
+import com.fieldofmemories.client.StoolMinigameScreen;
 import com.fieldofmemories.network.NetworkHandler;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -427,6 +428,16 @@ public final class MovementClient {
 
     @SubscribeEvent
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
+
+        float madness = StoolMinigameScreen.cameraMadness();
+        if (madness > 0.0F) {
+            float t = StoolMinigameScreen.cameraPhase(event.getPartialTick());
+            float fast = 1.0F + madness * 3.5F;
+            event.setYaw(event.getYaw() + (float)Math.sin(t * 0.83F) * 0.75F * fast);
+            event.setPitch(event.getPitch() + (float)Math.cos(t * 1.17F) * 0.55F * fast);
+            event.setRoll(event.getRoll() + (float)Math.sin(t * 1.43F) * 0.9F * fast);
+        }
+
         LocalPlayer player = Minecraft.getInstance().player;
         if (waitingForSpace) {
             event.setYaw(spawnLockedYaw);

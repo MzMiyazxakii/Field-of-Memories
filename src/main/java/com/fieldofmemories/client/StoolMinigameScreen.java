@@ -8,6 +8,9 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Random;
 
 public final class StoolMinigameScreen extends Screen {
+    private static StoolMinigameScreen activeScreen;
+    public static float cameraMadness() { return activeScreen == null || activeScreen.finished ? 0.0F : Math.min(1.0F, 0.25F + activeScreen.progress / (float)Math.max(1, activeScreen.sequence.length()) * 0.75F); }
+    public static float cameraPhase(float partialTick) { return activeScreen == null ? 0.0F : activeScreen.ticks + partialTick; }
     private final String sequence;
     private int ticks;
     private int progress;
@@ -22,6 +25,7 @@ public final class StoolMinigameScreen extends Screen {
     public StoolMinigameScreen(String sequence) {
         super(Component.literal("Аномальный табурет"));
         this.sequence = sequence;
+        activeScreen = this;
     }
 
     @Override
@@ -45,6 +49,7 @@ public final class StoolMinigameScreen extends Screen {
         attempts--;
         if (attempts <= 0) {
             finished = true;
+            activeScreen = null;
             NetworkHandler.finishStoolMinigame(-1);
             if (minecraft != null) minecraft.setScreen(null);
         } else {
@@ -55,6 +60,7 @@ public final class StoolMinigameScreen extends Screen {
     private void succeed() {
         if (finished) return;
         finished = true;
+        activeScreen = null;
         NetworkHandler.finishStoolMinigame(1);
         if (minecraft != null) minecraft.setScreen(null);
     }
@@ -62,6 +68,7 @@ public final class StoolMinigameScreen extends Screen {
     private void cancel() {
         if (finished) return;
         finished = true;
+        activeScreen = null;
         NetworkHandler.finishStoolMinigame(0);
         if (minecraft != null) minecraft.setScreen(null);
     }
@@ -70,10 +77,7 @@ public final class StoolMinigameScreen extends Screen {
     public void render(GuiGraphics gui, int mouseX, int mouseY, float partialTick) {
         renderBackground(gui);
         float madness = Math.min(1.0F, 0.25F + progress / (float)Math.max(1, sequence.length()) * 0.75F);
-        int shakeX = (int)Math.round((hallucinationRandom.nextDouble() - 0.5D) * 2.0D * (1.0D + madness * 4.0D));
-        int shakeY = (int)Math.round((hallucinationRandom.nextDouble() - 0.5D) * 2.0D * (1.0D + madness * 3.0D));
         gui.pose().pushPose();
-        gui.pose().translate(shakeX, shakeY, 0);
         gui.fill(0, 0, width, height, 0x22000000);
         if (ticks % 11 < 3) {
             int bandY = hallucinationRandom.nextInt(Math.max(1, height));
@@ -130,6 +134,8 @@ public final class StoolMinigameScreen extends Screen {
         }
         return true;
     }
+
+    @Override public void removed() { if (activeScreen == this) activeScreen = null; super.removed(); }
 
     @Override public boolean isPauseScreen() { return false; }
 }
