@@ -58,6 +58,27 @@ jobs:
                   element.pop("name", None)
                   if element.get("rotation", {}).get("angle") == 0:
                       element.pop("rotation", None)
+              # Keep the exact side-panel geometry from the two camera models supplied by the user.
+              side_geometry = {
+                  "video_camera.json": [
+                      ([5,0.9,8.2], [6.275,7.075,12.05], None),
+                      ([2.9774,5.32114,-0.01], [4.9974,7.34114,12.06], None),
+                      ([2.95277,0.63958,-0.01], [4.97277,2.65958,12.06], None),
+                      ([3.65,1.95,0.075], [5,6,12.05], None)],
+                  "video_camera_open.json": [
+                      ([-6.05,0.9,0], [-2.2,7.075,1.275], None),
+                      ([-6.06,5.32114,-2.0226], [6.01,7.34114,-0.0026],
+                       {"angle":22.5,"axis":"x","origin":[5,4,0]}),
+                      ([-6.06,0.63958,-2.04723], [6.01,2.65958,-0.02723],
+                       {"angle":-22.5,"axis":"x","origin":[5,4,0]}),
+                      ([-6.05,1.95,-1.35], [5.925,6,0], None)]}
+              for element, (start, end, rotation) in zip(model.get("elements", [])[18:22],
+                                                          side_geometry[target]):
+                  element["from"], element["to"] = start, end
+                  if rotation:
+                      element["rotation"] = rotation
+                  else:
+                      element.pop("rotation", None)
               if target == "video_camera.json":
                   model["overrides"] = [{
                       "predicate": {"fieldofmemories:open": 1.0},
