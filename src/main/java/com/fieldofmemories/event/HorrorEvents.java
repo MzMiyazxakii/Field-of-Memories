@@ -63,7 +63,7 @@ public final class HorrorEvents {
 
         // One shared world cooldown: danger and activity make all world events happen more often.
         double dangerFactor = 1.0D - danger * 0.006D;
-        long interval = Math.max(400L, (long) (1800.0D * dangerFactor * 100.0D / activity));
+        long interval = Math.max(300L, (long) (600.0D * dangerFactor * 100.0D / activity));
         HorrorWorldData.setNextAmbientEvent(level, now + interval);
     }
 
