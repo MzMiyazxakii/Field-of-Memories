@@ -25,7 +25,7 @@ public class FieldOfMemories {
     public static final String MOD_ID = "fieldofmemories";
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
-    public static final RegistryObject<Block> SCARECROW = BLOCKS.register("scarecrow", () -> new Block(BlockBehaviour.Properties.of().strength(1.0F).sound(SoundType.HAY).noOcclusion()));
+    public static final RegistryObject<Block> SCARECROW = BLOCKS.register("scarecrow", () -> new Block(BlockBehaviour.Properties.of().strength(1.0F).sound(SoundType.GRASS).noOcclusion()));
     public static final RegistryObject<Item> ADMIN_TOOL = ITEMS.register("admin_tool", () -> new AdminToolItem(new Item.Properties()));
     public static final RegistryObject<Item> MEMORY_DISC_1 = registerMemoryDisc("memory_disc_1", 0);
     public static final RegistryObject<Item> MEMORY_DISC_2 = registerMemoryDisc("memory_disc_2", 1);
