@@ -10,7 +10,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ComputeFovModifierEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
-import net.minecraftforge.client.event.RenderHandEvent;
+import net.minecraftforge.client.event.RenderHandEvent;\nimport net.minecraftforge.client.event.ScreenEvent;\nimport net.minecraft.client.gui.screens.inventory.InventoryScreen;\nimport net.minecraft.world.inventory.Slot;\nimport net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
