@@ -15,6 +15,7 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import com.fieldofmemories.block.LootContainerBlock;
 import com.fieldofmemories.block.TreeLeafletBlock;
+import com.fieldofmemories.block.AnomalousStoolBlock;
 import net.minecraft.world.item.BlockItem;
 import com.fieldofmemories.item.AdminToolItem;
 import com.fieldofmemories.item.MemoryDiscItem;
@@ -57,6 +58,8 @@ public class FieldOfMemories {
     public static final RegistryObject<Block> BACKPACK_BLOCK = BLOCKS.register("backpack", () -> new LootContainerBlock(true));
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));
     public static final RegistryObject<Block> TREE_LEAFLET_BLOCK = BLOCKS.register("tree_leaflet", () -> new TreeLeafletBlock(BlockBehaviour.Properties.of().strength(0.1F).sound(net.minecraft.world.level.block.SoundType.WOOL).noOcclusion().noCollission()));
+    public static final RegistryObject<Block> ANOMALOUS_STOOL_BLOCK = BLOCKS.register("anomalous_stool", AnomalousStoolBlock::new);
+    public static final RegistryObject<Item> ANOMALOUS_STOOL = ITEMS.register("anomalous_stool", () -> new BlockItem(ANOMALOUS_STOOL_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> CARDBOARD_BOX_ITEM = ITEMS.register("cardboard_box", () -> new BlockItem(CARDBOARD_BOX_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> BATTERY = ITEMS.register("battery", () -> new BatteryItem(new Item.Properties()));
     public static final RegistryObject<Item> VIDEO_CAMERA = ITEMS.register("video_camera", () -> new VideoCameraItem(new Item.Properties().stacksTo(1)));

@@ -11,6 +11,8 @@
   "key.categories.fieldofmemories": "Field of Memories",
   "block.fieldofmemories.backpack": "Рюкзак",
   "block.fieldofmemories.cardboard_box": "Картонная коробка",
+  "block.fieldofmemories.anomalous_stool": "Аномальный табурет",
+  "item.fieldofmemories.anomalous_stool": "Аномальный табурет",
   "block.minecraft.spruce_leaves": "Исхудавшая листва",
   "item.fieldofmemories.video_camera": "Видеокамера",
   "item.fieldofmemories.old_camera": "Старая фотокамера",

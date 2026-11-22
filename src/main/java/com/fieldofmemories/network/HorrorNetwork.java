@@ -98,6 +98,7 @@ public final class HorrorNetwork {
                             case "battery" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.BATTERY.get());
                             case "video_camera" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.VIDEO_CAMERA.get());
                             case "old_camera" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.OLD_CAMERA.get());
+                            case "anomalous_stool" -> new net.minecraft.world.item.ItemStack(FieldOfMemories.ANOMALOUS_STOOL.get());
                             default -> net.minecraft.world.item.ItemStack.EMPTY;
                         };
                         if (!stack.isEmpty() && !player.getInventory().add(stack)) player.drop(stack, false);

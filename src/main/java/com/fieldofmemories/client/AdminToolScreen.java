@@ -193,10 +193,11 @@ public class AdminToolScreen extends Screen {
             add("Батарейка", cx, y, () -> HorrorNetwork.giveAdminItem("battery"));
             add("Видеокамера", cx, y + 25, () -> HorrorNetwork.giveAdminItem("video_camera"));
             add("Фотокамера", cx, y + 50, () -> HorrorNetwork.giveAdminItem("old_camera"));
-            add("Воспоминания", cx, y + 75, () -> go("memory_items"));
-            add("Лут коробок", cx, y + 100, () -> go("box_loot"));
-            add("Шансы появления", cx, y + 125, () -> go("item_spawn"));
-            add("Назад", cx, y + 155, () -> go("home"));
+            add("Аномальный табурет", cx, y + 75, () -> HorrorNetwork.giveAdminItem("anomalous_stool"));
+            add("Воспоминания", cx, y + 100, () -> go("memory_items"));
+            add("Лут коробок", cx, y + 125, () -> go("box_loot"));
+            add("Шансы появления", cx, y + 150, () -> go("item_spawn"));
+            add("Назад", cx, y + 180, () -> go("home"));
         } else if (page.equals("item_spawn")) {
             HorrorNetwork.requestData();
             add("Шанс диска на дереве −", cx - 82, y, () -> HorrorNetwork.adjust(5, -1));
