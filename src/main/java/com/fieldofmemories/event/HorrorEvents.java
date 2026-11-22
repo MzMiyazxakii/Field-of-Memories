@@ -36,7 +36,7 @@ public final class HorrorEvents {
                 || !level.dimension().equals(Level.OVERWORLD)) return;
 
         long now = level.getGameTime();
-        if (now % 100L != 0L || now < HorrorWorldData.getNextAmbientEvent(level)) return;
+        if (now % 100L != 0L) return;
 
         List<ServerPlayer> players = new ArrayList<>();
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
@@ -49,6 +49,9 @@ public final class HorrorEvents {
         int danger = HorrorWorldData.getDangerLevel(level);
         int activity = HorrorWorldData.getActivityMultiplier(level);
         RandomSource random = level.random;
+        FakeItemEvent.trySpawn(level, players, random, danger, activity);
+
+        if (now < HorrorWorldData.getNextAmbientEvent(level)) return;
 
         manageScarecrow(level, players, random, danger, activity);
         maybeSpawnSpirit(level, players, random, danger, activity);
