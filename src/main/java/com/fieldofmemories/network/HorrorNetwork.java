@@ -124,6 +124,10 @@ public final class HorrorNetwork {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> target), new ScreamPacket());
         target.hurt(target.damageSources().magic(), 4.0F);
         target.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        var level = target.serverLevel();
+        if (level.dimension().equals(net.minecraft.world.level.Level.OVERWORLD)) {
+            HorrorWorldData.setNextAmbientEvent(level, level.getGameTime() + 300L);
+        }
     }
 
     public static void requestScream(UUID target) {
