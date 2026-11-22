@@ -539,7 +539,7 @@ public final class MovementClient {
         if (prone && waitingForSpace
                 && (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type()
                 || event.getOverlay() == VanillaGuiOverlay.CROSSHAIR.type()
-                || event.getOverlay() == VanillaGuiOverlay.CHAT.type())) {
+                || event.getOverlay() == VanillaGuiOverlay.CHAT_PANEL.type())) {
             event.setCanceled(true);
         }
     }
