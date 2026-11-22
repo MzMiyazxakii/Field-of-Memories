@@ -1,0 +1,1 @@
+{"variants":{"facing=north":{"model":"fieldofmemories:block/tree_leaflet"},"facing=east":{"model":"fieldofmemories:block/tree_leaflet","y":90},"facing=south":{"model":"fieldofmemories:block/tree_leaflet","y":180},"facing=west":{"model":"fieldofmemories:block/tree_leaflet","y":270}}}
