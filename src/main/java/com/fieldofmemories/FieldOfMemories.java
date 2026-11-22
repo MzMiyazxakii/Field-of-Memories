@@ -16,6 +16,8 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import com.fieldofmemories.block.ScarecrowBlock;
 import com.fieldofmemories.block.LootContainerBlock;
+import com.fieldofmemories.block.TripleTallGrassBlock;
+import com.fieldofmemories.worldgen.TripleTallGrassFeature;
 import net.minecraft.world.item.BlockItem;
 import com.fieldofmemories.item.AdminToolItem;
 import com.fieldofmemories.item.MemoryDiscItem;
@@ -29,6 +31,7 @@ public class FieldOfMemories {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
     public static final RegistryObject<Block> SCARECROW = BLOCKS.register("scarecrow", ScarecrowBlock::new);
+    public static final RegistryObject<Block> TRIPLE_TALL_GRASS = BLOCKS.register("triple_tall_grass", TripleTallGrassBlock::new);
     public static final RegistryObject<Block> BACKPACK_BLOCK = BLOCKS.register("backpack", () -> new LootContainerBlock(true));
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));
     public static final RegistryObject<Item> CARDBOARD_BOX_ITEM = ITEMS.register("cardboard_box", () -> new BlockItem(CARDBOARD_BOX_BLOCK.get(), new Item.Properties()));
@@ -67,6 +70,8 @@ public class FieldOfMemories {
 
     public static final DeferredRegister<Feature<?>> FEATURES =
             DeferredRegister.create(ForgeRegistries.FEATURES, MOD_ID);
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> TRIPLE_TALL_GRASS_FEATURE =
+            FEATURES.register("triple_tall_grass", () -> new TripleTallGrassFeature(NoneFeatureConfiguration.CODEC));
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> FIELD_DECOR =
             FEATURES.register("field_decor", () -> new FieldDecorFeature(NoneFeatureConfiguration.CODEC));
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> ABANDONED_SETTLEMENT =
