@@ -103,11 +103,18 @@ public final class HorrorNetwork {
                 .decoder(buffer -> new UseStrawBedPacket(buffer.readBlockPos()))
                 .consumerMainThread((packet, context) -> {
                     ServerPlayer player = context.get().getSender();
-                    if (player != null && player.distanceToSqr(
-                            packet.pos().getX() + 0.5D, packet.pos().getY() + 0.5D, packet.pos().getZ() + 0.5D) <= 36.0D
-                            && player.level().getBlockState(packet.pos()).is(FieldOfMemories.STRAW_BED_BLOCK.get())
-                            && !player.isSleeping()) {
-                        player.startSleeping(packet.pos());
+                    if (player != null && !player.isSleeping()) {
+                        var bedState = player.level().getBlockState(packet.pos());
+                        if (bedState.is(FieldOfMemories.STRAW_BED_BLOCK.get())) {
+                            var headPos = com.fieldofmemories.block.StrawBedBlock.getHeadPos(bedState, packet.pos());
+                            var headState = player.level().getBlockState(headPos);
+                            if (player.distanceToSqr(headPos.getX() + 0.5D, headPos.getY() + 0.5D,
+                                    headPos.getZ() + 0.5D) <= 36.0D
+                                    && headState.is(FieldOfMemories.STRAW_BED_BLOCK.get())
+                                    && !headState.getValue(net.minecraft.world.level.block.BedBlock.OCCUPIED)) {
+                                player.startSleeping(headPos);
+                            }
+                        }
                     }
                     context.get().setPacketHandled(true);
                 }).add();
