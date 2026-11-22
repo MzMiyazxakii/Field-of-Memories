@@ -317,7 +317,7 @@ public final class NetworkHandler {
         }
         if (!level.getBlockState(session.pos()).is(FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get())) return;
         level.destroyBlock(session.pos(), false);
-        net.minecraft.world.item.ItemStack reward = StoolLootData.get(level).roll(level.random);
+        net.minecraft.world.item.ItemStack reward = StoolLootData.get(level).rollForStool(level.random);
         if (reward.isEmpty()) reward = new ItemStack(net.minecraft.world.item.Items.DIAMOND);
         net.minecraft.world.level.block.Block.popResource(level, session.pos(), reward);
         dropBrokenStoolParts(level, session.pos());
