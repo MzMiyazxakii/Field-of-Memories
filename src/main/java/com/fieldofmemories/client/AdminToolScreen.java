@@ -22,7 +22,7 @@ public class AdminToolScreen extends Screen {
     private static int faceChance = 10;
     private static int spiritChance = 2;
     private static int mimicChance = 3;
-    private static int treeDiscChance = 3;
+    private static int treeDiscChance = 25;
     private static int houseCameraChance = 32;
 
     private static final String[] LOOT_ITEM_IDS = {
@@ -60,7 +60,7 @@ public class AdminToolScreen extends Screen {
         faceChance = Math.max(0, Math.min(100, face));
         spiritChance = Math.max(0, Math.min(100, spirit));
         mimicChance = Math.max(0, Math.min(100, mimic));
-        treeDiscChance = Math.max(0, Math.min(100, treeDisc));
+        treeDiscChance = Math.max(0, Math.min(1000, treeDisc));
         houseCameraChance = Math.max(0, Math.min(100, houseCamera));
     }
 
@@ -279,7 +279,7 @@ public class AdminToolScreen extends Screen {
             drawRightInfo(gui, "Шанс мимика: " + mimicChance + "%", height / 2 + 62);
         }
         if (page.equals("item_spawn")) {
-            drawRightInfo(gui, "Диск на дереве: " + treeDiscChance + "%", height / 2 + 4);
+            drawRightInfo(gui, "Диск на дереве: " + (treeDiscChance / 10) + "." + (treeDiscChance % 10) + "%", height / 2 + 4);
             drawRightInfo(gui, "Камера в доме: " + houseCameraChance + "%", height / 2 + 16);
         }
         if (page.equals("movement")) drawRightInfo(gui, String.format("Бонус скорости: %.2f", MovementClient.getAdminSpeed()), height / 2 + 12);
