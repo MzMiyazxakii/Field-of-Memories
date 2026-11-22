@@ -11,10 +11,13 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -26,6 +29,7 @@ import java.util.List;
 @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class FakeItemEvent {
     private static final String FAKE_TAG = "FieldOfMemoriesFakeItem";
+    private static final String CHEST_CHECKED_TAG = "FieldOfMemoriesFakeItemChecked";
     private static final String[] GLYPHS = {
             "⟊⍜⟟⟒ ⌖⍜⟟⟒", "⸸⟟⍜⟒ ⌇⍜⟟⟒", "⍜⟒⌖⟊ ⟟⸸⍜", "⌇⟒⸸⍜ ⌖⟟⟊",
             "⟟⟊⸸ ⍜⌖⟒", "⌖⍜⸸⟟ ⟒⌇⟊", "⍜⌇⟊⸸ ⟟⟒⌖"
@@ -37,7 +41,9 @@ public final class FakeItemEvent {
                                 int danger, int activity) {
         if (players.isEmpty()) return;
 
-        // Rare world event; higher danger and activity make it somewhat more likely.
+        // Check loaded chest inventories independently from the ground-spawn roll.
+        tryPopulateNearbyChests(level, players, random, danger, activity);
+
         int chance = Math.min(4, 1 + danger / 50 + Math.max(0, activity - 100) / 150);
         if (random.nextInt(100) >= chance) return;
 
@@ -47,15 +53,59 @@ public final class FakeItemEvent {
         int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
         int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
         int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        if (!level.getBlockState(new net.minecraft.core.BlockPos(x, y - 1, z)).isSolidRender(level,
-                new net.minecraft.core.BlockPos(x, y - 1, z))) return;
-        if (!level.getBlockState(new net.minecraft.core.BlockPos(x, y, z)).isAir()) return;
+        net.minecraft.core.BlockPos ground = new net.minecraft.core.BlockPos(x, y - 1, z);
+        net.minecraft.core.BlockPos spawn = new net.minecraft.core.BlockPos(x, y, z);
+        if (!level.getBlockState(ground).isSolidRender(level, ground)) return;
+        if (!level.getBlockState(spawn).isAir()) return;
 
         ItemStack fake = createFakeStack(random);
+        if (fake.isEmpty()) return;
         ItemEntity entity = new ItemEntity(level, x + 0.5D, y + 0.15D, z + 0.5D, fake);
         entity.setDefaultPickUpDelay();
         entity.setUnlimitedLifetime();
         level.addFreshEntity(entity);
+    }
+
+    private static void tryPopulateNearbyChests(ServerLevel level, List<ServerPlayer> players,
+                                                RandomSource random, int danger, int activity) {
+        int chance = Math.min(5, 2 + danger / 50 + Math.max(0, activity - 100) / 150);
+        for (ServerPlayer player : players) {
+            ChunkPos center = new ChunkPos(player.blockPosition());
+            // Only inspect already-loaded chunks around active players; never force-load terrain.
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dz = -2; dz <= 2; dz++) {
+                    LevelChunk chunk = level.getChunkSource().getChunkNow(center.x + dx, center.z + dz);
+                    if (chunk == null) continue;
+                    for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
+                        if (!(blockEntity instanceof ChestBlockEntity chest) || chest.isRemoved()) continue;
+                        CompoundTag persistent = chest.getPersistentData();
+                        if (persistent.getBoolean(CHEST_CHECKED_TAG)) continue;
+
+                        // Leave unopened structure loot tables untouched. They will be checked
+                        // again after vanilla has generated their contents on the first opening.
+                        if (chest.getLootTable() != null) continue;
+
+                        persistent.putBoolean(CHEST_CHECKED_TAG, true);
+                        chest.setChanged();
+                        if (random.nextInt(100) >= chance || chest.isEmpty()) continue;
+
+                        int size = chest.getContainerSize();
+                        int start = random.nextInt(Math.max(1, size));
+                        for (int i = 0; i < size; i++) {
+                            int slot = (start + i) % size;
+                            if (chest.getItem(slot).isEmpty()) {
+                                ItemStack fake = createFakeStack(random);
+                                if (!fake.isEmpty()) {
+                                    chest.setItem(slot, fake);
+                                    chest.setChanged();
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private static ItemStack createFakeStack(RandomSource random) {
@@ -86,7 +136,6 @@ public final class FakeItemEvent {
             ItemStack stack = player.getInventory().items.get(slot);
             if (stack.isEmpty() || !stack.hasTag() || !stack.getTag().getBoolean(FAKE_TAG)) continue;
 
-            // Remove the counterfeit before applying the scare, so it cannot trigger twice.
             player.getInventory().setItem(slot, ItemStack.EMPTY);
             triggerForPlayer(player);
             return;
@@ -98,7 +147,6 @@ public final class FakeItemEvent {
                 ? FieldOfMemories.SMILE_FACE_SCREAM_1.get()
                 : FieldOfMemories.SMILE_FACE_SCREAM_2.get();
 
-        // playNotifySound sends the sound only to this player, not to nearby players.
         player.playNotifySound(scream, SoundSource.MASTER, 1.0F, 1.0F);
         player.hurt(player.damageSources().magic(), 6.0F);
         player.sendSystemMessage(Component.literal("это мои вещи"));
