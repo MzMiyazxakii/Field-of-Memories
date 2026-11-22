@@ -35,7 +35,7 @@ public class PlayerEchoEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 24.0F, 0.025F));
-        this.goalSelector.addGoal(2, new RandomStrollGoal(this, 0.72D));
+        this.goalSelector.addGoal(2, new RandomStrollGoal(this, 1.15D));
         this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
     }
 
@@ -74,7 +74,18 @@ public class PlayerEchoEntity extends PathfinderMob {
     @Override
     public void tick() {
         super.tick();
-        if (!level().isClientSide && tickCount > 2400) discard();
+        if (!level().isClientSide) {
+            if (tickCount % 45 == 0 && getNavigation().isDone() && random.nextFloat() < 0.75F) {
+                getNavigation().moveTo(getX() + (random.nextDouble() - 0.5D) * 12.0D,
+                        getY(), getZ() + (random.nextDouble() - 0.5D) * 12.0D, 1.2D);
+            }
+            if (onGround() && tickCount % 37 == 0 && random.nextFloat() < 0.28F) getJumpControl().jump();
+            if (getNavigation().isInProgress()) {
+                getLookControl().setLookAt(getX() + getDeltaMovement().x * 8.0D,
+                        getEyeY(), getZ() + getDeltaMovement().z * 8.0D);
+            }
+            if (tickCount > 2400) discard();
+        }
     }
 
     @Override

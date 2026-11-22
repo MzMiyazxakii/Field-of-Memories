@@ -12,6 +12,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
@@ -290,6 +292,13 @@ public final class NetworkHandler {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new StoolFinishPacket(result));
     }
 
+    private static void dropBrokenStoolParts(net.minecraft.server.level.ServerLevel level, net.minecraft.core.BlockPos pos) {
+        net.minecraft.world.level.block.Block.popResource(level, pos,
+                new ItemStack(net.minecraft.world.item.Items.OAK_PLANKS, 2 + level.random.nextInt(3)));
+        net.minecraft.world.level.block.Block.popResource(level, pos,
+                new ItemStack(net.minecraft.world.item.Items.STICK, 1 + level.random.nextInt(3)));
+    }
+
     private static void finishStoolMinigameServer(ServerPlayer player, int result) {
         StoolSession session = STOOL_SESSIONS.remove(player.getUUID());
         if (session == null) return;
@@ -298,12 +307,12 @@ public final class NetworkHandler {
         if (player.isPassenger()) player.stopRiding();
         if (seat != null) seat.discard();
 
-        if (result == 0) return;
-        if (result < 0) {
+        if (result <= 0) {
             if (level.getBlockState(session.pos()).is(FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get())) {
                 level.destroyBlock(session.pos(), false);
+                dropBrokenStoolParts(level, session.pos());
             }
-            player.kill();
+            if (result < 0) player.kill();
             return;
         }
         long elapsed = level.getGameTime() - session.startedAt();
@@ -312,6 +321,7 @@ public final class NetworkHandler {
         level.destroyBlock(session.pos(), false);
         net.minecraft.world.item.ItemStack reward = StoolLootData.get(level).roll(level.random);
         if (!reward.isEmpty()) net.minecraft.world.level.block.Block.popResource(level, session.pos(), reward);
+        dropBrokenStoolParts(level, session.pos());
     }
 
     private static void sendMemoryDiscStats(ServerPlayer player) {
@@ -467,7 +477,12 @@ public final class NetworkHandler {
 
         @SubscribeEvent
         public static void onLivingDeath(LivingDeathEvent event) {
-            if (event.getEntity() instanceof ServerPlayer player) cancelMemoryDisc(player);
+            if (event.getEntity() instanceof ServerPlayer player) {
+                cancelMemoryDisc(player);
+                player.serverLevel().getGameRules().getRule(GameRules.RULE_SHOWDEATHMESSAGES).set(false, player.server);
+                player.server.getPlayerList().broadcastSystemMessage(
+                        Component.literal(player.getName().getString() + " переродился"), false);
+            }
         }
 
         @SubscribeEvent
