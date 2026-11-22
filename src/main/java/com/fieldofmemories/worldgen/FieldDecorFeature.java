@@ -38,33 +38,52 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
         // A continuous, gently winding main track, calculated from world coordinates
         // so neighboring chunks join without visible gaps.
         for (int z = minZ; z < minZ + 16; z++) {
-            double roadX = roadCenterX(z);
             for (int x = minX; x < minX + 16; x++) {
                 BlockPos ground = surface(level, x, z);
                 if (ground == null || !isOurBiome(level, ground)) continue;
-                double distance = Math.abs(x - roadX);
-                boolean trail = isBranchTrail(x, z);
-                if (distance <= 1.8D) {
-                    replaceGround(level, ground, Blocks.DIRT_PATH.defaultBlockState());
-                } else if (distance <= 2.8D) {
-                    replaceGround(level, ground, Blocks.COARSE_DIRT.defaultBlockState());
-                } else if (trail && Math.abs(x - roadX) > 3.0D) {
-                    replaceGround(level, ground, Blocks.DIRT_PATH.defaultBlockState());
+                if (level.getBiome(ground).is(EDGE_BIOME)) {
+                    // A continuous, gently winding abandoned asphalt road through the edge biome.
+                    double centerZ = roadCenterZ(x);
+                    double distance = Math.abs(z - centerZ);
+                    if (distance <= 2.7D) {
+                        BlockState road = Blocks.BLACK_CONCRETE.defaultBlockState();
+                        if (distance >= 2.0D) road = Blocks.WHITE_CONCRETE.defaultBlockState();
+                        if (Math.abs(z - Math.round(centerZ)) < 0.5D && Math.floorMod(x, 18) < 5) {
+                            road = Blocks.YELLOW_CONCRETE.defaultBlockState();
+                        }
+                        replaceGround(level, ground, road);
+                    } else if (distance <= 3.7D) {
+                        replaceGround(level, ground, Blocks.GRAVEL.defaultBlockState());
+                    }
+                } else {
+                    double roadX = roadCenterX(z);
+                    double distance = Math.abs(x - roadX);
+                    boolean trail = isBranchTrail(x, z);
+                    if (distance <= 1.8D) {
+                        replaceGround(level, ground, Blocks.DIRT_PATH.defaultBlockState());
+                    } else if (distance <= 2.8D) {
+                        replaceGround(level, ground, Blocks.COARSE_DIRT.defaultBlockState());
+                    } else if (trail && Math.abs(x - roadX) > 3.0D) {
+                        replaceGround(level, ground, Blocks.DIRT_PATH.defaultBlockState());
+                    }
                 }
             }
         }
 
-        // Sparse abandoned farm plots, empty signposts and irregular hay stacks.
-        if (random.nextFloat() < 0.055F) {
+        // The transition biome is intentionally more cluttered than the open field.
+        BlockPos chunkCenter = surface(level, minX + 8, minZ + 8);
+        boolean edgeChunk = chunkCenter != null && level.getBiome(chunkCenter).is(EDGE_BIOME);
+        float density = edgeChunk ? 1.65F : 1.0F;
+        if (random.nextFloat() < 0.055F * density) {
             placeAbandonedPlot(level, random, minX, minZ);
         }
-        if (random.nextFloat() < 0.065F) {
+        if (random.nextFloat() < 0.065F * density) {
             placeBlankSign(level, random, minX, minZ);
         }
-        if (random.nextFloat() < 0.14F) {
+        if (random.nextFloat() < 0.14F * (edgeChunk ? 1.35F : 1.0F)) {
             placeHayStack(level, random, minX, minZ);
         }
-        if (random.nextFloat() < 0.12F) {
+        if (random.nextFloat() < 0.12F * (edgeChunk ? 1.4F : 1.0F)) {
             placeLoosePumpkins(level, random, minX, minZ);
         }
         return true;
@@ -72,6 +91,10 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
 
     private static double roadCenterX(int z) {
         return 24.0D + 48.0D * Math.sin(z * 0.0018D) + 19.0D * Math.sin(z * 0.0051D);
+    }
+
+    private static double roadCenterZ(int x) {
+        return 112.0D + 44.0D * Math.sin(x * 0.00115D) + 17.0D * Math.sin(x * 0.0042D);
     }
 
     private static boolean isBranchTrail(int x, int z) {
