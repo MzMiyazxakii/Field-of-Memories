@@ -2,6 +2,7 @@ package com.fieldofmemories.client;
 
 import com.fieldofmemories.FieldOfMemories;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraft.world.level.material.FogType;
 import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -22,6 +23,7 @@ public final class FogClient {
 
     @SubscribeEvent
     public static void onRenderFog(ViewportEvent.RenderFog event) {
+        if (event.getType() != FogType.NONE) return;
         float far = distance;
         event.setNearPlaneDistance(Math.max(4.0F, far * 0.12F));
         event.setFarPlaneDistance(far);
