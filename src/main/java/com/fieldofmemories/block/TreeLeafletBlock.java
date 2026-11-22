@@ -8,6 +8,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -36,7 +37,7 @@ public class TreeLeafletBlock extends Block {
     }
 
     @Override
-    public boolean canSurvive(BlockState state, Level level, BlockPos pos) {
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
         Direction facing = state.getValue(FACING);
         BlockPos supportPos = pos.relative(facing.getOpposite());
         return level.getBlockState(supportPos).isFaceSturdy(level, supportPos, facing);
@@ -46,7 +47,7 @@ public class TreeLeafletBlock extends Block {
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState,
                                   net.minecraft.world.level.LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
         if (direction == state.getValue(FACING).getOpposite()
-                && !canSurvive(state, (Level) level, pos)) {
+                && !neighborState.isFaceSturdy(level, neighborPos, state.getValue(FACING))) {
             return net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
         }
         return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
