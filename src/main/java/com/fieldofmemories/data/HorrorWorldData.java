@@ -11,11 +11,13 @@ public class HorrorWorldData extends SavedData {
     private static final String SCARECROW_CHANCE_KEY = "ScarecrowChance";
     private static final String FACE_CHANCE_KEY = "FaceChance";
     private static final String NEXT_EVENT_KEY = "NextAmbientEvent";
+    private static final String SPIRIT_DISC_FAILURES_KEY = "SpiritDiscFailures";
 
     private int activityMultiplier = 100;
     private int scarecrowChance = 10;
     private int faceChance = 10;
     private long nextAmbientEvent;
+    private int spiritDiscFailures;
 
     public static HorrorWorldData get(ServerLevel level) {
         ServerLevel overworld = level.getServer().overworld();
@@ -55,6 +57,15 @@ public class HorrorWorldData extends SavedData {
         }
     }
 
+    public static boolean rollSpiritDiscDrop(ServerLevel level) {
+        HorrorWorldData data = get(level);
+        data.spiritDiscFailures = Math.min(20, data.spiritDiscFailures + 1);
+        boolean dropped = data.spiritDiscFailures >= 20 || level.random.nextFloat() < 0.10F;
+        if (dropped) data.spiritDiscFailures = 0;
+        data.setDirty();
+        return dropped;
+    }
+
     public static void changeSetting(ServerLevel level, int setting, int amount) {
         HorrorWorldData data = get(level);
         int old;
@@ -87,6 +98,7 @@ public class HorrorWorldData extends SavedData {
         data.scarecrowChance = clamp(tag.contains(SCARECROW_CHANCE_KEY) ? tag.getInt(SCARECROW_CHANCE_KEY) : 10, 0, 100);
         data.faceChance = clamp(tag.contains(FACE_CHANCE_KEY) ? tag.getInt(FACE_CHANCE_KEY) : 10, 0, 100);
         data.nextAmbientEvent = Math.max(0L, tag.getLong(NEXT_EVENT_KEY));
+        data.spiritDiscFailures = clamp(tag.getInt(SPIRIT_DISC_FAILURES_KEY), 0, 19);
         return data;
     }
 
@@ -96,6 +108,7 @@ public class HorrorWorldData extends SavedData {
         tag.putInt(SCARECROW_CHANCE_KEY, scarecrowChance);
         tag.putInt(FACE_CHANCE_KEY, faceChance);
         tag.putLong(NEXT_EVENT_KEY, nextAmbientEvent);
+        tag.putInt(SPIRIT_DISC_FAILURES_KEY, spiritDiscFailures);
         return tag;
     }
 }
