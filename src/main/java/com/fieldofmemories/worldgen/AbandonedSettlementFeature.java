@@ -1,6 +1,8 @@
 package com.fieldofmemories.worldgen;
 
 import com.fieldofmemories.FieldOfMemories;
+import com.fieldofmemories.data.HorrorWorldData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
@@ -119,7 +121,9 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
     private static void placeCameraFrame(WorldGenLevel level, int floorX, int floorY, int floorZ,
                                          RandomSource random) {
         // Not every abandoned house contains a camera.
-        if (random.nextFloat() >= 0.32F) return;
+        float cameraChance = level.getLevel() instanceof ServerLevel serverLevel
+                ? HorrorWorldData.getHouseCameraChance(serverLevel) / 100.0F : 0.32F;
+        if (random.nextFloat() >= cameraChance) return;
         BlockPos floor = new BlockPos(floorX, floorY, floorZ);
         if (!level.getBlockState(floor).isFaceSturdy(level, floor, Direction.UP)) return;
 
