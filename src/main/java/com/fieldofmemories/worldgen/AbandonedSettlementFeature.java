@@ -125,7 +125,10 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
 
         ItemFrame frame = new ItemFrame(level.getLevel(), floor, Direction.UP);
         frame.setInvisible(true);
-        frame.setItem(new ItemStack(FieldOfMemories.VIDEO_CAMERA.get()), false);
+        ItemStack camera = random.nextBoolean()
+                ? new ItemStack(FieldOfMemories.VIDEO_CAMERA.get())
+                : new ItemStack(FieldOfMemories.OLD_CAMERA.get());
+        frame.setItem(camera, false);
         level.addFreshEntity(frame);
     }
 
