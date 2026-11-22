@@ -21,6 +21,7 @@ public final class VideoCameraClient {
     private static boolean effectLoaded;
     private static float viewBlend;
     private static int exitCooldown;
+    private static int exitKickTicks;
 
     private VideoCameraClient() {}
 
@@ -53,6 +54,7 @@ public final class VideoCameraClient {
             loadCameraEffect();
         } else {
             exitCooldown = 12;
+            exitKickTicks = 7;
         }
         HorrorNetwork.requestCameraViewing(active);
     }
@@ -87,6 +89,7 @@ public final class VideoCameraClient {
             if (event.phase != TickEvent.Phase.END) return;
             Minecraft mc = Minecraft.getInstance();
             if (exitCooldown > 0) exitCooldown--;
+            if (exitKickTicks > 0) exitKickTicks--;
             viewBlend = viewing ? Math.min(1.0F, viewBlend + 0.125F)
                     : Math.max(0.0F, viewBlend - 0.125F);
             if (viewBlend <= 0.0F && !viewing && effectLoaded) {
@@ -110,9 +113,13 @@ public final class VideoCameraClient {
 
         @SubscribeEvent
         public static void fov(ComputeFovModifierEvent event) {
-            if (viewBlend > 0.0F) {
-                event.setNewFovModifier(event.getNewFovModifier() * (1.0F - 0.32F * viewBlend));
+            float fov = event.getNewFovModifier();
+            if (viewBlend > 0.0F) fov *= (1.0F - 0.32F * viewBlend);
+            if (exitKickTicks > 0) {
+                float progress = (7.0F - exitKickTicks) / 7.0F;
+                fov *= 1.0F + (float) Math.sin(progress * Math.PI) * 0.035F;
             }
+            event.setNewFovModifier(fov);
         }
 
         @SubscribeEvent
