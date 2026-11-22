@@ -28,18 +28,18 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
     @Override public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> c) {
         WorldGenLevel l=c.level(); RandomSource r=c.random(); ChunkPos ch=new ChunkPos(c.origin());
         int x=ch.getMinBlockX()+8,z=ch.getMinBlockZ()+8; BlockPos g=surface(l,x,z); if(g==null)return false;
-        boolean forest=l.getBiome(g).is(FOREST), valid=forest||l.getBiome(g).is(FIELD)||l.getBiome(g).is(EDGE);
+        boolean forest=l.getBiome(g).is(FOREST), edge=l.getBiome(g).is(EDGE), valid=forest||l.getBiome(g).is(FIELD)||edge;
         if (valid && r.nextFloat() < 0.020F && placeLootContainer(l, x, z, com.fieldofmemories.FieldOfMemories.BACKPACK_BLOCK.get())) return true;
         if (valid && r.nextFloat() < 0.020F && placeLootContainer(l, x, z, com.fieldofmemories.FieldOfMemories.CARDBOARD_BOX_BLOCK.get())) return true;
-        if(valid&&r.nextFloat()<0.006F){ if(!forest&&r.nextFloat()<0.42F) village(l,x,z); else house(l,x,z,r.nextInt(3)); return true; }
-        if(valid&&r.nextFloat()<0.006F){ if(forest||r.nextBoolean())stable(l,x,z); else well(l,x,z); return true; }
-        if(valid&&r.nextFloat()<0.008F){cart(l,x,z,r);return true;}
+        if(valid&&r.nextFloat()<(edge?0.0025F:0.006F)){ if(!forest&&r.nextFloat()<0.42F) village(l,x,z); else house(l,x,z,r.nextInt(3)); return true; }
+        if(valid&&r.nextFloat()<(edge?0.0025F:0.006F)){ if(forest||r.nextBoolean())stable(l,x,z); else well(l,x,z); return true; }
+        if(valid&&r.nextFloat()<(edge?0.003F:0.008F)){cart(l,x,z,r);return true;}
         if(forest&&r.nextFloat()<0.018F)lamp(l,x,z);
-        else if(r.nextFloat()<0.006F)pillar(l,x,z,r);
-        else if(!forest&&r.nextFloat()<0.012F)garden(l,x,z,r);
-        else if(!forest&&r.nextFloat()<0.008F)market(l,x,z,r);
-        else if(!forest&&r.nextFloat()<0.008F)hayGolem(l,x,z);
-        else if(r.nextFloat()<0.006F)well(l,x,z);
+        else if(r.nextFloat()<(edge?0.0015F:0.006F))pillar(l,x,z,r);
+        else if(!forest&&r.nextFloat()<(edge?0.004F:0.012F))garden(l,x,z,r);
+        else if(!forest&&r.nextFloat()<(edge?0.003F:0.008F))market(l,x,z,r);
+        else if(!forest&&r.nextFloat()<(edge?0.003F:0.008F))hayGolem(l,x,z);
+        else if(r.nextFloat()<(edge?0.002F:0.006F))well(l,x,z);
         return true;
     }
 
