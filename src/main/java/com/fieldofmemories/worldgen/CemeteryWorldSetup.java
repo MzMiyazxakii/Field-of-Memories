@@ -120,7 +120,7 @@ public final class CemeteryWorldSetup {
         for (int i = 0; i < graves.length; i++) {
             int gx = x + graves[i][0], gz = z + graves[i][1];
             put(level, gx, y, gz, Blocks.MOSSY_COBBLESTONE);
-            put(level, gx, y + 1, gz, i % 3 == 0 ? Blocks.POLISHED_DEEPSLATE_WALL : Blocks.COBBLESTONE_WALL);
+            put(level, gx, y + 1, gz, i % 3 == 0 ? Blocks.POLISHED_BLACKSTONE_WALL : Blocks.COBBLESTONE_WALL);
             if (i % 2 == 0) put(level, gx, y + 2, gz, Blocks.SPRUCE_FENCE);
             put(level, gx, y, gz + 1, Blocks.MOSSY_STONE_BRICK_SLAB);
             if (i % 4 == 0) put(level, gx + 1, y + 1, gz, Blocks.COBWEB);
