@@ -215,7 +215,18 @@ public class AdminToolScreen extends Screen {
         renderBackground(gui);
         gui.drawCenteredString(font, Component.literal("АДМИН-ПАНЕЛЬ"), width / 2, height / 2 - 94, 0xFFFF9A38);
         gui.drawCenteredString(font, Component.literal(pageName()), width / 2, height / 2 - 81, 0xFFE0E0E0);
-        if (page.equals("events")) {\n            drawRightInfo(gui, "Опасность мира: " + worldDanger + " / 100", height / 2 + 18);\n            drawRightInfo(gui, "Шанс пугала: " + scarecrowChance + "%", height / 2 + 30);\n            drawRightInfo(gui, "Шанс лица: " + faceChance + "%", height / 2 + 42);\n        }\n        if (page.equals("activity")) {\n            drawRightInfo(gui, "Уровень опасности мира: " + worldDanger + " / 100", height / 2 + 8);\n            drawRightInfo(gui, "Общая активность: " + horrorActivity + "%", height / 2 + 20);\n            drawRightInfo(gui, "Шанс пугала: " + scarecrowChance + "%", height / 2 + 32);\n            drawRightInfo(gui, "Шанс лица: " + faceChance + "%", height / 2 + 44);\n        }\n        if (page.equals("movement")) drawRightInfo(gui, String.format("Бонус скорости: %.2f", MovementClient.getAdminSpeed()), height / 2 + 12);
+        if (page.equals("events")) {
+            drawRightInfo(gui, "Опасность мира: " + worldDanger + " / 100", height / 2 + 18);
+            drawRightInfo(gui, "Шанс пугала: " + scarecrowChance + "%", height / 2 + 30);
+            drawRightInfo(gui, "Шанс лица: " + faceChance + "%", height / 2 + 42);
+        }
+        if (page.equals("activity")) {
+            drawRightInfo(gui, "Уровень опасности мира: " + worldDanger + " / 100", height / 2 + 8);
+            drawRightInfo(gui, "Общая активность: " + horrorActivity + "%", height / 2 + 20);
+            drawRightInfo(gui, "Шанс пугала: " + scarecrowChance + "%", height / 2 + 32);
+            drawRightInfo(gui, "Шанс лица: " + faceChance + "%", height / 2 + 44);
+        }
+        if (page.equals("movement")) drawRightInfo(gui, String.format("Бонус скорости: %.2f", MovementClient.getAdminSpeed()), height / 2 + 12);
         if (page.equals("stamina")) {
             drawRightInfo(gui, "Максимум: " + (int) MovementClient.getAdminMaxStamina(), height / 2 + 2);
             drawRightInfo(gui, String.format("Восстановление: %.2f / тик", MovementClient.getAdminRecovery()), height / 2 + 14);
@@ -257,7 +268,8 @@ public class AdminToolScreen extends Screen {
 
     private String pageName() {
         return switch (page) {
-            case "events" -> "СОБЫТИЯ";\n            case "activity" -> "РЕГУЛИРОВКА АКТИВНОСТИ";
+            case "events" -> "СОБЫТИЯ";
+            case "activity" -> "РЕГУЛИРОВКА АКТИВНОСТИ";
             case "players" -> "ВЫБЕРИТЕ ИГРОКА";
             case "movement" -> "ДВИЖЕНИЕ";
             case "stamina" -> "ВЫНОСЛИВОСТЬ";
