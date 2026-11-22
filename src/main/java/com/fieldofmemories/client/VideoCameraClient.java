@@ -140,6 +140,7 @@ public final class VideoCameraClient {
             int h = gui.guiHeight();
             var main = mc.player.getMainHandItem();
             var off = mc.player.getOffhandItem();
+            boolean hasCamera = main.getItem() instanceof VideoCameraItem || off.getItem() instanceof VideoCameraItem;
             boolean cameraOpen = (main.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(main))
                     || (off.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(off));
             if (cameraOpen && !viewing) {
