@@ -43,6 +43,9 @@ public class FieldOfMemories {
     public static final RegistryObject<EntityType<SmileFaceEntity>> SMILE_FACE_ENTITY = ENTITY_TYPES.register(
             "smile_face", () -> EntityType.Builder.of(SmileFaceEntity::new, MobCategory.MISC)
                     .sized(1.0F, 1.2F).clientTrackingRange(64).updateInterval(2).build("smile_face"));
+    public static final RegistryObject<EntityType<PlayerEchoEntity>> PLAYER_ECHO_ENTITY = ENTITY_TYPES.register(
+            "player_echo", () -> EntityType.Builder.of(PlayerEchoEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.8F).clientTrackingRange(64).updateInterval(2).build("player_echo"));
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
     public static final RegistryObject<Block> BACKPACK_BLOCK = BLOCKS.register("backpack", () -> new LootContainerBlock(true));
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));
