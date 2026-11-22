@@ -5,6 +5,7 @@ import com.fieldofmemories.client.MovementClient;
 import com.fieldofmemories.data.MemoryDiscWorldData;
 import com.fieldofmemories.data.FogWorldData;
 import com.fieldofmemories.data.BoxLootData;
+import com.fieldofmemories.data.StoolLootData;
 import com.fieldofmemories.item.MemoryDiscItem;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.nbt.CompoundTag;
@@ -231,6 +232,33 @@ public final class NetworkHandler {
                     if (player != null) finishStoolMinigameServer(player, packet.progress());
                     context.get().setPacketHandled(true);
                 }).add();
+        CHANNEL.messageBuilder(StoolLootRequestPacket.class, 15)
+                .encoder((packet, buffer) -> {})
+                .decoder(buffer -> new StoolLootRequestPacket())
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player=context.get().getSender();
+                    if(player!=null && player.hasPermissions(2)) sendStoolLoot(player);
+                    context.get().setPacketHandled(true);
+                }).add();
+        CHANNEL.messageBuilder(StoolLootEditPacket.class, 16)
+                .encoder((packet, buffer) -> {buffer.writeInt(packet.index());buffer.writeInt(packet.action());})
+                .decoder(buffer -> new StoolLootEditPacket(buffer.readInt(),buffer.readInt()))
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player=context.get().getSender();
+                    if(player!=null && player.hasPermissions(2)){
+                        StoolLootData.get(player.serverLevel()).edit(packet.index(),packet.action());
+                        sendStoolLoot(player);
+                    }
+                    context.get().setPacketHandled(true);
+                }).add();
+        CHANNEL.messageBuilder(StoolLootSyncPacket.class, 17)
+                .encoder((packet, buffer) -> buffer.writeUtf(packet.entries()))
+                .decoder(buffer -> new StoolLootSyncPacket(buffer.readUtf()))
+                .consumerMainThread((packet, context) -> {
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
+                            com.fieldofmemories.client.AdminToolScreen.updateStoolLootData(packet.entries()));
+                    context.get().setPacketHandled(true);
+                }).add();
     }
 
 
@@ -244,6 +272,12 @@ public final class NetworkHandler {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new StoolStartPacket(pattern));
     }
 
+    private static void sendStoolLoot(ServerPlayer player) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new StoolLootSyncPacket(StoolLootData.get(player.serverLevel()).serializeForClient()));
+    }
+    public static void requestStoolLoot() { CHANNEL.send(PacketDistributor.SERVER.noArg(), new StoolLootRequestPacket()); }
+    public static void editStoolLoot(int index,int action) { CHANNEL.send(PacketDistributor.SERVER.noArg(), new StoolLootEditPacket(index,action)); }
+
     public static void finishStoolMinigame(int progress) {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new StoolFinishPacket(progress));
     }
@@ -256,35 +290,8 @@ public final class NetworkHandler {
         var level = player.serverLevel();
         if (!level.getBlockState(session.pos()).is(FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get())) return;
         level.destroyBlock(session.pos(), false);
-        net.minecraft.world.item.ItemStack reward = rollStoolReward(level.random);
+        net.minecraft.world.item.ItemStack reward = StoolLootData.get(level).roll(level.random);
         if (!reward.isEmpty()) net.minecraft.world.level.block.Block.popResource(level, session.pos(), reward);
-    }
-
-    private static ItemStack rollStoolReward(net.minecraft.util.RandomSource random) {
-        int reward = random.nextInt(13);
-        return switch (reward) {
-            case 0 -> new ItemStack(net.minecraft.world.item.Items.DIAMOND, 1 + random.nextInt(3));
-            case 1 -> new ItemStack(net.minecraft.world.item.Items.NETHERITE_INGOT);
-            case 2 -> {
-                ItemStack[] armor = {new ItemStack(net.minecraft.world.item.Items.IRON_HELMET), new ItemStack(net.minecraft.world.item.Items.IRON_CHESTPLATE),
-                        new ItemStack(net.minecraft.world.item.Items.IRON_LEGGINGS), new ItemStack(net.minecraft.world.item.Items.IRON_BOOTS),
-                        new ItemStack(net.minecraft.world.item.Items.DIAMOND_HELMET), new ItemStack(net.minecraft.world.item.Items.DIAMOND_CHESTPLATE),
-                        new ItemStack(net.minecraft.world.item.Items.DIAMOND_LEGGINGS), new ItemStack(net.minecraft.world.item.Items.DIAMOND_BOOTS),
-                        new ItemStack(net.minecraft.world.item.Items.NETHERITE_HELMET), new ItemStack(net.minecraft.world.item.Items.NETHERITE_CHESTPLATE),
-                        new ItemStack(net.minecraft.world.item.Items.NETHERITE_LEGGINGS), new ItemStack(net.minecraft.world.item.Items.NETHERITE_BOOTS)};
-                yield armor[random.nextInt(armor.length)];
-            }
-            case 3 -> new ItemStack(net.minecraft.world.item.Items.IRON_INGOT, 3 + random.nextInt(10));
-            case 4 -> new ItemStack(net.minecraft.world.item.Items.GOLDEN_APPLE, 1 + random.nextInt(5));
-            case 5 -> new ItemStack(net.minecraft.world.item.Items.TOTEM_OF_UNDYING);
-            case 6 -> new ItemStack(net.minecraft.world.item.Items.NETHER_STAR);
-            case 7 -> new ItemStack(FieldOfMemories.MEMORY_DISC_6.get());
-            case 8 -> new ItemStack(net.minecraft.world.item.Items.COAL_BLOCK, 1 + random.nextInt(6));
-            case 9 -> new ItemStack(net.minecraft.world.item.Items.GOLD_INGOT, 1 + random.nextInt(7));
-            case 10 -> new ItemStack(net.minecraft.world.item.Items.GOAT_HORN);
-            case 11 -> new ItemStack(net.minecraft.world.item.Items.ENDER_PEARL, 1 + random.nextInt(5));
-            default -> new ItemStack(net.minecraft.world.item.Items.BLAZE_ROD, 1 + random.nextInt(4));
-        };
     }
 
     private static void sendMemoryDiscStats(ServerPlayer player) {
@@ -485,6 +492,9 @@ public final class NetworkHandler {
     private record BoxLootSyncPacket(String entries) {}
     private record StoolStartPacket(String sequence) {}
     private record StoolFinishPacket(int progress) {}
+    private record StoolLootRequestPacket() {}
+    private record StoolLootEditPacket(int index,int action) {}
+    private record StoolLootSyncPacket(String entries) {}
     private record StoolSession(net.minecraft.core.BlockPos pos, long startedAt, String sequence) {}
     private record ActiveMemoryDisc(int discId, ItemStack stack, InteractionHand hand, int fragmentIndex) {}
 }

@@ -15,6 +15,8 @@ public class AdminToolScreen extends Screen {
     private static boolean memorySpawnEnabled = true;
     private static int memorySpawnChance = 10;
     private static String boxLootData = "";
+    private static String stoolLootData = "";
+    private static int selectedStoolLoot;
     private static int selectedLootItem;
     private static int worldDanger;
     private static int horrorActivity = 100;
@@ -62,6 +64,16 @@ public class AdminToolScreen extends Screen {
         mimicChance = Math.max(0, Math.min(100, mimic));
         treeDiscChance = Math.max(0, Math.min(1000, treeDisc));
         houseCameraChance = Math.max(0, Math.min(100, houseCamera));
+    }
+
+    public static void updateStoolLootData(String data) { stoolLootData = data == null ? "" : data; }
+
+    private static String stoolLootDetails() {
+        String[] parts = stoolLootData.split(";");
+        if (selectedStoolLoot >= parts.length) return "Награда не загружена";
+        String[] values = parts[selectedStoolLoot].split(",");
+        if (values.length != 4) return "Нет данных";
+        return "Мин: " + values[1] + " | Макс: " + values[2] + " | Вес: " + values[3];
     }
 
     public static void updateBoxLootData(String data) {
@@ -196,6 +208,7 @@ public class AdminToolScreen extends Screen {
             add("Аномальный табурет", cx, y + 75, () -> HorrorNetwork.giveAdminItem("anomalous_stool"));
             add("Воспоминания", cx, y + 100, () -> go("memory_items"));
             add("Лут коробок", cx, y + 125, () -> go("box_loot"));
+            add("Награды табурета", cx, y + 150, () -> go("stool_loot"));
             add("Шансы появления", cx, y + 150, () -> go("item_spawn"));
             add("Назад", cx, y + 180, () -> go("home"));
         } else if (page.equals("item_spawn")) {
@@ -241,6 +254,19 @@ public class AdminToolScreen extends Screen {
             add("Мин. кол-во +", cx + 82, lootY + 103, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 4));
             add("Макс. кол-во −", cx - 82, lootY + 128, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 7));
             add("Макс. кол-во +", cx + 82, lootY + 128, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 6));
+            add("Назад", cx, lootY + 155, () -> go("items"));
+        } else if (page.equals("stool_loot")) {
+            NetworkHandler.requestStoolLoot();
+            int lootY = height / 2 - 35;
+            add("<", cx - 82, lootY, () -> { selectedStoolLoot = Math.floorMod(selectedStoolLoot - 1, 13); init(); });
+            add(">", cx + 82, lootY, () -> { selectedStoolLoot = (selectedStoolLoot + 1) % 13; init(); });
+            add("Увеличить шанс", cx, lootY + 25, () -> NetworkHandler.editStoolLoot(selectedStoolLoot, 0));
+            add("Уменьшить шанс", cx, lootY + 50, () -> NetworkHandler.editStoolLoot(selectedStoolLoot, 1));
+            add("Мин. количество +", cx - 82, lootY + 78, () -> NetworkHandler.editStoolLoot(selectedStoolLoot, 2));
+            add("Мин. количество −", cx + 82, lootY + 78, () -> NetworkHandler.editStoolLoot(selectedStoolLoot, 3));
+            add("Макс. количество +", cx - 82, lootY + 103, () -> NetworkHandler.editStoolLoot(selectedStoolLoot, 4));
+            add("Макс. количество −", cx + 82, lootY + 103, () -> NetworkHandler.editStoolLoot(selectedStoolLoot, 5));
+            add("Отключить награду", cx, lootY + 130, () -> NetworkHandler.editStoolLoot(selectedStoolLoot, 6));
             add("Назад", cx, lootY + 155, () -> go("items"));
         } else if (page.equals("fog")) {
             add("Дальность −", cx - 82, y, () -> NetworkHandler.changeFogDistance(-8));
@@ -294,7 +320,7 @@ public class AdminToolScreen extends Screen {
             drawRightInfo(gui, String.format("Цена выносливости: %.0f", MovementClient.getAdminLongJumpCost()), height / 2 - 40);
         }
         if (page.equals("fog")) drawRightInfo(gui, "Дальность: " + FogClient.getDistance() + " блоков", height / 2 + 12);
-        if (page.equals("box_loot")) {
+        if (page.equals("stool_loot")) {\n            String[] names = {"Алмаз", "Незеритовый слиток", "Случайная броня", "Железные слитки", "Золотые яблоки", "Тотем", "Звезда Незера", "Диск: Отец святой", "Блок угля", "Золотые слитки", "Рог козы", "Эндер-жемчуг", "Огненный стержень"};\n            gui.drawCenteredString(font, names[selectedStoolLoot], width / 2, height / 2 - 58, 0xFFFFD08A);\n            drawRightInfo(gui, stoolLootDetails(), height / 2 + 12);\n        }\n        if (page.equals("box_loot")) {
             gui.drawCenteredString(font, LOOT_ITEM_NAMES[selectedLootItem], width / 2, height / 2 - 58, 0xFFFFD08A);
             drawRightInfo(gui, selectedLootDetails(), height / 2 + 12);
         }
@@ -338,7 +364,7 @@ public class AdminToolScreen extends Screen {
             case "give_memory_disc" -> "ВЫБЕРИТЕ ДИСК";
             case "story" -> "СЮЖЕТ И СТАТИСТИКА";
             case "fog" -> "ТУМАН";
-            case "box_loot" -> "ЛУТ КОРОБОК";
+            case "box_loot" -> "ЛУТ КОРОБОК";\n            case "stool_loot" -> "НАГРАДЫ ТАБУРЕТА";
             default -> "ГЛАВНОЕ МЕНЮ";
         };
     }
