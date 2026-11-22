@@ -26,11 +26,9 @@ jobs:
           name: WWW-assets-extracted
           path: /tmp/WWW-assets-extracted.zip
           if-no-files-found: error
-      - name: Import Blockbench camera and straw bed models
+      - name: Import Blockbench camera and leaflet models
         run: |
           CAMERA_DIR=/tmp/WWW-assets/WWW/Camera
-          BED_FILE="$(find /tmp/WWW-assets/WWW -type f -name solomabad.json -print -quit)"
-          BED_DIR="$(dirname "$BED_FILE")"
           LEAFLET_FILE="$(find /tmp/WWW-assets/WWW -type f -name Cardboard.json -print -quit)"
           LEAFLET_DIR="$(dirname "$LEAFLET_FILE")"
           mkdir -p src/main/resources/assets/fieldofmemories/models/block
@@ -39,60 +37,7 @@ jobs:
           mkdir -p src/main/resources/assets/fieldofmemories/textures/item
           mkdir -p src/main/resources/assets/fieldofmemories/textures/block
           cp "$CAMERA_DIR/VideoCameraOpen.png" src/main/resources/assets/fieldofmemories/textures/item/video_camera.png
-          cp "$BED_DIR/solomabadt1.png" src/main/resources/assets/fieldofmemories/textures/block/straw_bed_1.png
-          cp "$BED_DIR/solomabadt2.png" src/main/resources/assets/fieldofmemories/textures/block/straw_bed_2.png
-          cp "$BED_DIR/solomabadt3.png" src/main/resources/assets/fieldofmemories/textures/block/straw_bed_3.png
           cp "$LEAFLET_DIR/cardboard.png" src/main/resources/assets/fieldofmemories/textures/block/tree_leaflet.png
-          python3 - "$CAMERA_DIR" "$BED_DIR" <<'PY'
-          import copy, json, os, sys
-          camera_dir, bed_dir = sys.argv[1], sys.argv[2]
-          root = "src/main/resources/assets/fieldofmemories"
-          item_models = os.path.join(root, "models", "item")
-          block_models = os.path.join(root, "models", "block")
-          blockstates = os.path.join(root, "blockstates")
-          # Camera models are committed from the user's exact Blockbench exports.
-          # Do not regenerate them from the older WWW.zip archive here.
-          bed = json.load(open(os.path.join(bed_dir, "solomabad.json"), encoding="utf-8"))
-          textures = {"0": "fieldofmemories:block/straw_bed_1",
-                      "1": "fieldofmemories:block/straw_bed_2",
-                      "particle": "fieldofmemories:block/straw_bed_3"}
-          main, pillow = bed["elements"]
-          # The supplied Blockbench bed was exported paper-thin (2 px base + 0.5 px pillow).
-          # Give the straw mattress a visible 5 px body and a 2 px raised pillow.
-          main["from"][1] = 0
-          main["to"][1] = 5
-          pillow["from"][1] = 5
-          pillow["to"][1] = 7
-          foot_main = copy.deepcopy(main)
-          foot_main["from"][2], foot_main["to"][2] = 0, 16
-          foot_main["faces"].pop("south", None)
-          head_main = copy.deepcopy(main)
-          head_main["from"][2], head_main["to"][2] = 0, 16
-          head_main["faces"].pop("north", None)
-          head_pillow = copy.deepcopy(pillow)
-          head_pillow["from"][2] -= 16
-          head_pillow["to"][2] -= 16
-          models = {
-              "straw_bed_foot.json": {"textures": textures, "elements": [foot_main]},
-              "straw_bed_head.json": {"textures": textures, "elements": [head_main, head_pillow]},
-              "straw_bed.json": {"textures": textures, "elements": [main, pillow]}
-          }
-          for filename, model in models.items():
-              with open(os.path.join(block_models if filename != "straw_bed.json" else item_models, filename),
-                        "w", encoding="utf-8") as out:
-                  json.dump(model, out, separators=(",", ":"))
-          variants = {}
-          rotations = {"north": 180, "east": 270, "south": 0, "west": 90}
-          for facing, rotation in rotations.items():
-              for part in ("foot", "head"):
-                  for occupied in ("false", "true"):
-                      variant = {"model": f"fieldofmemories:block/straw_bed_{part}"}
-                      if rotation:
-                          variant["y"] = rotation
-                      variants[f"facing={facing},part={part},occupied={occupied}"] = variant
-          with open(os.path.join(blockstates, "straw_bed.json"), "w", encoding="utf-8") as out:
-              json.dump({"variants": variants}, out, separators=(",", ":"))
-          PY
           python3 - "$LEAFLET_FILE" <<'PY'
           import json, os, sys
           source = json.load(open(sys.argv[1], encoding="utf-8"))
@@ -118,7 +63,7 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/main/resources/assets/fieldofmemories/models src/main/resources/assets/fieldofmemories/blockstates/straw_bed.json src/main/resources/assets/fieldofmemories/blockstates/tree_leaflet.json src/main/resources/assets/fieldofmemories/textures
+          git add src/main/resources/assets/fieldofmemories/models src/main/resources/assets/fieldofmemories/blockstates/tree_leaflet.json src/main/resources/assets/fieldofmemories/textures
           if ! git diff --cached --quiet; then
             git commit -m "Import supplied camera and straw bed models [skip ci]"
             git push origin HEAD:main
