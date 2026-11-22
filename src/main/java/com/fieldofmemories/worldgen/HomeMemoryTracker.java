@@ -3,6 +3,7 @@ package com.fieldofmemories.worldgen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.BedBlock;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -45,7 +46,12 @@ public final class HomeMemoryTracker {
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
         BlockPos respawn = player.getRespawnPosition();
-        if (respawn == null || !player.serverLevel().dimension().equals(player.getRespawnDimension())) return;
+        if (respawn == null || !player.serverLevel().dimension().equals(player.getRespawnDimension())) {
+            // Custom straw beds also count as a home clue even when they do not set vanilla respawn.
+            respawn = BlockPos.findClosestMatch(player.blockPosition(), 24, 8,
+                    pos -> player.serverLevel().getBlockState(pos).getBlock() instanceof BedBlock).orElse(null);
+        }
+        if (respawn == null) return;
 
         CompoundTag data = player.getPersistentData().getCompound(DATA_KEY);
         String dimension = player.serverLevel().dimension().location().toString();
