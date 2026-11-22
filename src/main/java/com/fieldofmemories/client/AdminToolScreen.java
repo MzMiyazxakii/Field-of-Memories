@@ -176,9 +176,11 @@ public class AdminToolScreen extends Screen {
             add("Цена выносливости +", cx + 82, jumpY + 88, () -> MovementClient.setAdminLongJumpCost(MovementClient.getAdminLongJumpCost() + 2));
             add("Назад", cx, jumpY + 110, () -> go("home"));
         } else if (page.equals("items")) {
-            add("Воспоминания", cx, y, () -> go("memory_items"));
-            add("Лут коробок", cx, y + 25, () -> go("box_loot"));
-            add("Назад", cx, y + 77, () -> go("home"));
+            add("Видеокамера", cx, y, () -> HorrorNetwork.giveAdminItem("video_camera"));
+            add("Кровать из соломы", cx, y + 25, () -> HorrorNetwork.giveAdminItem("straw_bed"));
+            add("Воспоминания", cx, y + 50, () -> go("memory_items"));
+            add("Лут коробок", cx, y + 75, () -> go("box_loot"));
+            add("Назад", cx, y + 105, () -> go("home"));
         } else if (page.equals("memory_items")) {
             NetworkHandler.requestMemoryDiscStats();
             add("Выдать предмет", cx, y, () -> go("give_memory_disc"));
