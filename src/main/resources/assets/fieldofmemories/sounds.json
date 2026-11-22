@@ -55,5 +55,21 @@
         "stream": false
       }
     ]
+  },
+  "knock_1": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:knock_1",
+        "stream": false
+      }
+    ]
+  },
+  "knock_2": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:knock_2",
+        "stream": false
+      }
+    ]
   }
 }
