@@ -231,7 +231,7 @@ public final class NetworkHandler {
                 .decoder(buffer -> new StoolFinishPacket(buffer.readInt()))
                 .consumerMainThread((packet, context) -> {
                     ServerPlayer player = context.get().getSender();
-                    if (player != null) finishStoolMinigameServer(player, packet.progress());
+                    if (player != null) finishStoolMinigameServer(player, packet.result());
                     context.get().setPacketHandled(true);
                 }).add();
         CHANNEL.messageBuilder(StoolLootRequestPacket.class, 15)
