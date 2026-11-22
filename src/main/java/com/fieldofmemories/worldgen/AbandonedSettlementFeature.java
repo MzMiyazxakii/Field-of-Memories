@@ -42,7 +42,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
     }
 
     private static BlockPos surface(WorldGenLevel l,int x,int z){
-        int y=l.getHeight(Heightmap.Types.WORLD_SURFACE_WG,x,z)-1;if(y<l.getMinBuildHeight())return null;
+        int y=l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z)-1;if(y<l.getMinBuildHeight())return null;
         BlockPos p=new BlockPos(x,y,z);Block b=l.getBlockState(p).getBlock();
         return b==Blocks.GRASS_BLOCK||b==Blocks.DIRT||b==Blocks.COARSE_DIRT||b==Blocks.ROOTED_DIRT||b==Blocks.PODZOL||b==Blocks.MYCELIUM?p:null;
     }
@@ -112,7 +112,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         for(int d=1;d<=h;d++)put(l,x,p.getY()+d,z,Blocks.SPRUCE_FENCE);if(r.nextBoolean())put(l,x,p.getY()+h+1,z,Blocks.LANTERN);
     }
     private static void lamp(WorldGenLevel l,int x,int z){
-        if(!clear(l,x,z,1,5))return;BlockPos p=surface(l,x,z);if(p==null)return;int y=p.getY();
+        if(!clear(l,x,z,0,5))return;BlockPos p=surface(l,x,z);if(p==null)return;int y=p.getY();
         for(int d=1;d<=4;d++)put(l,x,y+d,z,Blocks.SPRUCE_FENCE);put(l,x,y+4,z+1,Blocks.SPRUCE_FENCE);put(l,x,y+3,z+1,Blocks.LANTERN);
     }
     private static void garden(WorldGenLevel l,int x,int z,RandomSource r){
