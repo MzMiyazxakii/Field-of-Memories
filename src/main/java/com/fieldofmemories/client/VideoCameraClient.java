@@ -5,6 +5,7 @@ import com.fieldofmemories.item.VideoCameraItem;
 import com.fieldofmemories.item.OldCameraItem;
 import com.fieldofmemories.network.HorrorNetwork;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.sounds.SoundEvents;
@@ -205,6 +206,15 @@ public final class VideoCameraClient {
                         || (off.getItem() instanceof VideoCameraItem
                         && VideoCameraItem.isOpen(off) && VideoCameraItem.getBattery(off) > 0);
                 if (!hasOpenCamera) setViewing(false);
+            }
+        }
+
+        @SubscribeEvent
+        public static void cameraOpenSound(PlayerInteractEvent.RightClickItem event) {
+            if (!event.getLevel().isClientSide || !(event.getItemStack().getItem() instanceof VideoCameraItem)) return;
+            if (!VideoCameraItem.isOpen(event.getItemStack())) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(
+                        FieldOfMemories.CAMERA_OPEN_SOUND.get(), 1.0F, 1.0F));
             }
         }
 
