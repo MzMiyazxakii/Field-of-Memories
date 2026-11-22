@@ -71,8 +71,9 @@ public class LootContainerBlock extends Block {
             entity.setDefaultPickUpDelay();
             level.addFreshEntity(entity);
         }
-        if (level.random.nextFloat() < 0.012F) {
-            Block.popResource(level, pos, new ItemStack(FieldOfMemories.MEMORY_DISCS[level.random.nextBoolean() ? 0 : 1].get()));
+        ItemStack memoryDisc = table.rollMemoryDisc(level.random);
+        if (!memoryDisc.isEmpty()) {
+            Block.popResource(level, pos, memoryDisc);
         }
     }
 }
