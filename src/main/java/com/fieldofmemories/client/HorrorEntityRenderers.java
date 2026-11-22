@@ -24,5 +24,6 @@ public final class HorrorEntityRenderers {
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(FieldOfMemories.SCARECROW_ENTITY.get(), ScarecrowRenderer::new);
         event.registerEntityRenderer(FieldOfMemories.SMILE_FACE_ENTITY.get(), SmileFaceRenderer::new);
+        event.registerEntityRenderer(FieldOfMemories.PLAYER_ECHO_ENTITY.get(), PlayerEchoRenderer::new);
     }
 }
