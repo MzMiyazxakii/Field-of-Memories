@@ -203,15 +203,16 @@ public class AdminToolScreen extends Screen {
             add("Цена выносливости +", cx + 82, jumpY + 88, () -> MovementClient.setAdminLongJumpCost(MovementClient.getAdminLongJumpCost() + 2));
             add("Назад", cx, jumpY + 110, () -> go("home"));
         } else if (page.equals("items")) {
-            add("Батарейка", cx, y, () -> HorrorNetwork.giveAdminItem("battery"));
-            add("Видеокамера", cx, y + 25, () -> HorrorNetwork.giveAdminItem("video_camera"));
-            add("Фотокамера", cx, y + 50, () -> HorrorNetwork.giveAdminItem("old_camera"));
-            add("Аномальный табурет", cx, y + 75, () -> HorrorNetwork.giveAdminItem("anomalous_stool"));
-            add("Воспоминания", cx, y + 100, () -> go("memory_items"));
-            add("Лут коробок", cx, y + 125, () -> go("box_loot"));
-            add("Награды табурета", cx, y + 150, () -> go("stool_loot"));
-            add("Шансы появления", cx, y + 175, () -> go("item_spawn"));
-            add("Назад", cx, y + 200, () -> go("home"));
+            int itemMenuY = height / 2 - 65;
+            add("Батарейка", cx, itemMenuY, () -> HorrorNetwork.giveAdminItem("battery"));
+            add("Видеокамера", cx, itemMenuY + 26, () -> HorrorNetwork.giveAdminItem("video_camera"));
+            add("Фотокамера", cx, itemMenuY + 52, () -> HorrorNetwork.giveAdminItem("old_camera"));
+            add("Аномальный табурет", cx, itemMenuY + 78, () -> HorrorNetwork.giveAdminItem("anomalous_stool"));
+            add("Воспоминания", cx, itemMenuY + 104, () -> go("memory_items"));
+            add("Лут коробок", cx, itemMenuY + 130, () -> go("box_loot"));
+            add("Награды табурета", cx, itemMenuY + 156, () -> go("stool_loot"));
+            add("Шансы появления", cx, itemMenuY + 182, () -> go("item_spawn"));
+            add("Назад", cx, itemMenuY + 208, () -> go("home"));
         } else if (page.equals("item_spawn")) {
             HorrorNetwork.requestData();
             add("Шанс диска на дереве −", cx - 82, y, () -> HorrorNetwork.adjust(5, -1));
