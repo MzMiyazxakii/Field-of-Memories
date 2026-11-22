@@ -17,17 +17,33 @@ public final class CemeteryWorldSetup {
     public static void onServerStarted(ServerStartedEvent event) {
         ServerLevel level = event.getServer().overworld();
         BlockPos oldSpawn = level.getSharedSpawnPos();
-        int x = oldSpawn.getX(), z = oldSpawn.getZ();
         level.getChunkAt(oldSpawn);
-        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+        BlockPos existingScarecrow = findScarecrow(level, oldSpawn);
+        int x = existingScarecrow == null ? oldSpawn.getX() : existingScarecrow.getX();
+        int z = existingScarecrow == null ? oldSpawn.getZ() : existingScarecrow.getZ();
+        int y = existingScarecrow == null
+                ? level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1
+                : existingScarecrow.getY() - 1;
         if (y <= level.getMinBuildHeight()) y = level.getSeaLevel();
 
-        if (!level.getBlockState(new BlockPos(x, y + 1, z)).is(FieldOfMemories.SCARECROW.get())) {
+        if (existingScarecrow == null) {
             flatten(level, x, y, z);
             build(level, x, y, z);
         }
         // Put the world spawn just inside the cemetery entrance, facing the scarecrow.
         level.setDefaultSpawnPos(new BlockPos(x, y + 1, z + 6), 180.0F);
+    }
+
+    private static BlockPos findScarecrow(ServerLevel level, BlockPos spawn) {
+        // The default spawn is intentionally offset from the cemetery center.
+        // Find the existing landmark on later server starts so the cemetery is never stacked.
+        for (int dx = -10; dx <= 10; dx++) for (int dz = -10; dz <= 10; dz++) {
+            for (int dy = -3; dy <= 3; dy++) {
+                BlockPos candidate = spawn.offset(dx, dy, dz);
+                if (level.getBlockState(candidate).is(FieldOfMemories.SCARECROW.get())) return candidate;
+            }
+        }
+        return null;
     }
 
     private static void flatten(ServerLevel level, int x, int y, int z) {
