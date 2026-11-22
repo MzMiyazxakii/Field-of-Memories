@@ -103,7 +103,7 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
 
     private static void placeTreeLeaflets(WorldGenLevel level, RandomSource random, int minX, int minZ) {
         BlockState leaflet = FieldOfMemories.TREE_LEAFLET_BLOCK.get().defaultBlockState();
-        float memoryDiscChance = HorrorWorldData.getTreeDiscChance(level.getLevel()) / 100.0F;
+        float memoryDiscChance = HorrorWorldData.getTreeDiscChance(level.getLevel()) / 1000.0F;
         for (int x = minX; x < minX + 16; x++) {
             for (int z = minZ; z < minZ + 16; z++) {
                 int topY = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z);
