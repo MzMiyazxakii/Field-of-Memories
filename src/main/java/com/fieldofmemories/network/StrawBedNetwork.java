@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.network.simple.SimpleChannel;\nimport net.minecraftforge.event.TickEvent;\nimport net.minecraftforge.eventbus.api.SubscribeEvent;\nimport net.minecraftforge.fml.common.Mod;\nimport net.minecraftforge.api.distmarker.Dist;\nimport net.minecraftforge.fml.DistExecutor;
 
 import java.util.Map;
 import java.util.UUID;
@@ -87,6 +87,6 @@ public final class StrawBedNetwork {
     public static void requestSleep() { CHANNEL.sendToServer(new SleepRequest(true)); }
     public static void requestWake() { CHANNEL.sendToServer(new SleepRequest(false)); }
 
-    public record SleepRequest(boolean sleep) {}
+    @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID)\n    public static final class ServerEvents {\n        @SubscribeEvent\n        public static void tick(TickEvent.PlayerTickEvent event) {\n            if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;\n            BlockPos bed = RESTING.get(player.getUUID());\n            if (bed == null) return;\n            if (!player.serverLevel().getBlockState(bed).getBlock().equals(com.fieldofmemories.FieldOfMemories.STRAW_BED_BLOCK.get())) {\n                stopRest(player);\n                return;\n            }\n            player.setPose(Pose.SLEEPING);\n            player.setDeltaMovement(0, 0, 0);\n            player.setSprinting(false);\n            player.teleportTo(bed.getX() + 0.5D, bed.getY() + 0.15D, bed.getZ() + 0.5D);\n        }\n    }\n\n    public record SleepRequest(boolean sleep) {}
     public record RestState(boolean resting) {}
 }
