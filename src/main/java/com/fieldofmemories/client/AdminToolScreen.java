@@ -124,7 +124,8 @@ public class AdminToolScreen extends Screen {
             add("Назад", cx, jumpY + 110, () -> go("home"));
         } else if (page.equals("items")) {
             add("Воспоминания", cx, y, () -> go("memory_items"));
-            add("Назад", cx, y + 52, () -> go("home"));
+            add("Лут коробок", cx, y + 25, () -> go("box_loot"));
+            add("Назад", cx, y + 77, () -> go("home"));
         } else if (page.equals("memory_items")) {
             NetworkHandler.requestMemoryDiscStats();
             add("Выдать предмет", cx, y, () -> go("give_memory_disc"));
@@ -144,23 +145,24 @@ public class AdminToolScreen extends Screen {
             add("Назад", cx, y + 8 * 23, () -> go("memory_items"));
         } else if (page.equals("box_loot")) {
             NetworkHandler.requestBoxLootTable();
-            add("<", cx - 82, y, () -> {
+            int lootY = height / 2 - 35;
+            add("<", cx - 82, lootY, () -> {
                 selectedLootItem = Math.floorMod(selectedLootItem - 1, LOOT_ITEM_IDS.length);
                 init();
             });
-            add(">", cx + 82, y, () -> {
+            add(">", cx + 82, lootY, () -> {
                 selectedLootItem = (selectedLootItem + 1) % LOOT_ITEM_IDS.length;
                 init();
             });
-            add("Добавить предмет", cx, y + 25, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 0));
-            add("Убрать предмет", cx, y + 50, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 1));
-            add("Вес шанса −", cx - 82, y + 78, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 3));
-            add("Вес шанса +", cx + 82, y + 78, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 2));
-            add("Мин. кол-во −", cx - 82, y + 103, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 5));
-            add("Мин. кол-во +", cx + 82, y + 103, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 4));
-            add("Макс. кол-во −", cx - 82, y + 128, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 7));
-            add("Макс. кол-во +", cx + 82, y + 128, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 6));
-            add("Назад", cx, y + 155, () -> go("items"));
+            add("Добавить предмет", cx, lootY + 25, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 0));
+            add("Убрать предмет", cx, lootY + 50, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 1));
+            add("Вес шанса −", cx - 82, lootY + 78, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 3));
+            add("Вес шанса +", cx + 82, lootY + 78, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 2));
+            add("Мин. кол-во −", cx - 82, lootY + 103, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 5));
+            add("Мин. кол-во +", cx + 82, lootY + 103, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 4));
+            add("Макс. кол-во −", cx - 82, lootY + 128, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 7));
+            add("Макс. кол-во +", cx + 82, lootY + 128, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 6));
+            add("Назад", cx, lootY + 155, () -> go("items"));
         } else if (page.equals("fog")) {
             add("Дальность −", cx - 82, y, () -> NetworkHandler.changeFogDistance(-8));
             add("Дальность +", cx + 82, y, () -> NetworkHandler.changeFogDistance(8));
@@ -197,7 +199,7 @@ public class AdminToolScreen extends Screen {
         }
         if (page.equals("fog")) drawRightInfo(gui, "Дальность: " + FogClient.getDistance() + " блоков", height / 2 + 12);
         if (page.equals("box_loot")) {
-            gui.drawCenteredString(font, LOOT_ITEM_NAMES[selectedLootItem], width / 2, height / 2 - 22, 0xFFFFD08A);
+            gui.drawCenteredString(font, LOOT_ITEM_NAMES[selectedLootItem], width / 2, height / 2 - 58, 0xFFFFD08A);
             drawRightInfo(gui, selectedLootDetails(), height / 2 + 12);
         }
 
