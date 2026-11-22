@@ -113,7 +113,8 @@ public class AdminToolScreen extends Screen {
         } else if (page.equals("events")) {
             add("Заставить игрока упасть", cx, y, () -> go("players"));
             add("Вызвать скример на игроке", cx, y + 25, () -> go("scream_players"));
-            add("Назад", cx, y + 77, () -> go("home"));
+            add("Вызвать мимика", cx, y + 50, HorrorNetwork::requestMimic);
+            add("Назад", cx, y + 102, () -> go("home"));
         } else if (page.equals("activity")) {
             HorrorNetwork.requestData();
             add("Шанс пугала −", cx - 82, y, () -> HorrorNetwork.adjust(0, -5));
@@ -177,10 +178,9 @@ public class AdminToolScreen extends Screen {
             add("Назад", cx, jumpY + 110, () -> go("home"));
         } else if (page.equals("items")) {
             add("Видеокамера", cx, y, () -> HorrorNetwork.giveAdminItem("video_camera"));
-            add("Кровать из соломы", cx, y + 25, () -> HorrorNetwork.giveAdminItem("straw_bed"));
-            add("Воспоминания", cx, y + 50, () -> go("memory_items"));
-            add("Лут коробок", cx, y + 75, () -> go("box_loot"));
-            add("Назад", cx, y + 105, () -> go("home"));
+            add("Воспоминания", cx, y + 25, () -> go("memory_items"));
+            add("Лут коробок", cx, y + 50, () -> go("box_loot"));
+            add("Назад", cx, y + 80, () -> go("home"));
         } else if (page.equals("memory_items")) {
             NetworkHandler.requestMemoryDiscStats();
             add("Выдать предмет", cx, y, () -> go("give_memory_disc"));
