@@ -112,7 +112,7 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static BlockPos surface(WorldGenLevel level, int x, int z) {
-        int y = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) - 1;
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
         if (y < level.getMinBuildHeight()) return null;
         return new BlockPos(x, y, z);
     }
@@ -128,8 +128,19 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void replaceGround(WorldGenLevel level, BlockPos pos, BlockState state) {
-        if (isReplaceableGround(level.getBlockState(pos))) {
-            level.setBlock(pos, state, 2);
+        if (!isReplaceableGround(level.getBlockState(pos))) return;
+
+        level.setBlock(pos, state, 2);
+
+        // Remove grass, flowers and other replaceable vegetation growing over the road.
+        // Check two blocks so the upper half of double-height plants is cleared too.
+        for (int dy = 1; dy <= 2; dy++) {
+            BlockPos above = pos.above(dy);
+            BlockState aboveState = level.getBlockState(above);
+            if (!aboveState.isAir() && aboveState.getFluidState().isEmpty()
+                    && aboveState.canBeReplaced()) {
+                level.setBlock(above, Blocks.AIR.defaultBlockState(), 2);
+            }
         }
     }
 
