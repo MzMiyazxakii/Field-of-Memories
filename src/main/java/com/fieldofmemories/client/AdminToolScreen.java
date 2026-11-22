@@ -364,7 +364,8 @@ public class AdminToolScreen extends Screen {
             case "give_memory_disc" -> "ВЫБЕРИТЕ ДИСК";
             case "story" -> "СЮЖЕТ И СТАТИСТИКА";
             case "fog" -> "ТУМАН";
-            case "box_loot" -> "ЛУТ КОРОБОК";\n            case "stool_loot" -> "НАГРАДЫ ТАБУРЕТА";
+            case "box_loot" -> "ЛУТ КОРОБОК";
+            case "stool_loot" -> "НАГРАДЫ ТАБУРЕТА";
             default -> "ГЛАВНОЕ МЕНЮ";
         };
     }
