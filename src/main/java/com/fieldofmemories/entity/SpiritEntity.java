@@ -96,14 +96,14 @@ public class SpiritEntity extends PathfinderMob {
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag tag) {
+    public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putBoolean(CIRCLING_KEY, circling);
         tag.putInt(CIRCLE_TICKS_KEY, circleTicks);
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag tag) {
+    public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         circling = tag.getBoolean(CIRCLING_KEY);
         circleTicks = Math.max(0, Math.min(CIRCLE_DURATION, tag.getInt(CIRCLE_TICKS_KEY)));
