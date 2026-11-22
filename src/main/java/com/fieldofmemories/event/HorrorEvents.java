@@ -5,6 +5,7 @@ import com.fieldofmemories.entity.ScarecrowEntity;
 import com.fieldofmemories.entity.SmileFaceEntity;
 import com.fieldofmemories.entity.PlayerEchoEntity;
 import com.fieldofmemories.entity.SpiritEntity;
+import com.fieldofmemories.entity.RiftEntity;
 import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.worldgen.HomeMemoryTracker;
 import com.fieldofmemories.FieldOfMemories;
