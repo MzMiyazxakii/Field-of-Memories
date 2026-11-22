@@ -19,27 +19,34 @@ public final class CemeteryWorldSetup {
         ServerLevel level = event.getServer().overworld();
         BlockPos oldSpawn = level.getSharedSpawnPos();
         level.getChunkAt(oldSpawn);
-        BlockPos existingScarecrow = findScarecrow(level, oldSpawn);
-        int x = existingScarecrow == null ? oldSpawn.getX() : existingScarecrow.getX();
-        int z = existingScarecrow == null ? oldSpawn.getZ() : existingScarecrow.getZ();
-        int y = existingScarecrow == null
+        BlockPos existingCemetery = findCemeteryCenter(level, oldSpawn);
+        int x = existingCemetery == null ? oldSpawn.getX() : existingCemetery.getX();
+        int z = existingCemetery == null ? oldSpawn.getZ() : existingCemetery.getZ();
+        int y = existingCemetery == null
                 ? level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1
-                : existingScarecrow.getY() - 1;
+                : existingCemetery.getY();
         if (y <= level.getMinBuildHeight()) y = level.getSeaLevel();
 
-        if (existingScarecrow == null) {
+        if (existingCemetery == null) {
             flatten(level, x, y, z);
             build(level, x, y, z);
         }
-        // Keep the starting position inside the gate, looking toward the scarecrow.
+        // Keep the starting position inside the cemetery gate.
         level.setDefaultSpawnPos(new BlockPos(x, y + 1, z + 12), 180.0F);
     }
 
-    private static BlockPos findScarecrow(ServerLevel level, BlockPos spawn) {
-        for (int dx = -10; dx <= 10; dx++) for (int dz = -10; dz <= 10; dz++) {
-            for (int dy = -3; dy <= 3; dy++) {
+    private static BlockPos findCemeteryCenter(ServerLevel level, BlockPos spawn) {
+        // The central mossy-stone platform remains as an empty base for the future replacement.
+        for (int dx = -20; dx <= 20; dx++) for (int dz = -20; dz <= 20; dz++) {
+            for (int dy = -4; dy <= 4; dy++) {
                 BlockPos candidate = spawn.offset(dx, dy, dz);
-                if (level.getBlockState(candidate).is(FieldOfMemories.SCARECROW.get())) return candidate;
+                if (level.getBlockState(candidate).is(Blocks.MOSSY_STONE_BRICKS)
+                        && level.getBlockState(candidate.offset(-1, 0, 0)).is(Blocks.MOSSY_STONE_BRICKS)
+                        && level.getBlockState(candidate.offset(1, 0, 0)).is(Blocks.MOSSY_STONE_BRICKS)
+                        && level.getBlockState(candidate.offset(0, 0, -1)).is(Blocks.MOSSY_STONE_BRICKS)
+                        && level.getBlockState(candidate.offset(0, 0, 1)).is(Blocks.MOSSY_STONE_BRICKS)) {
+                    return candidate;
+                }
             }
         }
         return null;
@@ -95,7 +102,7 @@ public final class CemeteryWorldSetup {
             put(level, px, y + 5, pz, Blocks.SOUL_LANTERN);
         }
 
-        // Broken path, raised central plinth and the scarecrow.
+        // Broken path and raised, currently empty central plinth.
         for (int dz = 3; dz <= 15; dz++) {
             put(level, x, y, z + dz, dz % 3 == 0 ? Blocks.COARSE_DIRT : Blocks.DIRT_PATH);
         }
@@ -106,7 +113,6 @@ public final class CemeteryWorldSetup {
             if (Math.abs(dx) == 1 || Math.abs(dz) == 1)
                 put(level, x + dx, y + 1, z + dz, Blocks.DEEPSLATE_BRICKS);
         }
-        put(level, x, y + 1, z, FieldOfMemories.SCARECROW.get());
         put(level, x - 3, y + 1, z, Blocks.SOUL_LANTERN);
         put(level, x + 3, y + 1, z, Blocks.SOUL_LANTERN);
         put(level, x, y + 1, z - 3, Blocks.SOUL_LANTERN);
