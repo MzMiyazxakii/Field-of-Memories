@@ -64,7 +64,7 @@ public final class VideoCameraClient {
 
         @SubscribeEvent
         public static void fov(ComputeFovModifierEvent event) {
-            if (viewing) event.setFovModifier(event.getFovModifier() * 0.68F);
+            if (viewing) event.setNewFovModifier(event.getNewFovModifier() * 0.68F);
         }
 
         @SubscribeEvent
