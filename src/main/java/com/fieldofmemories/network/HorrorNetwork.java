@@ -98,6 +98,15 @@ public final class HorrorNetwork {
                     context.get().setPacketHandled(true);
                 }).add();
 
+        CHANNEL.messageBuilder(OldCameraFlashPacket.class, 10)
+                .encoder((packet, buffer) -> {})
+                .decoder(buffer -> new OldCameraFlashPacket())
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null) fireOldCameraFlash(player);
+                    context.get().setPacketHandled(true);
+                }).add();
+
         CHANNEL.messageBuilder(CameraViewPacket.class, 7)
                 .encoder((packet, buffer) -> buffer.writeBoolean(packet.viewing()))
                 .decoder(buffer -> new CameraViewPacket(buffer.readBoolean()))
@@ -125,14 +134,21 @@ public final class HorrorNetwork {
                         var slot = player.inventoryMenu.slots.get(packet.slot());
                         var camera = slot.getItem();
                         var carried = player.inventoryMenu.getCarried();
-                        if (camera.getItem() instanceof com.fieldofmemories.item.VideoCameraItem
-                                && carried.is(FieldOfMemories.BATTERY.get())
-                                && !com.fieldofmemories.item.VideoCameraItem.hasInsertedBattery(camera)
-                                && com.fieldofmemories.item.VideoCameraItem.getBattery(camera)
-                                        < com.fieldofmemories.item.VideoCameraItem.MAX_BATTERY) {
+                        boolean video = camera.getItem() instanceof com.fieldofmemories.item.VideoCameraItem;
+                        boolean oldCamera = camera.getItem() instanceof com.fieldofmemories.item.OldCameraItem;
+                        boolean inserted = video
+                                ? com.fieldofmemories.item.VideoCameraItem.hasInsertedBattery(camera)
+                                : oldCamera && com.fieldofmemories.item.OldCameraItem.hasInsertedBattery(camera);
+                        int charge = video ? com.fieldofmemories.item.VideoCameraItem.getBattery(camera)
+                                : oldCamera ? com.fieldofmemories.item.OldCameraItem.getCharge(camera) : 0;
+                        int max = video ? com.fieldofmemories.item.VideoCameraItem.MAX_BATTERY
+                                : oldCamera ? com.fieldofmemories.item.OldCameraItem.MAX_CHARGE : 0;
+                        if ((video || oldCamera) && carried.is(FieldOfMemories.BATTERY.get())
+                                && !inserted && charge < max) {
                             carried.shrink(1);
                             if (carried.isEmpty()) player.inventoryMenu.setCarried(net.minecraft.world.item.ItemStack.EMPTY);
-                            com.fieldofmemories.item.VideoCameraItem.setInsertedBattery(camera, true);
+                            if (video) com.fieldofmemories.item.VideoCameraItem.setInsertedBattery(camera, true);
+                            else com.fieldofmemories.item.OldCameraItem.setInsertedBattery(camera, true);
                             slot.setChanged();
                             player.inventoryMenu.broadcastChanges();
                         }
@@ -169,6 +185,59 @@ public final class HorrorNetwork {
                     }
                     context.get().setPacketHandled(true);
                 }).add();
+    }
+
+
+    private static void fireOldCameraFlash(ServerPlayer player) {
+        net.minecraft.world.item.ItemStack camera = player.getMainHandItem().getItem()
+                instanceof com.fieldofmemories.item.OldCameraItem ? player.getMainHandItem()
+                : player.getOffhandItem().getItem() instanceof com.fieldofmemories.item.OldCameraItem
+                ? player.getOffhandItem() : net.minecraft.world.item.ItemStack.EMPTY;
+        if (camera.isEmpty()) return;
+        long now = player.level().getGameTime();
+        long next = player.getPersistentData().getLong("FOMOldCameraNextFlash");
+        if (now < next) return;
+        int charge = com.fieldofmemories.item.OldCameraItem.getCharge(camera);
+        if (charge < 10) return;
+        com.fieldofmemories.item.OldCameraItem.setCharge(camera, charge - 10);
+        player.getPersistentData().putLong("FOMOldCameraNextFlash", now + 10L);
+        player.getInventory().setChanged();
+        player.containerMenu.broadcastChanges();
+
+        net.minecraft.server.level.ServerLevel level = player.serverLevel();
+        net.minecraft.world.phys.Vec3 direction = player.getLookAngle().normalize();
+        net.minecraft.world.phys.Vec3 origin = player.getEyePosition().add(direction.scale(1.4D));
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD,
+                origin.x, origin.y, origin.z, 36, 0.8D, 0.65D, 0.8D, 0.09D);
+        level.playSound(null, player.blockPosition(),
+                net.minecraft.sounds.SoundEvents.FIREWORK_ROCKET_BLAST,
+                net.minecraft.sounds.SoundSource.PLAYERS, 0.75F, 1.55F);
+
+        net.minecraft.world.phys.AABB area = player.getBoundingBox().expandTowards(direction.scale(12.0D))
+                .inflate(3.0D, 2.5D, 3.0D);
+        for (net.minecraft.world.entity.Entity target : level.getEntitiesOfClass(
+                net.minecraft.world.entity.Entity.class, area,
+                entity -> entity != player && !entity.isRemoved())) {
+            net.minecraft.world.phys.Vec3 toTarget = target.getBoundingBox().getCenter()
+                    .subtract(player.getEyePosition());
+            double distanceSqr = toTarget.lengthSqr();
+            if (distanceSqr > 144.0D || distanceSqr < 0.01D) continue;
+            if (direction.dot(toTarget.normalize()) < 0.70D || !player.hasLineOfSight(target)) continue;
+
+            if (target instanceof com.fieldofmemories.entity.PlayerEchoEntity
+                    || target instanceof com.fieldofmemories.entity.SmileFaceEntity) {
+                target.discard();
+                continue;
+            }
+            if (target instanceof net.minecraft.world.entity.LivingEntity living) {
+                living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                        net.minecraft.world.effect.MobEffects.BLINDNESS, 30, 0, false, false, true));
+            }
+        }
+    }
+
+    public static void requestOldCameraFlash() {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new OldCameraFlashPacket());
     }
 
     public static void triggerScream(ServerPlayer target) {
@@ -242,4 +311,5 @@ public final class HorrorNetwork {
     private record CameraBatterySlotPacket(int slot, boolean remove) {}
     private record CameraViewPacket(boolean viewing) {}
     private record CameraViewStopPacket() {}
+    private record OldCameraFlashPacket() {}
 }
