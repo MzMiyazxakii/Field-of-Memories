@@ -2,6 +2,7 @@ package com.fieldofmemories.client;
 
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.item.VideoCameraItem;
+import com.fieldofmemories.item.OldCameraItem;
 import com.fieldofmemories.network.HorrorNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.item.ItemProperties;
@@ -95,7 +96,7 @@ public final class VideoCameraClient {
             int left = screen.getGuiLeft();
             int top = screen.getGuiTop();
             for (Slot slot : Minecraft.getInstance().player.inventoryMenu.slots) {
-                if (!(slot.getItem().getItem() instanceof VideoCameraItem)) continue;
+                if (!(slot.getItem().getItem() instanceof VideoCameraItem) && !(slot.getItem().getItem() instanceof OldCameraItem)) continue;
                 int x = left + slot.x;
                 int y = top + slot.y;
                 int panelX = x + 18;
@@ -120,7 +121,8 @@ public final class VideoCameraClient {
             gui.fill(x - 1, y - 1, x + 17, y + 17, 0xFF080808);
             gui.fill(x, y, x + 16, y + 16, 0xFF555555);
             gui.fill(x + 1, y + 1, x + 15, y + 15, 0xFF242424);
-            if (VideoCameraItem.hasInsertedBattery(slot.getItem())) {
+            if ((slot.getItem().getItem() instanceof VideoCameraItem && VideoCameraItem.hasInsertedBattery(slot.getItem()))
+                    || (slot.getItem().getItem() instanceof OldCameraItem && OldCameraItem.hasInsertedBattery(slot.getItem()))) {
                 gui.renderItem(new ItemStack(FieldOfMemories.BATTERY.get()), x, y);
             }
         }
@@ -139,9 +141,13 @@ public final class VideoCameraClient {
             if (!clickedBatteryCell) return;
             event.setCanceled(true);
             ItemStack carried = mc.player.containerMenu.getCarried();
-            if (VideoCameraItem.hasInsertedBattery(slot.getItem())
-                    || !carried.is(FieldOfMemories.BATTERY.get())
-                    || VideoCameraItem.getBattery(slot.getItem()) >= VideoCameraItem.MAX_BATTERY) return;
+            boolean inserted = slot.getItem().getItem() instanceof VideoCameraItem
+                    ? VideoCameraItem.hasInsertedBattery(slot.getItem()) : OldCameraItem.hasInsertedBattery(slot.getItem());
+            int charge = slot.getItem().getItem() instanceof VideoCameraItem
+                    ? VideoCameraItem.getBattery(slot.getItem()) : OldCameraItem.getCharge(slot.getItem());
+            int maxCharge = slot.getItem().getItem() instanceof VideoCameraItem
+                    ? VideoCameraItem.MAX_BATTERY : OldCameraItem.MAX_CHARGE;
+            if (inserted || !carried.is(FieldOfMemories.BATTERY.get()) || charge >= maxCharge) return;
             HorrorNetwork.requestCameraBatterySlot(slot.index, false);
         }
 
@@ -212,7 +218,9 @@ public final class VideoCameraClient {
             int h = gui.guiHeight();
             var main = mc.player.getMainHandItem();
             var off = mc.player.getOffhandItem();
-            boolean hasCamera = main.getItem() instanceof VideoCameraItem || off.getItem() instanceof VideoCameraItem;
+            boolean hasCamera = (main.getItem() instanceof VideoCameraItem || off.getItem() instanceof VideoCameraItem)
+                    && !(main.getItem() instanceof OldCameraItem || off.getItem() instanceof OldCameraItem);
+            boolean hasOldCamera = main.getItem() instanceof OldCameraItem || off.getItem() instanceof OldCameraItem;
             boolean cameraOpen = (main.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(main))
                     || (off.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(off));
             if (cameraOpen && !viewing) {
@@ -235,6 +243,20 @@ public final class VideoCameraClient {
                 int color = charge > 360 ? 0xFFB7D48A : charge > 120 ? 0xFFE0B34F : 0xFFCC5148;
                 gui.fill(x, y, x + filled, y + 5, color);
                 String percent = (charge * 100 / VideoCameraItem.MAX_BATTERY) + "%";
+                gui.drawString(mc.font, percent, x + barWidth - mc.font.width(percent), y - 12, 0xFFFFFFFF, true);
+            }
+            if (hasOldCamera) {
+                var stack = main.getItem() instanceof OldCameraItem ? main : off;
+                int charge = OldCameraItem.getCharge(stack);
+                int barWidth = 64;
+                int x = w - barWidth - 10;
+                int y = h / 2 - 4;
+                gui.fill(x - 1, y - 1, x + barWidth + 1, y + 7, 0xCC080808);
+                gui.fill(x, y, x + barWidth, y + 5, 0xFF282828);
+                int filled = Math.round(barWidth * charge / (float) OldCameraItem.MAX_CHARGE);
+                int color = charge > 60 ? 0xFFB7D48A : charge > 20 ? 0xFFE0B34F : 0xFFCC5148;
+                gui.fill(x, y, x + filled, y + 5, color);
+                String percent = charge + "%";
                 gui.drawString(mc.font, percent, x + barWidth - mc.font.width(percent), y - 12, 0xFFFFFFFF, true);
             }
             if (!viewing) return;
