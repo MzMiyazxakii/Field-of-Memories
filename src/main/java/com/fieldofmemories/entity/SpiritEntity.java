@@ -90,6 +90,7 @@ public class SpiritEntity extends PathfinderMob {
                 if (!player.isAlive() || player.isCreative() || player.isSpectator()
                         || distanceToSqr(player) > 16.0D * 16.0D) continue;
                 if (player.getHealth() > 1.0F) player.setHealth(1.0F);
+                com.fieldofmemories.network.NetworkHandler.forceFall(player);
             }
             discard();
         }
