@@ -65,8 +65,14 @@ public final class HorrorClient {
         int width = event.getWindow().getGuiScaledWidth();
         int height = event.getWindow().getGuiScaledHeight();
         float strength = Math.min(1.0F, spiritInterference);
-        int alpha = (int)(3 + strength * 9);
         var gui = event.getGuiGraphics();
+
+        // A warm yellow screen tint grows as the spirit approaches.
+        // Keep it subtle at long range and clearly visible nearby.
+        int yellowAlpha = (int)(5 + strength * 42);
+        gui.fill(0, 0, width, height, (yellowAlpha << 24) | 0x00E6C94F);
+
+        int alpha = (int)(3 + strength * 9);
         gui.fill(0, 0, width, height, (alpha << 24) | 0x00303030);
         Random random = new Random(interferenceTicks * 31L + 7L);
         int lines = 1 + (int)(strength * 5.0F);
