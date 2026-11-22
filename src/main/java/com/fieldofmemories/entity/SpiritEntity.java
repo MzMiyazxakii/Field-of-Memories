@@ -22,7 +22,6 @@ public class SpiritEntity extends PathfinderMob {
     private boolean circling;
     private int circleTicks;
     private int orbitRefresh;
-    private int presenceSoundCooldown;
     private double orbitAngle;
 
     public SpiritEntity(EntityType<? extends SpiritEntity> type, Level level) {
@@ -58,18 +57,6 @@ public class SpiritEntity extends PathfinderMob {
     public void tick() {
         super.tick();
         if (level().isClientSide) return;
-
-        if (--presenceSoundCooldown <= 0) {
-            presenceSoundCooldown = 100;
-            for (ServerPlayer nearby : level().getEntitiesOfClass(ServerPlayer.class, getBoundingBox().inflate(20.0D))) {
-                if (nearby.isAlive() && !nearby.isSpectator() && !nearby.isCreative()
-                        && distanceToSqr(nearby) <= 20.0D * 20.0D) {
-                    level().playSound(null, nearby.blockPosition(),
-                            com.fieldofmemories.FieldOfMemories.SPIRIT_PRESENCE_SOUND.get(),
-                            net.minecraft.sounds.SoundSource.HOSTILE, 0.75F, 0.92F + random.nextFloat() * 0.16F);
-                }
-            }
-        }
 
         if (tickCount > 2400) {
             discard();
