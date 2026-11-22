@@ -20,15 +20,11 @@ public class ScarecrowEntity extends Entity {
         super.tick();
         setDeltaMovement(Vec3.ZERO);
         this.noPhysics = true;
-        if (!level().isClientSide) {
-            var target = level().getNearestPlayer(this, 64.0D);
-            if (target != null) {
-                float yaw = (float) (Math.atan2(target.getZ() - getZ(), target.getX() - getX())
-                        * (180.0D / Math.PI)) - 90.0F;
-                setYRot(yaw);
-                yRotO = yaw;
-            }
-        }
+        // Static world prop: never turn toward players.
+        setYRot(0.0F);
+        setXRot(0.0F);
+        yRotO = 0.0F;
+        xRotO = 0.0F;
     }
 
     @Override protected void defineSynchedData() {}
