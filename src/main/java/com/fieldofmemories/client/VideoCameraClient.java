@@ -140,9 +140,10 @@ public final class VideoCameraClient {
             int h = gui.guiHeight();
             var main = mc.player.getMainHandItem();
             var off = mc.player.getOffhandItem();
-            boolean hasCamera = main.getItem() instanceof VideoCameraItem || off.getItem() instanceof VideoCameraItem;
-            if (hasCamera && !viewing) {
-                String prompt = "Нажмите U, чтобы посмотреть";
+            boolean cameraOpen = (main.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(main))
+                    || (off.getItem() instanceof VideoCameraItem && VideoCameraItem.isOpen(off));
+            if (cameraOpen && !viewing) {
+                String prompt = "Нажмите U чтоб посмотреть";
                 gui.drawString(mc.font, prompt, w - mc.font.width(prompt) - 8, h - 30, 0xFFFFFFFF, true);
             }
             if (hasCamera) {
