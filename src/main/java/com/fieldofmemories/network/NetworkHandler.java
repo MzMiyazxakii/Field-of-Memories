@@ -225,7 +225,7 @@ public final class NetworkHandler {
                 }).add();
 
         CHANNEL.messageBuilder(StoolFinishPacket.class, 14)
-                .encoder((packet, buffer) -> buffer.writeInt(packet.progress()))
+                .encoder((packet, buffer) -> buffer.writeInt(packet.result()))
                 .decoder(buffer -> new StoolFinishPacket(buffer.readInt()))
                 .consumerMainThread((packet, context) -> {
                     ServerPlayer player = context.get().getSender();
@@ -264,13 +264,13 @@ public final class NetworkHandler {
 
     public static void startStoolMinigame(ServerPlayer player, net.minecraft.core.BlockPos pos) {
         if (STOOL_SESSIONS.containsKey(player.getUUID())) return;
-        StringBuilder sequence = new StringBuilder(20);
+        StringBuilder sequence = new StringBuilder(12);
         String[] directions = {"U", "D", "L", "R"};
-        for (int i = 0; i < 20; i++) sequence.append(directions[player.serverLevel().random.nextInt(4)]);
+        for (int i = 0; i < 12; i++) sequence.append(directions[player.serverLevel().random.nextInt(4)]);
         String pattern = sequence.toString();
         var level = player.serverLevel();
         net.minecraft.world.entity.decoration.ArmorStand seat = new net.minecraft.world.entity.decoration.ArmorStand(
-                level, pos.getX() + 0.5D, pos.getY() + 0.55D, pos.getZ() + 0.5D);
+                level, pos.getX() + 0.5D, pos.getY() - 1.25D, pos.getZ() + 0.5D);
         seat.setInvisible(true);
         seat.setNoGravity(true);
         seat.setInvulnerable(true);
@@ -286,19 +286,28 @@ public final class NetworkHandler {
     public static void requestStoolLoot() { CHANNEL.send(PacketDistributor.SERVER.noArg(), new StoolLootRequestPacket()); }
     public static void editStoolLoot(int index,int action) { CHANNEL.send(PacketDistributor.SERVER.noArg(), new StoolLootEditPacket(index,action)); }
 
-    public static void finishStoolMinigame(int progress) {
-        CHANNEL.send(PacketDistributor.SERVER.noArg(), new StoolFinishPacket(progress));
+    public static void finishStoolMinigame(int result) {
+        CHANNEL.send(PacketDistributor.SERVER.noArg(), new StoolFinishPacket(result));
     }
 
-    private static void finishStoolMinigameServer(ServerPlayer player, int progress) {
+    private static void finishStoolMinigameServer(ServerPlayer player, int result) {
         StoolSession session = STOOL_SESSIONS.remove(player.getUUID());
         if (session == null) return;
         var level = player.serverLevel();
         net.minecraft.world.entity.Entity seat = level.getEntity(session.seatId());
         if (player.isPassenger()) player.stopRiding();
         if (seat != null) seat.discard();
+
+        if (result == 0) return;
+        if (result < 0) {
+            if (level.getBlockState(session.pos()).is(FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get())) {
+                level.destroyBlock(session.pos(), false);
+            }
+            player.hurt(level.damageSources().generic(), Float.MAX_VALUE);
+            return;
+        }
         long elapsed = level.getGameTime() - session.startedAt();
-        if (elapsed < 780 || progress < 20 || !player.blockPosition().closerThan(session.pos(), 5.0D)) return;
+        if (elapsed < 200 || !player.blockPosition().closerThan(session.pos(), 5.0D)) return;
         if (!level.getBlockState(session.pos()).is(FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get())) return;
         level.destroyBlock(session.pos(), false);
         net.minecraft.world.item.ItemStack reward = StoolLootData.get(level).roll(level.random);
@@ -509,7 +518,7 @@ public final class NetworkHandler {
     private record BoxLootEditPacket(int action, String itemId) {}
     private record BoxLootSyncPacket(String entries) {}
     private record StoolStartPacket(String sequence) {}
-    private record StoolFinishPacket(int progress) {}
+    private record StoolFinishPacket(int result) {}
     private record StoolLootRequestPacket() {}
     private record StoolLootEditPacket(int index,int action) {}
     private record StoolLootSyncPacket(String entries) {}
