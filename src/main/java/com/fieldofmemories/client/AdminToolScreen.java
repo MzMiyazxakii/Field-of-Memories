@@ -112,7 +112,8 @@ public class AdminToolScreen extends Screen {
             add("Туман", cx, y, () -> go("fog"));
         } else if (page.equals("events")) {
             add("Заставить игрока упасть", cx, y, () -> go("players"));
-            add("Назад", cx, y + 52, () -> go("home"));
+            add("Вызвать скример на игроке", cx, y + 25, () -> go("scream_players"));
+            add("Назад", cx, y + 77, () -> go("home"));
         } else if (page.equals("scream_players")) {
             int row = 0;
             if (Minecraft.getInstance().level != null) {
