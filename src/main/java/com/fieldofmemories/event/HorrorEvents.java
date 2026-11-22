@@ -3,6 +3,7 @@ package com.fieldofmemories.event;
 import com.fieldofmemories.data.HorrorWorldData;
 import com.fieldofmemories.entity.ScarecrowEntity;
 import com.fieldofmemories.entity.SmileFaceEntity;
+import com.fieldofmemories.entity.PlayerEchoEntity;
 import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.worldgen.HomeMemoryTracker;
 import com.fieldofmemories.FieldOfMemories;
@@ -49,6 +50,7 @@ public final class HorrorEvents {
 
         manageScarecrow(level, players, random, danger, activity);
         maybeSpawnFace(level, players, random, danger, activity);
+        maybeSpawnPlayerEcho(level, players, random, danger, activity);
         HorrorSignEvent.tryTrigger(level, players, random, danger, activity);
 
         List<ServerPlayer> darkPlayers = new ArrayList<>();
@@ -96,9 +98,11 @@ public final class HorrorEvents {
 
     private static void maybeSpawnFace(ServerLevel level, List<ServerPlayer> players,
                                        RandomSource random, int danger, int activity) {
+        // The face is a night-only event and requires elevated world horror activity.
+        if (!level.isNight() || activity < 150) return;
         int configuredChance = HorrorWorldData.getFaceChance(level);
         int chance = configuredChance == 0 ? 0
-                : Math.min(100, (configuredChance + 10 + danger / 3) * activity / 100);
+                : Math.min(90, (configuredChance + 5 + danger / 4) * (activity - 100) / 100);
         if (random.nextInt(100) >= chance) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
@@ -119,6 +123,37 @@ public final class HorrorEvents {
                     z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
             level.addFreshEntity(face);
         }
+    }
+
+
+    private static void maybeSpawnPlayerEcho(ServerLevel level, List<ServerPlayer> players,
+                                             RandomSource random, int danger, int activity) {
+        // This event only exists in multiplayer and becomes possible at high world activity.
+        if (players.size() < 2 || activity < 140) return;
+
+        int chance = Math.min(45, Math.max(0, (activity - 140) / 3 + danger / 8));
+        if (random.nextInt(100) >= chance) return;
+
+        ServerPlayer target = players.get(random.nextInt(players.size()));
+        if (!level.getEntitiesOfClass(PlayerEchoEntity.class,
+                target.getBoundingBox().inflate(64.0D, 24.0D, 64.0D)).isEmpty()) return;
+
+        List<ServerPlayer> possibleSkins = new ArrayList<>(players);
+        possibleSkins.remove(target);
+        if (possibleSkins.isEmpty()) return;
+        ServerPlayer skinOwner = possibleSkins.get(random.nextInt(possibleSkins.size()));
+
+        double angle = random.nextDouble() * Math.PI * 2.0D;
+        double distance = 18.0D + random.nextDouble() * 10.0D;
+        int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
+        int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+
+        PlayerEchoEntity echo = FieldOfMemories.PLAYER_ECHO_ENTITY.get().create(level);
+        if (echo == null) return;
+        echo.setSkinOwner(skinOwner.getUUID());
+        echo.moveTo(x + 0.5D, y, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
+        if (level.noCollision(echo)) level.addFreshEntity(echo);
     }
 
     private static void spawnScarecrow(ServerLevel level, ServerPlayer target, RandomSource random) {
