@@ -3,7 +3,6 @@ package com.fieldofmemories.client;
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.item.MemoryDiscItem;
 import com.fieldofmemories.item.VideoCameraItem;
-import com.fieldofmemories.block.StrawBedBlock;
 import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.network.NetworkHandler;
 import net.minecraft.client.Minecraft;
