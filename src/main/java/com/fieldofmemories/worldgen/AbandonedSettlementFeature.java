@@ -2,6 +2,7 @@ package com.fieldofmemories.worldgen;
 
 import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -10,6 +11,8 @@ import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.ChunkPos;
@@ -62,6 +65,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
     private static void house(WorldGenLevel l,int x,int z,int v,RandomSource random){
         if(!clear(l,x,z,4,6))return;BlockPos p=surface(l,x,z);if(p==null)return;int y=p.getY(),sx=x-2,sz=z-2;
         Block floor=v==1?Blocks.COBBLESTONE:Blocks.SPRUCE_PLANKS,wall=v==2?Blocks.OAK_PLANKS:Blocks.SPRUCE_PLANKS,log=v==1?Blocks.OAK_LOG:Blocks.SPRUCE_LOG,roof=v==2?Blocks.DARK_OAK_PLANKS:Blocks.SPRUCE_PLANKS;
+        clearHouseInterior(l, sx, y, sz);
         fill(l,sx,y,sz,5,5,floor);
         for(int dx=0;dx<5;dx++)for(int dz=0;dz<5;dz++){boolean c=(dx==0||dx==4)&&(dz==0||dz==4);for(int dy=1;dy<=3;dy++){
             if(c)put(l,sx+dx,y+dy,sz+dz,log);
@@ -73,6 +77,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         placeLootContainer(l, new BlockPos(sx+1,y+1,sz+1), Blocks.BARREL, random);
         placeLootContainer(l, new BlockPos(sx+3,y+1,sz+3), Blocks.CHEST, random);
         if(v==2)put(l,sx+3,y+1,sz+2,Blocks.CRAFTING_TABLE);
+        placeCameraFrame(l, sx + 2, y, sz + 2, random);
     }
     private static void village(WorldGenLevel l,int x,int z,RandomSource random){
         if(!clear(l,x,z,7,6))return;BlockPos p=surface(l,x,z);if(p==null)return;int y=p.getY();
@@ -82,6 +87,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
     }
     private static void houseAt(WorldGenLevel l,int x,int y,int z,int v,RandomSource random){ // village houses use same compact layout
         int sx=x-2,sz=z-2;Block wall=v==1?Blocks.OAK_PLANKS:Blocks.SPRUCE_PLANKS,log=v==1?Blocks.OAK_LOG:Blocks.SPRUCE_LOG;
+        clearHouseInterior(l, sx, y, sz);
         fill(l,sx,y,sz,5,5,Blocks.SPRUCE_PLANKS);
         for(int dx=0;dx<5;dx++)for(int dz=0;dz<5;dz++)for(int dy=1;dy<=3;dy++){
             if((dx==0||dx==4)&&(dz==0||dz==4))put(l,sx+dx,y+dy,sz+dz,log);
@@ -91,6 +97,36 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         fill(l,sx-1,y+4,sz-1,7,7,Blocks.SPRUCE_PLANKS);
         placeLootContainer(l, new BlockPos(sx+1,y+1,sz+1), Blocks.BARREL, random);
         placeLootContainer(l, new BlockPos(sx+3,y+1,sz+3), Blocks.CHEST, random);
+        placeCameraFrame(l, sx + 2, y, sz + 2, random);
+    }
+
+    private static void clearHouseInterior(WorldGenLevel level, int startX, int floorY, int startZ) {
+        // Clear replaceable plants from the room before placing the floor and walls.
+        // This prevents tall grass and ferns from being trapped inside newly generated houses.
+        for (int dx = 1; dx <= 3; dx++) {
+            for (int dz = 1; dz <= 3; dz++) {
+                for (int dy = 1; dy <= 4; dy++) {
+                    BlockPos pos = new BlockPos(startX + dx, floorY + dy, startZ + dz);
+                    BlockState state = level.getBlockState(pos);
+                    if (!state.isAir() && state.getFluidState().isEmpty() && state.canBeReplaced()) {
+                        level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void placeCameraFrame(WorldGenLevel level, int floorX, int floorY, int floorZ,
+                                         RandomSource random) {
+        // Not every abandoned house contains a camera.
+        if (random.nextFloat() >= 0.32F) return;
+        BlockPos floor = new BlockPos(floorX, floorY, floorZ);
+        if (!level.getBlockState(floor).isFaceSturdy(level, floor, Direction.UP)) return;
+
+        ItemFrame frame = new ItemFrame(level.getLevel(), floor, Direction.UP);
+        frame.setInvisible(true);
+        frame.setItem(new ItemStack(FieldOfMemories.VIDEO_CAMERA.get()), false);
+        level.addFreshEntity(frame);
     }
 
     private static void placeLootContainer(WorldGenLevel level, BlockPos pos, Block block, RandomSource random) {
