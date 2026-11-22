@@ -23,7 +23,7 @@ public final class DeathScreen extends Screen {
     private static final int BUTTON_HEIGHT = 30;
 
     public DeathScreen() {
-        super(Component.literal("Смерть"));
+        super(Component.literal("Переродился"));
     }
 
     @Override
