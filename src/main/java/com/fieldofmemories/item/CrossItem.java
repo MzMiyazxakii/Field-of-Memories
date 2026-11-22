@@ -20,6 +20,7 @@ import net.minecraft.world.level.Level;
 import org.joml.Vector3f;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class CrossItem extends Item {
     public static final int NORMAL = 0;
@@ -62,27 +63,39 @@ public class CrossItem extends Item {
         return true;
     }
 
-    // Hostile entities can drain the cross, but this never cancels or prevents their attack.
+    // Every usable cross in the player's inventory has its own chance to be drained.
+    // This never cancels or prevents the hostile entity's attack.
     public static void tryDepleteOnAttack(ServerPlayer player) {
-        ItemStack cross = findUsableCross(player);
-        if (cross.isEmpty()) return;
         RandomSource random = player.serverLevel().random;
-        if (random.nextInt(100) >= PROTECTION_CHANCE) return;
-
-        setState(cross, EMPTY);
-        player.playSound(SoundEvents.ITEM_BREAK, 1.0F, 0.85F + random.nextFloat() * 0.3F);
-        player.getInventory().setChanged();
-        player.containerMenu.broadcastChanges();
+        boolean depletedAny = false;
+        for (ItemStack cross : findUsableCrosses(player)) {
+            if (random.nextInt(100) < PROTECTION_CHANCE) {
+                setState(cross, EMPTY);
+                depletedAny = true;
+            }
+        }
+        if (depletedAny) {
+            player.playSound(SoundEvents.ITEM_BREAK, 1.0F, 0.85F + random.nextFloat() * 0.3F);
+            player.getInventory().setChanged();
+            player.containerMenu.broadcastChanges();
+        }
     }
 
     private static ItemStack findUsableCross(ServerPlayer player) {
+        List<ItemStack> crosses = findUsableCrosses(player);
+        return crosses.isEmpty() ? ItemStack.EMPTY : crosses.get(0);
+    }
+
+    private static List<ItemStack> findUsableCrosses(ServerPlayer player) {
+        List<ItemStack> crosses = new ArrayList<>();
+        // Inventory.items includes both the hotbar and the main inventory.
         for (ItemStack stack : player.getInventory().items) {
-            if (stack.is(FieldOfMemories.CROSS.get()) && getState(stack) == NORMAL) return stack;
+            if (stack.is(FieldOfMemories.CROSS.get()) && getState(stack) == NORMAL) crosses.add(stack);
         }
         for (ItemStack stack : player.getInventory().offhand) {
-            if (stack.is(FieldOfMemories.CROSS.get()) && getState(stack) == NORMAL) return stack;
+            if (stack.is(FieldOfMemories.CROSS.get()) && getState(stack) == NORMAL) crosses.add(stack);
         }
-        return ItemStack.EMPTY;
+        return crosses;
     }
 
     @Override
