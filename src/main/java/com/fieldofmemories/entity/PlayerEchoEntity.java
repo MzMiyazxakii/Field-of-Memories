@@ -58,6 +58,9 @@ public class PlayerEchoEntity extends PathfinderMob {
         if (level().isClientSide || isRemoved()) return false;
         if (level() instanceof ServerLevel serverLevel) {
             if (source.getEntity() instanceof LivingEntity attacker && attacker != this) {
+                if (attacker instanceof net.minecraft.server.level.ServerPlayer player) {
+                    com.fieldofmemories.item.CrossItem.tryDepleteOnAttack(player);
+                }
                 attacker.hurt(serverLevel.damageSources().mobAttack(this), 16.0F);
             }
             serverLevel.sendParticles(ParticleTypes.SQUID_INK,
