@@ -6,6 +6,7 @@ import com.fieldofmemories.entity.SmileFaceEntity;
 import com.fieldofmemories.entity.PlayerEchoEntity;
 import com.fieldofmemories.entity.SpiritEntity;
 import com.fieldofmemories.entity.RiftEntity;
+import com.fieldofmemories.block.AnomalousStoolBlock;
 import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.worldgen.HomeMemoryTracker;
 import com.fieldofmemories.FieldOfMemories;
@@ -54,6 +55,7 @@ public final class HorrorEvents {
         maybeSpawnFace(level, players, random, danger, activity);
         maybeSpawnPlayerEcho(level, players, random, danger, activity);
         maybeSpawnRift(level, players, random, danger, activity);
+        manageAnomalousStool(level, players, random, activity);
         HorrorSignEvent.tryTrigger(level, players, random, danger, activity);
 
         double dangerFactor = 1.0D - danger * 0.006D;
@@ -132,6 +134,43 @@ public final class HorrorEvents {
         rift.moveTo(x + 0.5D, y + 0.1D, z + 0.5D, 0.0F, 0.0F);
         rift.setLifetime(240 + random.nextInt(361));
         if (level.noCollision(rift)) level.addFreshEntity(rift);
+    }
+
+    private static void manageAnomalousStool(ServerLevel level, List<ServerPlayer> players,
+                                             RandomSource random, int activity) {
+        List<BlockPos> stools = new ArrayList<>();
+        for (ServerPlayer player : players) {
+            BlockPos center = player.blockPosition();
+            for (BlockPos pos : BlockPos.betweenClosed(center.offset(-40, -12, -40),
+                    center.offset(40, 12, 40))) {
+                if (level.getBlockState(pos).is(FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get())) {
+                    stools.add(pos.immutable());
+                }
+            }
+        }
+        if (!stools.isEmpty()) {
+            if (random.nextInt(100) < 8) {
+                BlockPos vanish = stools.get(random.nextInt(stools.size()));
+                level.destroyBlock(vanish, false);
+            }
+            return;
+        }
+        int chance = Math.min(18, Math.max(1, activity / 12));
+        if (random.nextInt(100) >= chance) return;
+        ServerPlayer target = players.get(random.nextInt(players.size()));
+        for (int attempt = 0; attempt < 12; attempt++) {
+            double angle = random.nextDouble() * Math.PI * 2.0D;
+            double distance = 16.0D + random.nextDouble() * 24.0D;
+            int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
+            int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
+            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            BlockPos pos = new BlockPos(x, y, z);
+            if (level.getBlockState(pos).isAir()
+                    && level.getBlockState(pos.below()).isSolidRender(level, pos.below())) {
+                level.setBlock(pos, FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get().defaultBlockState(), 3);
+                return;
+            }
+        }
     }
 
     private static void maybeSpawnFace(ServerLevel level, List<ServerPlayer> players,
