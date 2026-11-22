@@ -14,7 +14,6 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-import com.fieldofmemories.block.ScarecrowBlock;
 import com.fieldofmemories.block.LootContainerBlock;
 import com.fieldofmemories.block.TripleTallGrassBlock;
 import com.fieldofmemories.worldgen.TripleTallGrassFeature;
@@ -30,7 +29,6 @@ public class FieldOfMemories {
     public static final String MOD_ID = "fieldofmemories";
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
-    public static final RegistryObject<Block> SCARECROW = BLOCKS.register("scarecrow", ScarecrowBlock::new);
     public static final RegistryObject<Block> TRIPLE_TALL_GRASS = BLOCKS.register("triple_tall_grass", TripleTallGrassBlock::new);
     public static final RegistryObject<Block> BACKPACK_BLOCK = BLOCKS.register("backpack", () -> new LootContainerBlock(true));
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));
