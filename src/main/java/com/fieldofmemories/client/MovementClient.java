@@ -431,7 +431,7 @@ public final class MovementClient {
 
         float madness = StoolMinigameScreen.cameraMadness();
         if (madness > 0.0F) {
-            float t = StoolMinigameScreen.cameraPhase(event.getPartialTick());
+            float t = (float) StoolMinigameScreen.cameraPhase(event.getPartialTick());
             float fast = 1.0F + madness * 3.5F;
             event.setYaw(event.getYaw() + (float)Math.sin(t * 0.83F) * 0.75F * fast);
             event.setPitch(event.getPitch() + (float)Math.cos(t * 1.17F) * 0.55F * fast);
