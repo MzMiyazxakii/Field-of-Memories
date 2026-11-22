@@ -7,6 +7,9 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -21,6 +24,8 @@ import com.fieldofmemories.worldgen.AbandonedSettlementFeature;
 public class FieldOfMemories {
     public static final String MOD_ID = "fieldofmemories";
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
+    public static final RegistryObject<Block> SCARECROW = BLOCKS.register("scarecrow", () -> new Block(BlockBehaviour.Properties.of().strength(1.0F).sound(SoundType.HAY).noOcclusion()));
     public static final RegistryObject<Item> ADMIN_TOOL = ITEMS.register("admin_tool", () -> new AdminToolItem(new Item.Properties()));
     public static final RegistryObject<Item> MEMORY_DISC_1 = registerMemoryDisc("memory_disc_1", 0);
     public static final RegistryObject<Item> MEMORY_DISC_2 = registerMemoryDisc("memory_disc_2", 1);
@@ -64,6 +69,7 @@ public class FieldOfMemories {
     public FieldOfMemories() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ITEMS.register(modBus);
+        BLOCKS.register(modBus);
         SOUND_EVENTS.register(modBus);
         FEATURES.register(modBus);
         NetworkHandler.register();
