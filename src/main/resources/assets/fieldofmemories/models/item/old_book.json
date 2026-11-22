@@ -1,1 +1,6 @@
-{"parent":"fieldofmemories:item/bok"}
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "fieldofmemories:item/old_book"
+  }
+}
