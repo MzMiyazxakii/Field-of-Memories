@@ -1,5 +1,6 @@
 package com.fieldofmemories.block;
 
+import com.fieldofmemories.network.StrawBedNetwork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -29,8 +30,6 @@ public class StrawBedBlock extends BedBlock {
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        // BedBlock normally uses the vanilla animated bed renderer. This custom
-        // bed has no vanilla bed texture/renderer, so render its supplied block model.
         return RenderShape.MODEL;
     }
 
@@ -45,8 +44,10 @@ public class StrawBedBlock extends BedBlock {
         if (player.isSleeping()) return InteractionResult.PASS;
         BlockPos headPos = getHeadPos(state, pos);
         BlockState headState = level.getBlockState(headPos);
-        if (!headState.is(this) || headState.getValue(OCCUPIED)) return InteractionResult.PASS;
-        if (!level.isClientSide) player.startSleeping(headPos);
+        if (!headState.is(this)) return InteractionResult.PASS;
+        if (!level.isClientSide && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            StrawBedNetwork.beginRest(serverPlayer, headPos);
+        }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 }
