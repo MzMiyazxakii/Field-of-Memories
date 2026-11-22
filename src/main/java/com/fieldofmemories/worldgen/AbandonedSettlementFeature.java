@@ -96,7 +96,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
     private static void placeLootContainer(WorldGenLevel level, BlockPos pos, Block block, RandomSource random) {
         level.setBlock(pos, block.defaultBlockState(), 3);
         if (level.getBlockEntity(pos) instanceof net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity container) {
-            container.setLootTable(new ResourceLocation(FieldOfMemories.MOD_ID, "chests/abandoned_house"), random.nextLong());
+            container.setLootTable(new ResourceLocation(FieldOfMemories.MOD_ID, block == Blocks.CHEST ? "chests/abandoned_house" : "chests/abandoned_house_barrel"), random.nextLong());
         }
     }
 
