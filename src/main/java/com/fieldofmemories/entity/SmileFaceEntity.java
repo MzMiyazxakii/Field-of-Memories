@@ -1,7 +1,10 @@
 package com.fieldofmemories.entity;
 
 import com.fieldofmemories.network.HorrorNetwork;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.server.level.ServerLevel;
@@ -48,9 +51,11 @@ public class SmileFaceEntity extends Entity {
                 closest = player;
             }
 
-            Vec3 toFace = position().subtract(player.getEyePosition()).normalize();
+            Vec3 faceCenter = position().add(0.0D, getBbHeight() * 0.5D, 0.0D);
+            Vec3 eyePosition = player.getEyePosition();
+            Vec3 toFace = faceCenter.subtract(eyePosition).normalize();
             boolean watching = distance < 40.0D * 40.0D
-                    && player.hasLineOfSight(this)
+                    && hasClearHorrorSight(serverLevel, eyePosition, faceCenter)
                     && toFace.dot(player.getLookAngle()) > 0.992D;
             if (watching) {
                 int ticks = gazeTicks.getOrDefault(player.getUUID(), 0) + 1;
@@ -72,6 +77,29 @@ public class SmileFaceEntity extends Entity {
             setYRot((float) (Math.atan2(dz, dx) * (180.0D / Math.PI)) - 90.0F);
         }
         setPos(getX(), getY() + Math.sin(tickCount * 0.08D) * 0.003D, getZ());
+    }
+
+    // Transparent blocks and non-occluding vegetation must not hide the face.
+    private static boolean hasClearHorrorSight(ServerLevel level, Vec3 from, Vec3 to) {
+        Vec3 ray = to.subtract(from);
+        double distance = ray.length();
+        int steps = Math.max(1, (int) Math.ceil(distance * 12.0D));
+        for (int i = 1; i < steps; i++) {
+            Vec3 sample = from.add(ray.scale((double) i / steps));
+            BlockPos pos = BlockPos.containing(sample);
+            var state = level.getBlockState(pos);
+            if (!state.canOcclude()) continue;
+
+            VoxelShape shape = state.getOcclusionShape(level, pos);
+            if (shape.isEmpty()) continue;
+            double localX = sample.x - pos.getX();
+            double localY = sample.y - pos.getY();
+            double localZ = sample.z - pos.getZ();
+            for (AABB box : shape.toAabbs()) {
+                if (box.contains(localX, localY, localZ)) return false;
+            }
+        }
+        return true;
     }
 
     @Override protected void defineSynchedData() {}
