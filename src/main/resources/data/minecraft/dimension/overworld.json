@@ -38,7 +38,7 @@
           "parameters": {
             "temperature": [
               -0.42,
-              0.42
+              0.2
             ],
             "humidity": [
               -1,
@@ -64,7 +64,7 @@
           "biome": "fieldofmemories:gloomy_forest",
           "parameters": {
             "temperature": [
-              0.42,
+              0.2,
               1
             ],
             "humidity": [
