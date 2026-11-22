@@ -4,6 +4,7 @@ import com.fieldofmemories.data.HorrorWorldData;
 import com.fieldofmemories.entity.ScarecrowEntity;
 import com.fieldofmemories.entity.SmileFaceEntity;
 import com.fieldofmemories.entity.PlayerEchoEntity;
+import com.fieldofmemories.entity.SpiritEntity;
 import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.worldgen.HomeMemoryTracker;
 import com.fieldofmemories.FieldOfMemories;
@@ -47,45 +48,68 @@ public final class HorrorEvents {
         RandomSource random = level.random;
 
         manageScarecrow(level, players, random, danger, activity);
+        maybeSpawnSpirit(level, players, random, danger, activity);
         maybeSpawnFace(level, players, random, danger, activity);
         maybeSpawnPlayerEcho(level, players, random, danger, activity);
         HorrorSignEvent.tryTrigger(level, players, random, danger, activity);
 
-        // One shared world cooldown: danger and activity make all world events happen more often.
         double dangerFactor = 1.0D - danger * 0.006D;
         long interval = Math.max(300L, (long) (600.0D * dangerFactor * 100.0D / activity));
         HorrorWorldData.setNextAmbientEvent(level, now + interval);
     }
 
+    private static AABB worldBounds(ServerLevel level) {
+        var border = level.getWorldBorder();
+        return new AABB(border.getMinX(), level.getMinBuildHeight(), border.getMinZ(),
+                border.getMaxX(), level.getMaxBuildHeight(), border.getMaxZ());
+    }
+
     private static void manageScarecrow(ServerLevel level, List<ServerPlayer> players,
                                         RandomSource random, int danger, int activity) {
-        ScarecrowEntity existing = null;
-        for (ServerPlayer player : players) {
-            List<ScarecrowEntity> nearby = level.getEntitiesOfClass(ScarecrowEntity.class,
-                    player.getBoundingBox().inflate(80.0D, 32.0D, 80.0D));
-            if (!nearby.isEmpty()) {
-                existing = nearby.get(0);
-                break;
-            }
-        }
+        List<ScarecrowEntity> all = level.getEntitiesOfClass(ScarecrowEntity.class, worldBounds(level));
+        ScarecrowEntity existing = all.isEmpty() ? null : all.get(0);
+        for (int i = 1; i < all.size(); i++) all.get(i).discard();
 
         int chance = scaleChance(HorrorWorldData.getScarecrowChance(level), danger, activity, 35);
         if (existing != null) {
             for (ServerPlayer player : players) {
                 if (isLookingAt(player, existing, 80.0D)) return;
             }
-            // It can only relocate while nobody is watching it.
             existing.discard();
-            if (random.nextInt(100) < chance) spawnScarecrow(level, players.get(random.nextInt(players.size())), random);
+            if (random.nextInt(100) < chance) {
+                spawnScarecrow(level, players.get(random.nextInt(players.size())), random);
+            }
         } else if (random.nextInt(100) < chance) {
             spawnScarecrow(level, players.get(random.nextInt(players.size())), random);
         }
     }
 
+    private static void maybeSpawnSpirit(ServerLevel level, List<ServerPlayer> players,
+                                         RandomSource random, int danger, int activity) {
+        List<SpiritEntity> existing = level.getEntitiesOfClass(SpiritEntity.class, worldBounds(level));
+        if (!existing.isEmpty()) {
+            for (int i = 1; i < existing.size(); i++) existing.get(i).discard();
+            return;
+        }
+
+        int chance = Math.min(8, Math.max(1, (2 + danger / 25) * activity / 100));
+        if (random.nextInt(100) >= chance) return;
+
+        ServerPlayer target = players.get(random.nextInt(players.size()));
+        double angle = random.nextDouble() * Math.PI * 2.0D;
+        double distance = 14.0D + random.nextDouble() * 10.0D;
+        int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
+        int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+
+        SpiritEntity spirit = FieldOfMemories.SPIRIT_ENTITY.get().create(level);
+        if (spirit == null) return;
+        spirit.moveTo(x + 0.5D, y, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
+        if (level.noCollision(spirit)) level.addFreshEntity(spirit);
+    }
+
     private static void maybeSpawnFace(ServerLevel level, List<ServerPlayer> players,
                                        RandomSource random, int danger, int activity) {
-        // Normally the face appears at night. During the day it can break through
-        // only when the world's horror activity reaches an extreme level (200%+).
         if (level.isNight()) {
             if (activity < 150) return;
         } else if (activity < 200) {
@@ -116,12 +140,9 @@ public final class HorrorEvents {
         }
     }
 
-
     private static void maybeSpawnPlayerEcho(ServerLevel level, List<ServerPlayer> players,
                                              RandomSource random, int danger, int activity) {
-        // A rare multiplayer-only event; world danger and activity both raise its chance.
         if (players.size() < 2) return;
-
         int chance = Math.min(40, (3 + danger / 10) * activity / 100);
         if (random.nextInt(100) >= chance) return;
 
@@ -173,5 +194,4 @@ public final class HorrorEvents {
         Vec3 direction = entity.position().subtract(player.getEyePosition()).normalize();
         return direction.dot(player.getLookAngle()) > 0.985D;
     }
-
 }
