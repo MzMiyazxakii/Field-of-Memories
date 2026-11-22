@@ -13,6 +13,28 @@ public class AdminToolScreen extends Screen {
     private static int memoryReadMask;
     private static boolean memorySpawnEnabled = true;
     private static int memorySpawnChance = 10;
+    private static String boxLootData = "";
+    private static int selectedLootItem;
+
+    private static final String[] LOOT_ITEM_IDS = {
+            "minecraft:iron_ingot", "minecraft:iron_nugget", "minecraft:gold_ingot",
+            "minecraft:carrot", "minecraft:potato", "minecraft:redstone", "minecraft:lapis_lazuli",
+            "minecraft:amethyst_shard", "minecraft:copper_ingot", "minecraft:bone", "minecraft:stick",
+            "minecraft:spruce_planks", "minecraft:string", "minecraft:feather", "minecraft:leather",
+            "minecraft:flint", "minecraft:beef", "minecraft:porkchop", "minecraft:chicken",
+            "minecraft:mutton", "minecraft:rabbit", "minecraft:bread", "minecraft:apple",
+            "minecraft:coal", "minecraft:torch", "minecraft:emerald", "minecraft:diamond",
+            "minecraft:arrow", "minecraft:golden_carrot",
+            "fieldofmemories:memory_disc_1", "fieldofmemories:memory_disc_2"
+    };
+    private static final String[] LOOT_ITEM_NAMES = {
+            "Железный слиток", "Железный самородок", "Золотой слиток", "Морковь", "Картофель",
+            "Редстоун", "Лазурит", "Осколок аметиста", "Медный слиток", "Кость", "Палка",
+            "Еловые доски", "Нить", "Перо", "Кожа", "Кремень", "Сырая говядина",
+            "Сырая свинина", "Сырая курятина", "Сырая баранина", "Сырая крольчатина",
+            "Хлеб", "Яблоко", "Уголь", "Факел", "Изумруд", "Алмаз", "Стрела",
+            "Золотая морковь", "Диск: Пирог с клубничкой", "Диск: Сторож"
+    };
 
     private static final String[] DISC_NAMES = {
             "Пирог с клубничкой", "Сторож", "Уличная прядь", "Городская выгода",
@@ -20,6 +42,21 @@ public class AdminToolScreen extends Screen {
     };
 
     public AdminToolScreen() { super(Component.literal("Field of Memories — Admin Tool")); }
+
+    public static void updateBoxLootData(String data) {
+        boxLootData = data == null ? "" : data;
+    }
+
+    private static String selectedLootDetails() {
+        String selected = LOOT_ITEM_IDS[selectedLootItem];
+        for (String entry : boxLootData.split(";")) {
+            String[] parts = entry.split(",");
+            if (parts.length == 4 && parts[0].equals(selected)) {
+                return "В таблице | мин: " + parts[1] + " | макс: " + parts[2] + " | вес: " + parts[3];
+            }
+        }
+        return "Предмет не добавлен";
+    }
 
     public static void updateMemoryData(int readMask, boolean spawnEnabled, int spawnChance) {
         memoryReadMask = readMask & 0xFF;
@@ -105,6 +142,25 @@ public class AdminToolScreen extends Screen {
                 });
             }
             add("Назад", cx, y + 8 * 23, () -> go("memory_items"));
+        } else if (page.equals("box_loot")) {
+            NetworkHandler.requestBoxLootTable();
+            add("<", cx - 82, y, () -> {
+                selectedLootItem = Math.floorMod(selectedLootItem - 1, LOOT_ITEM_IDS.length);
+                init();
+            });
+            add(">", cx + 82, y, () -> {
+                selectedLootItem = (selectedLootItem + 1) % LOOT_ITEM_IDS.length;
+                init();
+            });
+            add("Добавить предмет", cx, y + 25, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 0));
+            add("Убрать предмет", cx, y + 50, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 1));
+            add("Вес шанса −", cx - 82, y + 78, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 3));
+            add("Вес шанса +", cx + 82, y + 78, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 2));
+            add("Мин. кол-во −", cx - 82, y + 103, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 5));
+            add("Мин. кол-во +", cx + 82, y + 103, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 4));
+            add("Макс. кол-во −", cx - 82, y + 128, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 7));
+            add("Макс. кол-во +", cx + 82, y + 128, () -> NetworkHandler.editBoxLoot(LOOT_ITEM_IDS[selectedLootItem], 6));
+            add("Назад", cx, y + 155, () -> go("items"));
         } else if (page.equals("fog")) {
             add("Дальность −", cx - 82, y, () -> NetworkHandler.changeFogDistance(-8));
             add("Дальность +", cx + 82, y, () -> NetworkHandler.changeFogDistance(8));
@@ -140,6 +196,11 @@ public class AdminToolScreen extends Screen {
             drawRightInfo(gui, String.format("Цена выносливости: %.0f", MovementClient.getAdminLongJumpCost()), height / 2 - 40);
         }
         if (page.equals("fog")) drawRightInfo(gui, "Дальность: " + FogClient.getDistance() + " блоков", height / 2 + 12);
+        if (page.equals("box_loot")) {
+            gui.drawCenteredString(font, LOOT_ITEM_NAMES[selectedLootItem], width / 2, height / 2 - 22, 0xFFFFD08A);
+            drawRightInfo(gui, selectedLootDetails(), height / 2 + 12);
+        }
+
         if (page.equals("memory_items")) {
             drawRightInfo(gui, "Спавн: " + (memorySpawnEnabled ? "включён" : "отключён"), height / 2 + 8);
             drawRightInfo(gui, "Шанс: " + memorySpawnChance + "%", height / 2 + 20);
@@ -176,6 +237,7 @@ public class AdminToolScreen extends Screen {
             case "give_memory_disc" -> "ВЫБЕРИТЕ ДИСК";
             case "story" -> "СЮЖЕТ И СТАТИСТИКА";
             case "fog" -> "ТУМАН";
+            case "box_loot" -> "ЛУТ КОРОБОК";
             default -> "ГЛАВНОЕ МЕНЮ";
         };
     }
