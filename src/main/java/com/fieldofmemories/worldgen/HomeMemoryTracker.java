@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "fieldofmemories")
 public final class HomeMemoryTracker {
     private static final String DATA_KEY = "FieldOfMemoriesHomeMemory";
-    private static final int REQUIRED_ACTIVE_TICKS = 12_000; // 10 minutes of activity near the respawn point
+    private static final int REQUIRED_ACTIVE_TICKS = 18_000; // 15 minutes of active time at a new home
     private static final double HOME_RADIUS_SQUARED = 32.0D * 32.0D;
 
     private HomeMemoryTracker() {}
@@ -66,8 +66,7 @@ public final class HomeMemoryTracker {
             data.putInt("CandidateX", respawn.getX());
             data.putInt("CandidateY", respawn.getY());
             data.putInt("CandidateZ", respawn.getZ());
-            data.putInt("ActiveTicks", 0);
-            data.putBoolean("HomeRecognized", false);
+            data.putInt("CandidateActiveTicks", 0);
             data.putDouble("LastX", player.getX());
             data.putDouble("LastY", player.getY());
             data.putDouble("LastZ", player.getZ());
@@ -83,19 +82,25 @@ public final class HomeMemoryTracker {
         boolean moving = lastDx * lastDx + lastDy * lastDy + lastDz * lastDz > 0.0004D;
 
         if (nearHome && moving) {
-            int ticks = data.getInt("ActiveTicks") + 1;
-            data.putInt("ActiveTicks", ticks);
-            if (ticks >= REQUIRED_ACTIVE_TICKS && !data.getBoolean("HomeRecognized")) {
+            int ticks = data.getInt("CandidateActiveTicks") + 1;
+            data.putInt("CandidateActiveTicks", ticks);
+            boolean sameAsRemembered = data.getBoolean("HomeRecognized")
+                    && dimension.equals(data.getString("HomeDimension"))
+                    && respawn.getX() == data.getInt("HomeX")
+                    && respawn.getY() == data.getInt("HomeY")
+                    && respawn.getZ() == data.getInt("HomeZ");
+            // Keep the old home until the player has genuinely settled at the new bed.
+            if (ticks >= REQUIRED_ACTIVE_TICKS && !sameAsRemembered) {
                 data.putBoolean("HomeRecognized", true);
                 data.putString("HomeDimension", dimension);
                 data.putInt("HomeX", respawn.getX());
                 data.putInt("HomeY", respawn.getY());
                 data.putInt("HomeZ", respawn.getZ());
                 data.putLong("HomeRecognizedAt", player.serverLevel().getGameTime());
+                data.putInt("CandidateActiveTicks", 0);
             }
         } else if (!nearHome) {
-            data.putInt("ActiveTicks", Math.max(0, data.getInt("ActiveTicks") - 2));
-            if (data.getInt("ActiveTicks") == 0 && data.getBoolean("HomeRecognized")) data.putBoolean("HomeRecognized", false);
+            data.putInt("CandidateActiveTicks", Math.max(0, data.getInt("CandidateActiveTicks") - 2));
         }
 
         data.putDouble("LastX", player.getX());
