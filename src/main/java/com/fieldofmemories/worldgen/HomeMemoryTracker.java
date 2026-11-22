@@ -3,7 +3,6 @@ package com.fieldofmemories.worldgen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -16,6 +15,24 @@ public final class HomeMemoryTracker {
     private static final double HOME_RADIUS_SQUARED = 32.0D * 32.0D;
 
     private HomeMemoryTracker() {}
+
+    public static boolean hasRecognizedHome(ServerPlayer player) {
+        return player.getPersistentData().getCompound(DATA_KEY).getBoolean("HomeRecognized");
+    }
+
+    public static BlockPos getRecognizedHome(ServerPlayer player) {
+        CompoundTag data = player.getPersistentData().getCompound(DATA_KEY);
+        if (!data.getBoolean("HomeRecognized")) return null;
+        return new BlockPos(data.getInt("HomeX"), data.getInt("HomeY"), data.getInt("HomeZ"));
+    }
+
+    public static String getRecognizedHomeDimension(ServerPlayer player) {
+        return player.getPersistentData().getCompound(DATA_KEY).getString("HomeDimension");
+    }
+
+    public static int getActiveHomeTicks(ServerPlayer player) {
+        return player.getPersistentData().getCompound(DATA_KEY).getInt("ActiveTicks");
+    }
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
