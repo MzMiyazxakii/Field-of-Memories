@@ -24,7 +24,7 @@ public final class SpiritSoundClient {
         }
 
         SpiritEntity nearest = mc.level.getEntitiesOfClass(
-                SpiritEntity.class, mc.player.getBoundingBox().inflate(32.0D))
+                SpiritEntity.class, mc.player.getBoundingBox().inflate(24.0D))
                 .stream()
                 .filter(spirit -> spirit.isAlive() && !spirit.isRemoved())
                 .min((a, b) -> Double.compare(mc.player.distanceToSqr(a), mc.player.distanceToSqr(b)))
@@ -41,12 +41,15 @@ public final class SpiritSoundClient {
         }
 
         double distance = mc.player.distanceTo(nearest);
-        float proximity = (float)Math.max(0.0D, Math.min(1.0D, 1.0D - distance / 32.0D));
-        float volume = 0.25F + proximity * 0.75F;
-        float pitch = 0.88F + mc.level.random.nextFloat() * 0.24F;
-        mc.level.playLocalSound(nearest.getX(), nearest.getY(), nearest.getZ(),
-                FieldOfMemories.SPIRIT_PRESENCE_SOUND.get(), SoundSource.AMBIENT,
+        float proximity = (float)Math.max(0.0D, Math.min(1.0D, 1.0D - distance / 24.0D));
+        float volume = 0.65F + proximity * 0.35F;
+        float pitch = 0.90F + mc.level.random.nextFloat() * 0.20F;
+
+        // Play at the listener rather than at the Spirit: this avoids positional
+        // attenuation making the proximity cue inaudible at the edge of its range.
+        mc.level.playLocalSound(mc.player.getX(), mc.player.getY(), mc.player.getZ(),
+                FieldOfMemories.SPIRIT_PRESENCE_SOUND.get(), SoundSource.HOSTILE,
                 volume, pitch, false);
-        soundCooldown = 80 + mc.level.random.nextInt(41);
+        soundCooldown = 70 + mc.level.random.nextInt(31);
     }
 }
