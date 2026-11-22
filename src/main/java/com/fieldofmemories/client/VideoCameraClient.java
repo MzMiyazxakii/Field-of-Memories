@@ -132,11 +132,17 @@ public final class VideoCameraClient {
             if (mc.player == null) return;
             Slot slot = findCameraSlot(screen, event.getMouseX(), event.getMouseY());
             if (slot == null) return;
-            boolean remove = VideoCameraItem.hasInsertedBattery(slot.getItem());
-            ItemStack carried = mc.player.containerMenu.getCarried();
-            if (remove ? !carried.isEmpty() : !carried.is(FieldOfMemories.BATTERY.get())) return;
-            HorrorNetwork.requestCameraBatterySlot(slot.index, remove);
+            int x = screen.getGuiLeft() + slot.x + 18;
+            int y = screen.getGuiTop() + slot.y;
+            boolean clickedBatteryCell = event.getMouseX() >= x && event.getMouseX() < x + 18
+                    && event.getMouseY() >= y && event.getMouseY() < y + 18;
+            if (!clickedBatteryCell) return;
             event.setCanceled(true);
+            ItemStack carried = mc.player.containerMenu.getCarried();
+            if (VideoCameraItem.hasInsertedBattery(slot.getItem())
+                    || !carried.is(FieldOfMemories.BATTERY.get())
+                    || VideoCameraItem.getBattery(slot.getItem()) >= VideoCameraItem.MAX_BATTERY) return;
+            HorrorNetwork.requestCameraBatterySlot(slot.index, false);
         }
 
         @SubscribeEvent
