@@ -229,9 +229,24 @@ public final class HorrorNetwork {
             if (distanceSqr > 576.0D || distanceSqr < 0.01D) continue;
             if (direction.dot(toTarget.normalize()) < 0.70D || !player.hasLineOfSight(target)) continue;
 
-            if (target instanceof com.fieldofmemories.entity.PlayerEchoEntity
-                    || target instanceof com.fieldofmemories.entity.SmileFaceEntity) {
+            if (target instanceof com.fieldofmemories.entity.PlayerEchoEntity) {
                 target.discard();
+                continue;
+            }
+            if (target instanceof com.fieldofmemories.entity.SmileFaceEntity face) {
+                int photos = player.getPersistentData().getInt("FOMClosedDoorPhotoCount") + 1;
+                boolean guaranteed = photos >= 20;
+                boolean dropped = guaranteed || level.random.nextFloat() < 0.10F;
+                if (dropped) {
+                    net.minecraft.world.entity.item.ItemEntity reward = new net.minecraft.world.entity.item.ItemEntity(
+                            level, face.getX(), face.getY() + 0.35D, face.getZ(),
+                            new net.minecraft.world.item.ItemStack(FieldOfMemories.MEMORY_DISC_5.get()));
+                    level.addFreshEntity(reward);
+                    player.getPersistentData().putInt("FOMClosedDoorPhotoCount", 0);
+                } else {
+                    player.getPersistentData().putInt("FOMClosedDoorPhotoCount", photos);
+                }
+                face.discard();
                 continue;
             }
             if (target instanceof net.minecraft.world.entity.LivingEntity living) {
