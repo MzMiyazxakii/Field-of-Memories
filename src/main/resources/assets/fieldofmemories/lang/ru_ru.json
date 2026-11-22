@@ -13,5 +13,6 @@
   "block.fieldofmemories.cardboard_box": "Картонная коробка",
   "block.minecraft.spruce_leaves": "Исхудавшая листва",
   "item.fieldofmemories.video_camera": "Видеокамера",
-  "block.fieldofmemories.straw_bed": "Кровать из соломы"
+  "block.fieldofmemories.straw_bed": "Кровать из соломы",
+  "item.fieldofmemories.battery": "Батарейка"
 }
