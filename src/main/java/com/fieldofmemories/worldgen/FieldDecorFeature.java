@@ -144,7 +144,6 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
 
             ItemFrame frame = new ItemFrame(level.getLevel(), framePos, facing);
             frame.setInvisible(true);
-            frame.setFixed(true);
             frame.setItem(new ItemStack(FieldOfMemories.MEMORY_DISC_4.get()), false);
             if (level.addFreshEntity(frame)) return;
         }
