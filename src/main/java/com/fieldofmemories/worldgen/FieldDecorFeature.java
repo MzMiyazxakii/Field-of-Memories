@@ -106,9 +106,9 @@ public class FieldDecorFeature extends Feature<NoneFeatureConfiguration> {
                 int bottomY = Math.max(level.getMinBuildHeight(), topY - 28);
                 for (int y = bottomY; y < topY; y++) {
                     BlockPos logPos = new BlockPos(x, y, z);
-                    if (!level.getBiome(logPos).is(FOREST_BIOME)) continue;
+                    if (!level.getBiome(logPos).is(FOREST_BIOME) && !level.getBiome(logPos).is(EDGE_BIOME)) continue;
                     if (!level.getBlockState(logPos).is(BlockTags.LOGS)) continue;
-                    if (random.nextFloat() > 0.10F) continue;
+                    if (random.nextFloat() > 0.22F) continue;
 
                     Direction start = Direction.Plane.HORIZONTAL.getRandomDirection(random);
                     for (int offset = 0; offset < 4; offset++) {
