@@ -174,32 +174,43 @@ public class RiftEntity extends Entity {
             return outputs;
         }
 
-        // The rift reverses the recipe: the offered item must be the recipe result.
+        // Reverse the matching crafting recipe, preserving ingredient TYPES and their slot counts.
         for (CraftingRecipe recipe : serverLevel.getRecipeManager().getRecipes().stream()
                 .filter(CraftingRecipe.class::isInstance)
                 .map(CraftingRecipe.class::cast).toList()) {
             ItemStack crafted = recipe.getResultItem(serverLevel.registryAccess());
             if (crafted.isEmpty() || !ItemStack.isSameItemSameTags(crafted, input)) continue;
 
-            List<net.minecraft.world.item.crafting.Ingredient> ingredients = new ArrayList<>();
+            List<net.minecraft.world.item.crafting.Ingredient> groups = new ArrayList<>();
+            List<Integer> groupSizes = new ArrayList<>();
             for (var ingredient : recipe.getIngredients()) {
-                if (!ingredient.isEmpty() && ingredient.getItems().length > 0) ingredients.add(ingredient);
-            }
-            if (ingredients.isEmpty()) break;
+                if (ingredient.isEmpty() || ingredient.getItems().length == 0) continue;
 
-            // Each crafted item gives back a random subset of its recipe ingredients.
-            for (int craft = 0; craft < input.getCount(); craft++) {
-                List<net.minecraft.world.item.crafting.Ingredient> shuffled = new ArrayList<>(ingredients);
-                for (int i = shuffled.size() - 1; i > 0; i--) {
-                    int j = random.nextInt(i + 1);
-                    Collections.swap(shuffled, i, j);
+                int group = -1;
+                for (int i = 0; i < groups.size(); i++) {
+                    if (sameIngredientChoices(groups.get(i), ingredient)) {
+                        group = i;
+                        break;
+                    }
                 }
-                int returnedCount = 1 + random.nextInt(shuffled.size());
-                for (int i = 0; i < returnedCount; i++) {
-                    var choices = shuffled.get(i).getItems();
-                    if (choices.length == 0) continue;
-                    ItemStack material = choices[random.nextInt(choices.length)].copy();
-                    if (!material.isEmpty()) outputs.add(material);
+                if (group < 0) {
+                    groups.add(ingredient);
+                    groupSizes.add(1);
+                } else {
+                    groupSizes.set(group, groupSizes.get(group) + 1);
+                }
+            }
+
+            if (groups.isEmpty()) break;
+
+            for (int craft = 0; craft < input.getCount(); craft++) {
+                for (int i = 0; i < groups.size(); i++) {
+                    int returnedCount = 1 + random.nextInt(groupSizes.get(i));
+                    ItemStack material = chooseIngredientItem(groups.get(i), recipe, crafted);
+                    if (!material.isEmpty()) {
+                        material.setCount(returnedCount);
+                        outputs.add(material);
+                    }
                 }
             }
             return outputs;
@@ -208,6 +219,53 @@ public class RiftEntity extends Entity {
         // Items without a crafting recipe are returned unchanged.
         outputs.add(input.copy());
         return outputs;
+    }
+
+    private boolean sameIngredientChoices(net.minecraft.world.item.crafting.Ingredient first,
+                                          net.minecraft.world.item.crafting.Ingredient second) {
+        ItemStack[] a = first.getItems();
+        ItemStack[] b = second.getItems();
+        if (a.length != b.length) return false;
+        for (ItemStack stackA : a) {
+            boolean found = false;
+            for (ItemStack stackB : b) {
+                if (ItemStack.isSameItemSameTags(stackA, stackB)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) return false;
+        }
+        return true;
+    }
+
+    private ItemStack chooseIngredientItem(net.minecraft.world.item.crafting.Ingredient ingredient,
+                                           CraftingRecipe recipe, ItemStack crafted) {
+        ItemStack[] choices = ingredient.getItems();
+        if (choices.length == 0) return ItemStack.EMPTY;
+
+        // For tagged ingredients (for example #minecraft:planks), prefer the variant
+        // that corresponds to the recipe output (oak door -> oak planks).
+        String outputPath = net.minecraft.core.registries.BuiltInRegistries.ITEM
+                .getKey(crafted.getItem()).getPath();
+        String recipePath = recipe.getId().getPath();
+        String hint = recipePath.length() > outputPath.length() ? recipePath : outputPath;
+        String[] parts = hint.split("_");
+        List<ItemStack> preferred = new ArrayList<>();
+        for (ItemStack choice : choices) {
+            String choicePath = net.minecraft.core.registries.BuiltInRegistries.ITEM
+                    .getKey(choice.getItem()).getPath();
+            for (String part : parts) {
+                if (part.length() >= 3 && choicePath.startsWith(part + "_")) {
+                    preferred.add(choice);
+                    break;
+                }
+            }
+        }
+        ItemStack selected = preferred.isEmpty()
+                ? choices[random.nextInt(choices.length)]
+                : preferred.get(random.nextInt(preferred.size()));
+        return selected.copy();
     }
 
     @Override protected void readAdditionalSaveData(CompoundTag tag) {
