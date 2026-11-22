@@ -272,7 +272,6 @@ public final class NetworkHandler {
         net.minecraft.world.entity.decoration.ArmorStand seat = new net.minecraft.world.entity.decoration.ArmorStand(
                 level, pos.getX() + 0.5D, pos.getY() + 0.55D, pos.getZ() + 0.5D);
         seat.setInvisible(true);
-        seat.setMarker(true);
         seat.setNoGravity(true);
         seat.setInvulnerable(true);
         level.addFreshEntity(seat);
