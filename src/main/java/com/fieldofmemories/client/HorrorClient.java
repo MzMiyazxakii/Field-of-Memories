@@ -1,6 +1,8 @@
 package com.fieldofmemories.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.fieldofmemories.FieldOfMemories;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -19,6 +21,13 @@ public final class HorrorClient {
 
     public static void startScream() {
         screamTicks = 50;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null) {
+            var sound = mc.level != null && mc.level.random.nextBoolean()
+                    ? FieldOfMemories.SMILE_FACE_SCREAM_1.get()
+                    : FieldOfMemories.SMILE_FACE_SCREAM_2.get();
+            mc.getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F, 1.0F));
+        }
         MovementClient.beginForcedFallFromServer();
     }
 
