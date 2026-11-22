@@ -10,6 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Extract supplied asset archive
+        run: |
+          git fetch origin assets-library
+          git show origin/assets-library:WWW.zip > /tmp/WWW.zip
+          mkdir -p /tmp/WWW-assets
+          unzip -q /tmp/WWW.zip -d /tmp/WWW-assets
+          cd /tmp
+          zip -qr /tmp/WWW-assets-extracted.zip WWW-assets
+      - name: Upload extracted asset archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: WWW-assets-extracted
+          path: /tmp/WWW-assets-extracted.zip
+          if-no-files-found: error
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
