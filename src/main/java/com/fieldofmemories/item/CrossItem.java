@@ -62,6 +62,19 @@ public class CrossItem extends Item {
         return true;
     }
 
+    // Hostile entities can drain the cross, but this never cancels or prevents their attack.
+    public static void tryDepleteOnAttack(ServerPlayer player) {
+        ItemStack cross = findUsableCross(player);
+        if (cross.isEmpty()) return;
+        RandomSource random = player.serverLevel().random;
+        if (random.nextInt(100) >= PROTECTION_CHANCE) return;
+
+        setState(cross, EMPTY);
+        player.playSound(SoundEvents.ITEM_BREAK, 1.0F, 0.85F + random.nextFloat() * 0.3F);
+        player.getInventory().setChanged();
+        player.containerMenu.broadcastChanges();
+    }
+
     private static ItemStack findUsableCross(ServerPlayer player) {
         for (ItemStack stack : player.getInventory().items) {
             if (stack.is(FieldOfMemories.CROSS.get()) && getState(stack) == NORMAL) return stack;
