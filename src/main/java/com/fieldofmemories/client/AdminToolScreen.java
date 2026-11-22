@@ -20,6 +20,10 @@ public class AdminToolScreen extends Screen {
     private static int horrorActivity = 100;
     private static int scarecrowChance = 10;
     private static int faceChance = 10;
+    private static int spiritChance = 2;
+    private static int mimicChance = 3;
+    private static int treeDiscChance = 3;
+    private static int houseCameraChance = 32;
 
     private static final String[] LOOT_ITEM_IDS = {
             "minecraft:iron_ingot", "minecraft:iron_nugget", "minecraft:gold_ingot",
@@ -48,11 +52,16 @@ public class AdminToolScreen extends Screen {
 
     public AdminToolScreen() { super(Component.literal("Field of Memories — Admin Tool")); }
 
-    public static void updateHorrorData(int danger, int activity, int scarecrow, int face) {
+    public static void updateHorrorData(int danger, int activity, int scarecrow, int face,
+                                        int spirit, int mimic, int treeDisc, int houseCamera) {
         worldDanger = Math.max(0, Math.min(100, danger));
         horrorActivity = Math.max(10, Math.min(300, activity));
         scarecrowChance = Math.max(0, Math.min(100, scarecrow));
         faceChance = Math.max(0, Math.min(100, face));
+        spiritChance = Math.max(0, Math.min(100, spirit));
+        mimicChance = Math.max(0, Math.min(100, mimic));
+        treeDiscChance = Math.max(0, Math.min(100, treeDisc));
+        houseCameraChance = Math.max(0, Math.min(100, houseCamera));
     }
 
     public static void updateBoxLootData(String data) {
@@ -121,10 +130,14 @@ public class AdminToolScreen extends Screen {
             add("Шанс пугала +", cx + 82, y, () -> HorrorNetwork.adjust(0, 5));
             add("Шанс лица −", cx - 82, y + 25, () -> HorrorNetwork.adjust(1, -5));
             add("Шанс лица +", cx + 82, y + 25, () -> HorrorNetwork.adjust(1, 5));
-            add("Общая активность −", cx - 82, y + 50, () -> HorrorNetwork.adjust(2, -10));
-            add("Общая активность +", cx + 82, y + 50, () -> HorrorNetwork.adjust(2, 10));
-            add("Обновить данные", cx, y + 77, HorrorNetwork::requestData);
-            add("Назад", cx, y + 102, () -> go("home"));
+            add("Шанс духа −", cx - 82, y + 50, () -> HorrorNetwork.adjust(3, -1));
+            add("Шанс духа +", cx + 82, y + 50, () -> HorrorNetwork.adjust(3, 1));
+            add("Шанс мимика −", cx - 82, y + 75, () -> HorrorNetwork.adjust(4, -1));
+            add("Шанс мимика +", cx + 82, y + 75, () -> HorrorNetwork.adjust(4, 1));
+            add("Общая активность −", cx - 82, y + 100, () -> HorrorNetwork.adjust(2, -10));
+            add("Общая активность +", cx + 82, y + 100, () -> HorrorNetwork.adjust(2, 10));
+            add("Обновить данные", cx, y + 127, HorrorNetwork::requestData);
+            add("Назад", cx, y + 152, () -> go("home"));
         } else if (page.equals("scream_players")) {
             int row = 0;
             if (Minecraft.getInstance().level != null) {
@@ -177,10 +190,20 @@ public class AdminToolScreen extends Screen {
             add("Цена выносливости +", cx + 82, jumpY + 88, () -> MovementClient.setAdminLongJumpCost(MovementClient.getAdminLongJumpCost() + 2));
             add("Назад", cx, jumpY + 110, () -> go("home"));
         } else if (page.equals("items")) {
-            add("Видеокамера", cx, y, () -> HorrorNetwork.giveAdminItem("video_camera"));
-            add("Воспоминания", cx, y + 25, () -> go("memory_items"));
-            add("Лут коробок", cx, y + 50, () -> go("box_loot"));
-            add("Назад", cx, y + 80, () -> go("home"));
+            add("Батарейка", cx, y, () -> HorrorNetwork.giveAdminItem("battery"));
+            add("Видеокамера", cx, y + 25, () -> HorrorNetwork.giveAdminItem("video_camera"));
+            add("Фотокамера", cx, y + 50, () -> HorrorNetwork.giveAdminItem("old_camera"));
+            add("Воспоминания", cx, y + 75, () -> go("memory_items"));
+            add("Лут коробок", cx, y + 100, () -> go("box_loot"));
+            add("Шансы появления", cx, y + 125, () -> go("item_spawn"));
+            add("Назад", cx, y + 155, () -> go("home"));
+        } else if (page.equals("item_spawn")) {
+            HorrorNetwork.requestData();
+            add("Шанс диска на дереве −", cx - 82, y, () -> HorrorNetwork.adjust(5, -1));
+            add("Шанс диска на дереве +", cx + 82, y, () -> HorrorNetwork.adjust(5, 1));
+            add("Шанс камеры в доме −", cx - 82, y + 35, () -> HorrorNetwork.adjust(6, -1));
+            add("Шанс камеры в доме +", cx + 82, y + 35, () -> HorrorNetwork.adjust(6, 1));
+            add("Назад", cx, y + 85, () -> go("items"));
         } else if (page.equals("memory_items")) {
             NetworkHandler.requestMemoryDiscStats();
             add("Выдать предмет", cx, y, () -> go("give_memory_disc"));
@@ -248,10 +271,16 @@ public class AdminToolScreen extends Screen {
             drawRightInfo(gui, "Шанс лица: " + faceChance + "%", height / 2 + 42);
         }
         if (page.equals("activity")) {
-            drawRightInfo(gui, "Уровень опасности мира: " + worldDanger + " / 100", height / 2 + 8);
-            drawRightInfo(gui, "Общая активность: " + horrorActivity + "%", height / 2 + 20);
-            drawRightInfo(gui, "Шанс пугала: " + scarecrowChance + "%", height / 2 + 32);
-            drawRightInfo(gui, "Шанс лица: " + faceChance + "%", height / 2 + 44);
+            drawRightInfo(gui, "Опасность мира: " + worldDanger + " / 100", height / 2 + 2);
+            drawRightInfo(gui, "Общая активность: " + horrorActivity + "%", height / 2 + 14);
+            drawRightInfo(gui, "Шанс пугала: " + scarecrowChance + "%", height / 2 + 26);
+            drawRightInfo(gui, "Шанс лица: " + faceChance + "%", height / 2 + 38);
+            drawRightInfo(gui, "Шанс духа: " + spiritChance + "%", height / 2 + 50);
+            drawRightInfo(gui, "Шанс мимика: " + mimicChance + "%", height / 2 + 62);
+        }
+        if (page.equals("item_spawn")) {
+            drawRightInfo(gui, "Диск на дереве: " + treeDiscChance + "%", height / 2 + 4);
+            drawRightInfo(gui, "Камера в доме: " + houseCameraChance + "%", height / 2 + 16);
         }
         if (page.equals("movement")) drawRightInfo(gui, String.format("Бонус скорости: %.2f", MovementClient.getAdminSpeed()), height / 2 + 12);
         if (page.equals("stamina")) {
@@ -304,6 +333,7 @@ public class AdminToolScreen extends Screen {
             case "jumps" -> "ПРЫЖКИ";
             case "items" -> "УПРАВЛЕНИЕ ПРЕДМЕТАМИ";
             case "memory_items" -> "ВОСПОМИНАНИЯ";
+            case "item_spawn" -> "ШАНСЫ ПОЯВЛЕНИЯ";
             case "give_memory_disc" -> "ВЫБЕРИТЕ ДИСК";
             case "story" -> "СЮЖЕТ И СТАТИСТИКА";
             case "fog" -> "ТУМАН";
