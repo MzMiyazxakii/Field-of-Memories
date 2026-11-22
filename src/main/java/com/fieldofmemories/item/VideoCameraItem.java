@@ -45,7 +45,16 @@ public class VideoCameraItem extends Item {
                               int slot, boolean selected) {
         super.inventoryTick(stack, level, entity, slot, selected);
         if (level.isClientSide || !(entity instanceof ServerPlayer player)) return;
-        if (hasInsertedBattery(stack)) {\n            int charge = getBattery(stack);\n            if (charge < MAX_BATTERY) {\n                setBattery(stack, Math.min(MAX_BATTERY, charge + 2));\n                if (getBattery(stack) >= MAX_BATTERY) setInsertedBattery(stack, false);\n            } else {\n                setInsertedBattery(stack, false);\n            }\n        }\n        if (!player.getPersistentData().getBoolean("FOMCameraViewing")) return;
+        if (hasInsertedBattery(stack)) {
+            int charge = getBattery(stack);
+            if (charge < MAX_BATTERY) {
+                setBattery(stack, Math.min(MAX_BATTERY, charge + 2));
+                if (getBattery(stack) >= MAX_BATTERY) setInsertedBattery(stack, false);
+            } else {
+                setInsertedBattery(stack, false);
+            }
+        }
+        if (!player.getPersistentData().getBoolean("FOMCameraViewing")) return;
         boolean held = player.getItemInHand(InteractionHand.MAIN_HAND) == stack
                 || player.getItemInHand(InteractionHand.OFF_HAND) == stack;
         if (!held) return;
