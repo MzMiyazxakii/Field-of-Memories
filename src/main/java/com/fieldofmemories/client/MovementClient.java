@@ -538,7 +538,8 @@ public final class MovementClient {
         // and crosshair hidden until the player presses Space.
         if (prone && waitingForSpace
                 && (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type()
-                || event.getOverlay() == VanillaGuiOverlay.CROSSHAIR.type())) {
+                || event.getOverlay() == VanillaGuiOverlay.CROSSHAIR.type()
+                || event.getOverlay() == VanillaGuiOverlay.CHAT.type())) {
             event.setCanceled(true);
         }
     }
