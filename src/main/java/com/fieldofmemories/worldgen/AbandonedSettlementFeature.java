@@ -30,7 +30,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         int x=ch.getMinBlockX()+8,z=ch.getMinBlockZ()+8; BlockPos g=surface(l,x,z); if(g==null)return false;
         boolean forest=l.getBiome(g).is(FOREST), edge=l.getBiome(g).is(EDGE), valid=forest||l.getBiome(g).is(FIELD)||edge;
         if (valid && r.nextFloat() < 0.08F && placeLootContainer(l, x, z, com.fieldofmemories.FieldOfMemories.CARDBOARD_BOX_BLOCK.get())) return true;
-        if(valid&&r.nextFloat()<(edge?0.0025F:0.006F)){ if(!forest&&r.nextFloat()<0.42F) village(l,x,z); else house(l,x,z,r.nextInt(3)); return true; }
+        if(valid&&r.nextFloat()<(edge?0.0012F:0.0025F)){ if(!forest&&r.nextFloat()<0.30F) village(l,x,z,r); else house(l,x,z,r.nextInt(3),r); return true; }
         if(valid&&r.nextFloat()<(edge?0.0025F:0.006F)){ if(forest||r.nextBoolean())stable(l,x,z); else well(l,x,z); return true; }
         if(valid&&r.nextFloat()<(edge?0.003F:0.008F)){cart(l,x,z,r);return true;}
         if(forest&&r.nextFloat()<0.018F)lamp(l,x,z);
@@ -59,7 +59,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
     private static void put(WorldGenLevel l,int x,int y,int z,BlockState s){l.setBlock(new BlockPos(x,y,z),s,3);}
     private static void fill(WorldGenLevel l,int x,int y,int z,int w,int d,Block b){for(int a=0;a<w;a++)for(int q=0;q<d;q++)put(l,x+a,y,z+q,b);}
 
-    private static void house(WorldGenLevel l,int x,int z,int v){
+    private static void house(WorldGenLevel l,int x,int z,int v,RandomSource random){
         if(!clear(l,x,z,4,6))return;BlockPos p=surface(l,x,z);if(p==null)return;int y=p.getY(),sx=x-2,sz=z-2;
         Block floor=v==1?Blocks.COBBLESTONE:Blocks.SPRUCE_PLANKS,wall=v==2?Blocks.OAK_PLANKS:Blocks.SPRUCE_PLANKS,log=v==1?Blocks.OAK_LOG:Blocks.SPRUCE_LOG,roof=v==2?Blocks.DARK_OAK_PLANKS:Blocks.SPRUCE_PLANKS;
         fill(l,sx,y,sz,5,5,floor);
@@ -70,15 +70,15 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         put(l,sx+2,y+1,sz,Blocks.AIR);put(l,sx+2,y+2,sz,Blocks.AIR);put(l,sx+2,y+2,sz+4,Blocks.GLASS_PANE);put(l,sx,y+2,sz+2,Blocks.GLASS_PANE);
         fill(l,sx-1,y+4,sz-1,7,7,roof);
         for(int dx=0;dx<5;dx++){put(l,sx+dx,y+5,sz-1,Blocks.SPRUCE_SLAB);put(l,sx+dx,y+5,sz+5,Blocks.SPRUCE_SLAB);}
-        put(l,sx+1,y+1,sz+1,Blocks.BARREL);if(v==2)put(l,sx+3,y+1,sz+3,Blocks.CRAFTING_TABLE);
+        placeLootContainer(l, new BlockPos(sx+1,y+1,sz+1), Blocks.BARREL, random);\n        placeLootContainer(l, new BlockPos(sx+3,y+1,sz+3), Blocks.CHEST, random);\n        if(v==2)put(l,sx+3,y+1,sz+2,Blocks.CRAFTING_TABLE);
     }
-    private static void village(WorldGenLevel l,int x,int z){
+    private static void village(WorldGenLevel l,int x,int z,RandomSource random){
         if(!clear(l,x,z,7,6))return;BlockPos p=surface(l,x,z);if(p==null)return;int y=p.getY();
-        houseAt(l,x-4,y,z-3,0);houseAt(l,x+4,y,z-3,1);houseAt(l,x,y,z+4,2);
+        houseAt(l,x-4,y,z-3,0,random);houseAt(l,x+4,y,z-3,1,random);houseAt(l,x,y,z+4,2,random);
         for(int d=-1;d<=1;d++){put(l,x+d,y,z,Blocks.DIRT_PATH);put(l,x,y,z+d,Blocks.DIRT_PATH);}
         wellAt(l,x,y,z);put(l,x-7,y+1,z+1,Blocks.SPRUCE_FENCE);put(l,x+7,y+1,z+1,Blocks.SPRUCE_FENCE);
     }
-    private static void houseAt(WorldGenLevel l,int x,int y,int z,int v){ // village houses use same compact layout
+    private static void houseAt(WorldGenLevel l,int x,int y,int z,int v,RandomSource random){ // village houses use same compact layout
         int sx=x-2,sz=z-2;Block wall=v==1?Blocks.OAK_PLANKS:Blocks.SPRUCE_PLANKS,log=v==1?Blocks.OAK_LOG:Blocks.SPRUCE_LOG;
         fill(l,sx,y,sz,5,5,Blocks.SPRUCE_PLANKS);
         for(int dx=0;dx<5;dx++)for(int dz=0;dz<5;dz++)for(int dy=1;dy<=3;dy++){
@@ -86,9 +86,16 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
             else if((dx==0||dx==4||dz==0||dz==4)&&!(dy==2&&dx==2))put(l,sx+dx,y+dy,sz+dz,wall);
         }
         put(l,sx+2,y+1,sz,Blocks.AIR);put(l,sx+2,y+2,sz,Blocks.AIR);put(l,sx+2,y+2,sz+4,Blocks.GLASS_PANE);
-        fill(l,sx-1,y+4,sz-1,7,7,Blocks.SPRUCE_PLANKS);
+        fill(l,sx-1,y+4,sz-1,7,7,Blocks.SPRUCE_PLANKS);\n        placeLootContainer(l, new BlockPos(sx+1,y+1,sz+1), Blocks.BARREL, random);\n        placeLootContainer(l, new BlockPos(sx+3,y+1,sz+3), Blocks.CHEST, random);
     }
-    private static void well(WorldGenLevel l,int x,int z){if(!clear(l,x,z,2,5))return;BlockPos p=surface(l,x,z);if(p!=null)wellAt(l,x,p.getY(),z);}
+
+    private static void placeLootContainer(WorldGenLevel level, BlockPos pos, Block block, RandomSource random) {
+        level.setBlock(pos, block.defaultBlockState(), 3);
+        if (level.getBlockEntity(pos) instanceof net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity container) {
+            container.setLootTable(new ResourceLocation(FieldOfMemories.MOD_ID, "chests/abandoned_house"), random.nextLong());
+        }
+    }
+\n    private static void well(WorldGenLevel l,int x,int z){if(!clear(l,x,z,2,5))return;BlockPos p=surface(l,x,z);if(p!=null)wellAt(l,x,p.getY(),z);}
     private static void wellAt(WorldGenLevel l,int x,int y,int z){
         for(int dx=-1;dx<=1;dx++)for(int dz=-1;dz<=1;dz++)if(Math.abs(dx)==1||Math.abs(dz)==1){put(l,x+dx,y+1,z+dz,Blocks.MOSSY_COBBLESTONE);put(l,x+dx,y+2,z+dz,Blocks.STONE_BRICKS);}else put(l,x,y+1,z,Blocks.WATER);
         for(int dx=-2;dx<=2;dx++)for(int dz=-2;dz<=2;dz++)if(Math.abs(dx)==2||Math.abs(dz)==2)put(l,x+dx,y+4,z+dz,Blocks.SPRUCE_SLAB);
