@@ -25,6 +25,7 @@ public final class FogClient {
         float far = distance;
         event.setNearPlaneDistance(Math.max(4.0F, far * 0.12F));
         event.setFarPlaneDistance(far);
+        event.setCanceled(true);
     }
 
     @SubscribeEvent
