@@ -7,5 +7,21 @@
         "stream": false
       }
     ]
+  },
+  "diskmemorysound": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:diskmemorysound",
+        "stream": true
+      }
+    ]
+  },
+  "opensoundisk": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:opensoundisk",
+        "stream": false
+      }
+    ]
   }
 }

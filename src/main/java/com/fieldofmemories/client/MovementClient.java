@@ -1,6 +1,7 @@
 package com.fieldofmemories.client;
 
 import com.fieldofmemories.FieldOfMemories;
+import com.fieldofmemories.client.MemoryDiscClient;
 import com.fieldofmemories.network.NetworkHandler;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -29,6 +30,7 @@ import net.minecraftforge.client.event.MovementInputUpdateEvent;
 import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
@@ -524,6 +526,14 @@ public final class MovementClient {
 
     @SubscribeEvent
     public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Pre event) {
+        Minecraft mc = Minecraft.getInstance();
+        // A restrained darkness pass before the HUD: the world is a little dimmer
+        // at both day and night, while the HUD and CRT pass remain clearly visible.
+        if (event.getOverlay() == VanillaGuiOverlay.VIGNETTE.type()
+                && mc.player != null && mc.screen == null && !prone && !waitingForSpace) {
+            GuiGraphics gui = event.getGuiGraphics();
+            gui.fill(0, 0, gui.guiWidth(), gui.guiHeight(), 0x0C000000);
+        }
         // During the initial spawn/get-up sequence, keep the vanilla hotbar
         // and crosshair hidden until the player presses Space.
         if (prone && waitingForSpace
@@ -533,11 +543,23 @@ public final class MovementClient {
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onRenderGui(RenderGuiEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         GuiGraphics gui = event.getGuiGraphics();
+
+        // Darken the complete frame for the two atmospheric discs first.
+        // The CRT pass below is deliberately drawn afterward so its scanlines,
+        // interference band and static remain visible over the darkness.
+        if (MemoryDiscClient.shouldDarkenScreen()) {
+            gui.fill(0, 0, gui.guiWidth(), gui.guiHeight(), 0xEA000000);
+        }
+        // A restrained crimson tint while any memory disc is being read.
+        // Draw it before the CRT pass so scanlines and interference stay crisp.
+        if (MemoryDiscClient.isReading() && !MemoryDiscClient.shouldDarkenScreen()) {
+            gui.fill(0, 0, gui.guiWidth(), gui.guiHeight(), 0x16A00020);
+        }
 
         // Alternate, slightly darker CRT look: dense scanlines, a drifting
         // interference band and sparse static streaks. The vignette is drawn

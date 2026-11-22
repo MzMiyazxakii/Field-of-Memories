@@ -1,0 +1,40 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.7,
+  "downfall": 0.35,
+  "effects": {
+    "sky_color": 7907327,
+    "fog_color": 7564632,
+    "water_color": 4159204,
+    "water_fog_color": 329011,
+    "grass_color": 14256181,
+    "foliage_color": 10524466
+  },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {
+    "air": [],
+    "liquid": []
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "fieldofmemories:triple_tall_grass",
+      "minecraft:patch_pumpkin",
+      "fieldofmemories:gloomy_mud_patches",
+      "fieldofmemories:field_decor"
+    ],
+    [
+      "fieldofmemories:abandoned_settlement"
+    ]
+  ]
+}

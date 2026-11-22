@@ -1,0 +1,46 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.35,
+  "downfall": 0.8,
+  "effects": {
+    "sky_color": 6579300,
+    "fog_color": 5526612,
+    "water_color": 2960685,
+    "water_fog_color": 197379,
+    "grass_color": 7242082,
+    "foliage_color": 4342596,
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2
+    }
+  },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {
+    "air": [],
+    "liquid": []
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:trees_old_growth_spruce_taiga",
+      "minecraft:patch_grass_taiga",
+      "minecraft:patch_large_fern",
+      "minecraft:patch_pumpkin"
+    ],
+    [],
+    [
+      "fieldofmemories:abandoned_settlement"
+    ]
+  ]
+}

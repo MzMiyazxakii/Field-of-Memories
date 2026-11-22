@@ -1,0 +1,93 @@
+{
+  "type": "minecraft:overworld",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "fieldofmemories:flat_field",
+    "biome_source": {
+      "type": "minecraft:multi_noise",
+      "biomes": [
+        {
+          "biome": "fieldofmemories:gloomy_field",
+          "parameters": {
+            "temperature": [
+              -1,
+              -0.42
+            ],
+            "humidity": [
+              -1,
+              1
+            ],
+            "continentalness": [
+              -1,
+              1
+            ],
+            "erosion": [
+              -1,
+              1
+            ],
+            "depth": 0,
+            "weirdness": [
+              -1,
+              1
+            ],
+            "offset": 0
+          }
+        },
+        {
+          "biome": "fieldofmemories:gloomy_edge",
+          "parameters": {
+            "temperature": [
+              -0.42,
+              0.42
+            ],
+            "humidity": [
+              -1,
+              1
+            ],
+            "continentalness": [
+              -1,
+              1
+            ],
+            "erosion": [
+              -1,
+              1
+            ],
+            "depth": 0,
+            "weirdness": [
+              -1,
+              1
+            ],
+            "offset": 0
+          }
+        },
+        {
+          "biome": "fieldofmemories:gloomy_forest",
+          "parameters": {
+            "temperature": [
+              0.42,
+              1
+            ],
+            "humidity": [
+              -1,
+              1
+            ],
+            "continentalness": [
+              -1,
+              1
+            ],
+            "erosion": [
+              -1,
+              1
+            ],
+            "depth": 0,
+            "weirdness": [
+              -1,
+              1
+            ],
+            "offset": 0
+          }
+        }
+      ]
+    }
+  }
+}
