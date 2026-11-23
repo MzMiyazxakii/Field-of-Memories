@@ -9,7 +9,6 @@ import com.fieldofmemories.data.StoolLootData;
 import com.fieldofmemories.item.MemoryDiscItem;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -371,7 +370,7 @@ public final class NetworkHandler {
                 if (online.hasPermissions(2)) sendMemoryDiscStats(online);
             }
             restoreMemoryDisc(player, session);
-            player.playSound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.22F, 1.0F);
+            player.playSound(SoundEvents.ITEM_PICKUP, 0.22F, 1.0F);
             CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MemoryDiscStatePacket(2, session.discId(), -1));
         }
     }
