@@ -170,8 +170,9 @@ public class HorrorWorldData extends SavedData {
         data.houseCameraChance = clamp(tag.contains(HOUSE_CAMERA_CHANCE_KEY) ? tag.getInt(HOUSE_CAMERA_CHANCE_KEY) : 32, 0, 100);
         data.nextAmbientEvent = Math.max(0L, tag.getLong(NEXT_EVENT_KEY));
         data.spiritDiscFailures = clamp(tag.getInt(SPIRIT_DISC_FAILURES_KEY), 0, 19);
-        data.eventRampStartDay = tag.contains(EVENT_RAMP_START_DAY_KEY)
-                ? clamp(tag.getInt(EVENT_RAMP_START_DAY_KEY), 2, 4) : -1;
+        int savedRampStartDay = tag.getInt(EVENT_RAMP_START_DAY_KEY);
+        data.eventRampStartDay = savedRampStartDay >= 2
+                ? clamp(savedRampStartDay, 2, 4) : -1;
         return data;
     }
 
