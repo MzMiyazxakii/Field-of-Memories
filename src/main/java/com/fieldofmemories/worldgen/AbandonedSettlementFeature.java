@@ -34,9 +34,9 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         int x=ch.getMinBlockX()+8,z=ch.getMinBlockZ()+8; BlockPos g=surface(l,x,z); if(g==null)return false;
         boolean forest=l.getBiome(g).is(FOREST), edge=l.getBiome(g).is(EDGE), valid=forest||l.getBiome(g).is(FIELD)||edge;
         if (valid && r.nextFloat() < 0.08F && placeLootContainer(l, x, z, com.fieldofmemories.FieldOfMemories.CARDBOARD_BOX_BLOCK.get())) return true;
-        if(valid&&r.nextFloat()<(edge?0.0012F:0.0025F)){ if(!forest&&r.nextFloat()<0.30F) village(l,x,z,r); else house(l,x,z,r.nextInt(3),r); return true; }
-        if(valid&&r.nextFloat()<(edge?0.0025F:0.006F)){ if(forest||r.nextBoolean())stable(l,x,z); else well(l,x,z); return true; }
-        if(valid&&r.nextFloat()<(edge?0.003F:0.008F)){cart(l,x,z,r);return true;}
+        if(valid&&r.nextFloat()<(edge?0.003F:0.006F)){ if(!forest&&r.nextFloat()<0.30F) village(l,x,z,r); else house(l,x,z,r.nextInt(3),r); return true; }
+        if(valid&&r.nextFloat()<(edge?0.006F:0.012F)){ if(forest||r.nextBoolean())stable(l,x,z); else well(l,x,z); return true; }
+        if(valid&&r.nextFloat()<(edge?0.007F:0.018F)){cart(l,x,z,r);return true;}
         if(forest&&r.nextFloat()<0.018F)lamp(l,x,z);
         else if(r.nextFloat()<(edge?0.0015F:0.006F))pillar(l,x,z,r);
         else if(!forest&&r.nextFloat()<(edge?0.004F:0.012F))garden(l,x,z,r);
@@ -160,7 +160,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         for(int dx:new int[]{-1,1})for(int dz:new int[]{-1,1})put(l,x+dx,y+1,z+dz,Blocks.SPRUCE_LOG);
         fill(l,x-1,y+2,z-1,3,3,Blocks.SPRUCE_SLAB);
         for(int dx=-1;dx<=1;dx++){put(l,x+dx,y+3,z-1,Blocks.SPRUCE_TRAPDOOR);put(l,x+dx,y+3,z+1,Blocks.SPRUCE_TRAPDOOR);}
-        put(l,x,y+3,z,r.nextBoolean()?Blocks.HAY_BLOCK:Blocks.BARREL);put(l,x,y+1,z-2,Blocks.SPRUCE_FENCE);put(l,x,y+1,z-3,Blocks.SPRUCE_FENCE);
+        if(r.nextBoolean())put(l,x,y+3,z,Blocks.HAY_BLOCK);else placeLootContainer(l,new BlockPos(x,y+3,z),Blocks.BARREL,r);put(l,x,y+1,z-2,Blocks.SPRUCE_FENCE);put(l,x,y+1,z-3,Blocks.SPRUCE_FENCE);
     }
     private static void pillar(WorldGenLevel l,int x,int z,RandomSource r){
         if(!clear(l,x,z,1,5))return;BlockPos p=surface(l,x,z);if(p==null)return;int h=3+r.nextInt(3);
