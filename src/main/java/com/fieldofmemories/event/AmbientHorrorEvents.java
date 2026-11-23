@@ -101,6 +101,57 @@ public final class AmbientHorrorEvents {
         }
     }
 
+
+    public static boolean triggerAdminEvent(ServerLevel level, ServerPlayer target, String event) {
+        var random = level.random;
+        switch (event) {
+            case "laugh" -> playKidLaugh(level, target, random);
+            case "pipi" -> playHorrorPipi(level, target, random);
+            case "clock" -> playClock(level, target, random);
+            case "steps" -> playRunningSteps(level, target, random);
+            case "dark" -> startDarkPeriod(level);
+            case "blackout" -> AmbientHorrorNetwork.sendToLevel(level,
+                    com.fieldofmemories.client.AmbientHorrorClient.EFFECT_BLACKOUT, 80);
+            case "silence" -> AmbientHorrorNetwork.sendToLevel(level,
+                    com.fieldofmemories.client.AmbientHorrorClient.EFFECT_SILENCE, 100);
+            case "glass" -> breakNearbyWindow(level, target, random);
+            case "cake" -> placeCakeOutsideHome(level, target, random);
+            case "door_open" -> {
+                BlockPos doorPos = BlockPos.findClosestMatch(target.blockPosition(), 12, 5,
+                        pos -> level.getBlockState(pos).getBlock() instanceof DoorBlock
+                                && !level.getBlockState(pos).getValue(DoorBlock.OPEN)).orElse(null);
+                if (doorPos == null) return false;
+                BlockState state = level.getBlockState(doorPos);
+                ((DoorBlock) state.getBlock()).setOpen(target, level, state, doorPos, true);
+            }
+            case "stalker" -> {
+                BlockPos window = BlockPos.findClosestMatch(target.blockPosition(), 16, 6, pos -> {
+                    String id = BuiltInRegistries.BLOCK.getKey(level.getBlockState(pos).getBlock()).getPath();
+                    return id.equals("glass") || id.equals("glass_pane")
+                            || id.endsWith("_stained_glass") || id.endsWith("_stained_glass_pane");
+                }).orElse(null);
+                if (window == null) return false;
+                BlockPos spawn = null;
+                double farthest = -1.0D;
+                for (Direction direction : Direction.Plane.HORIZONTAL) {
+                    BlockPos candidate = window.relative(direction);
+                    if (!level.isLoaded(candidate) || !level.getBlockState(candidate).isAir()
+                            || !level.getBlockState(candidate.below()).isSolidRender(level, candidate.below())) continue;
+                    double distance = candidate.distSqr(target.blockPosition());
+                    if (distance > farthest) { farthest = distance; spawn = candidate; }
+                }
+                if (spawn == null) return false;
+                var entity = FieldOfMemories.WINDOW_STALKER_ENTITY.get().create(level);
+                if (entity == null) return false;
+                entity.moveTo(spawn.getX() + 0.5D, spawn.getY(), spawn.getZ() + 0.5D,
+                        target.getYRot() + 180.0F, 0.0F);
+                if (!level.addFreshEntity(entity)) return false;
+            }
+            default -> { return false; }
+        }
+        return true;
+    }
+
     private static void playKidLaugh(ServerLevel level, ServerPlayer target,
                                      net.minecraft.util.RandomSource random) {
         SoundEvent sound = FieldOfMemories.KID_LAUGH.get();
