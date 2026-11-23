@@ -3,6 +3,8 @@ package com.fieldofmemories.client;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import org.lwjgl.glfw.GLFW;
@@ -53,7 +55,17 @@ public final class OldBookScreen extends Screen {
     }
 
     public static void open(int mask) {
-        Minecraft.getInstance().setScreen(new OldBookScreen(mask));
+        Minecraft mc = Minecraft.getInstance();
+        mc.setScreen(new OldBookScreen(mask));
+        mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PUT, 0.75F));
+    }
+
+    public static void updateEntries(int mask) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen instanceof OldBookScreen book) {
+            book.unlockedMask = mask;
+            book.rebuildPages();
+        }
     }
 
     private void rebuildPages() {
@@ -112,7 +124,12 @@ public final class OldBookScreen extends Screen {
 
     private void movePage(int direction) {
         if (pages.isEmpty()) return;
-        pageIndex = Math.max(0, Math.min(pages.size() - 1, pageIndex + direction));
+        int next = Math.max(0, Math.min(pages.size() - 1, pageIndex + direction));
+        if (next != pageIndex) {
+            pageIndex = next;
+            Minecraft.getInstance().getSoundManager().play(
+                    SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 0.65F));
+        }
     }
 
     @Override
