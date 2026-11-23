@@ -18,7 +18,8 @@ public class BoxLootData extends SavedData {
     private static final String DATA_NAME = "fieldofmemories_box_loot";
     private final List<Entry> entries = new ArrayList<>();
     private int brokenBoxes;
-    private boolean memoryDiscFound;
+    private boolean memoryDiscOneFound;
+    private boolean memoryDiscTwoFound;
 
     public BoxLootData() {
         addDefault(Items.IRON_INGOT, 1, 3, 10);
@@ -62,16 +63,36 @@ public class BoxLootData extends SavedData {
     }
 
     /**
-     * Records one broken cardboard box for the entire world.
-     * Returns a memory disc when the random chance succeeds or the 40-box guarantee is reached.
+     * Each memory disc has its own chance and found flag.
+     * Each disc is guaranteed after 40 broken boxes if it has not been found yet.
      */
     public ItemStack rollMemoryDisc(net.minecraft.util.RandomSource random) {
         brokenBoxes++;
-        if (!memoryDiscFound && (brokenBoxes >= 40 || random.nextFloat() < 0.012F)) {
-            memoryDiscFound = true;
-            setDirty();
-            return new ItemStack(FieldOfMemories.MEMORY_DISCS[random.nextBoolean() ? 0 : 1].get());
+
+        boolean discOneEligible = !memoryDiscOneFound
+                && (brokenBoxes >= 40 || random.nextFloat() < 0.012F);
+        boolean discTwoEligible = !memoryDiscTwoFound
+                && (brokenBoxes >= 40 || random.nextFloat() < 0.012F);
+
+        if (discOneEligible || discTwoEligible) {
+            boolean giveFirst;
+            if (discOneEligible && discTwoEligible) {
+                giveFirst = random.nextBoolean();
+            } else {
+                giveFirst = discOneEligible;
+            }
+
+            if (giveFirst) {
+                memoryDiscOneFound = true;
+                setDirty();
+                return new ItemStack(FieldOfMemories.MEMORY_DISCS[0].get());
+            } else {
+                memoryDiscTwoFound = true;
+                setDirty();
+                return new ItemStack(FieldOfMemories.MEMORY_DISCS[1].get());
+            }
         }
+
         setDirty();
         return ItemStack.EMPTY;
     }
@@ -157,7 +178,10 @@ public class BoxLootData extends SavedData {
             }
         }
         data.brokenBoxes = Math.max(0, tag.getInt("BrokenBoxes"));
-        data.memoryDiscFound = tag.getBoolean("MemoryDiscFound");
+        // The old shared MemoryDiscFound flag did not record which disc was obtained.
+        // Ignore it so existing worlds can still find whichever disc was previously blocked.
+        data.memoryDiscOneFound = tag.getBoolean("MemoryDiscOneFound");
+        data.memoryDiscTwoFound = tag.getBoolean("MemoryDiscTwoFound");
         return data;
     }
 
@@ -174,7 +198,8 @@ public class BoxLootData extends SavedData {
         }
         tag.put("Entries", list);
         tag.putInt("BrokenBoxes", brokenBoxes);
-        tag.putBoolean("MemoryDiscFound", memoryDiscFound);
+        tag.putBoolean("MemoryDiscOneFound", memoryDiscOneFound);
+        tag.putBoolean("MemoryDiscTwoFound", memoryDiscTwoFound);
         return tag;
     }
 
