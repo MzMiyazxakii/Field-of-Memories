@@ -83,6 +83,118 @@ public final class HorrorEvents {
         HorrorWorldData.setNextAmbientEvent(level, now + interval);
     }
 
+
+    public static boolean triggerAdminEvent(ServerLevel level, ServerPlayer target, String event) {
+        RandomSource random = level.random;
+        if ("scarecrow".equals(event)) {
+            if (!getLoadedEntities(level, ScarecrowEntity.class).isEmpty()) return false;
+            spawnScarecrow(level, target, random);
+            return !getLoadedEntities(level, ScarecrowEntity.class).isEmpty();
+        }
+        if ("spirit".equals(event)) {
+            return spawnAdminEntity(level, target, "spirit");
+        }
+        if ("face".equals(event)) {
+            return spawnAdminEntity(level, target, "face");
+        }
+        if ("mimic".equals(event)) {
+            return spawnAdminEntity(level, target, "mimic");
+        }
+        if ("rift".equals(event) || "pink_rift".equals(event) || "black_rift".equals(event)) {
+            return spawnAdminEntity(level, target, event);
+        }
+        if ("stool".equals(event)) {
+            for (int attempt = 0; attempt < 32; attempt++) {
+                double angle = random.nextDouble() * Math.PI * 2.0D;
+                double distance = 5.0D + random.nextDouble() * 8.0D;
+                int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
+                int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
+                int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                BlockPos pos = new BlockPos(x, y, z);
+                if (level.isLoaded(pos) && level.getBlockState(pos).isAir()
+                        && level.getBlockState(pos.below()).isSolidRender(level, pos.below())) {
+                    return level.setBlock(pos, FieldOfMemories.ANOMALOUS_STOOL_BLOCK.get().defaultBlockState(), 3);
+                }
+            }
+            return false;
+        }
+        if ("workstation".equals(event)) {
+            BlockPos home = HomeMemoryTracker.getHorrorAnchor(target);
+            if (home == null) return false;
+            int before = countWorkstations(level, home);
+            moveHouseWorkstation(level, home, random);
+            return countWorkstations(level, home) == before;
+        }
+        if ("sign".equals(event)) {
+            HorrorSignEvent.tryTrigger(level, List.of(target), random, 100, 300);
+            return true;
+        }
+        if ("fake_item".equals(event)) {
+            return FakeItemEvent.spawnForAdmin(level, target);
+        }
+        return false;
+    }
+
+    private static boolean spawnAdminEntity(ServerLevel level, ServerPlayer target, String kind) {
+        RandomSource random = level.random;
+        for (int attempt = 0; attempt < 24; attempt++) {
+            double angle = random.nextDouble() * Math.PI * 2.0D;
+            double distance = 5.0D + random.nextDouble() * 8.0D;
+            int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
+            int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
+            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            BlockPos pos = new BlockPos(x, y, z);
+            if (!level.isLoaded(pos) || !level.getBlockState(pos).isAir()
+                    || !level.getBlockState(pos.above()).isAir()
+                    || !level.getBlockState(pos.below()).isSolidRender(level, pos.below())) continue;
+            Entity entity;
+            switch (kind) {
+                case "spirit" -> entity = FieldOfMemories.SPIRIT_ENTITY.get().create(level);
+                case "face" -> {
+                    SmileFaceEntity face = FieldOfMemories.SMILE_FACE_ENTITY.get().create(level);
+                    if (face == null) return false;
+                    face.moveTo(x + 0.5D, y + 3.0D, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
+                    return level.addFreshEntity(face);
+                }
+                case "mimic" -> {
+                    PlayerEchoEntity echo = FieldOfMemories.PLAYER_ECHO_ENTITY.get().create(level);
+                    if (echo == null) return false;
+                    echo.setSkinOwner(target.getUUID());
+                    echo.moveTo(x + 0.5D, y, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
+                    return level.noCollision(echo) && level.addFreshEntity(echo);
+                }
+                case "rift", "pink_rift", "black_rift" -> {
+                    RiftEntity rift = FieldOfMemories.RIFT_ENTITY.get().create(level);
+                    if (rift == null) return false;
+                    rift.setPinkRift("pink_rift".equals(kind));
+                    rift.setBlackRift("black_rift".equals(kind));
+                    rift.setLifetime(600);
+                    rift.moveTo(x + 0.5D, y + 0.1D, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
+                    return level.addFreshEntity(rift);
+                }
+                default -> { return false; }
+            }
+            if (entity == null) return false;
+            entity.moveTo(x + 0.5D, y, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
+            return level.noCollision(entity) && level.addFreshEntity(entity);
+        }
+        return false;
+    }
+
+    private static int countWorkstations(ServerLevel level, BlockPos home) {
+        int count = 0;
+        for (BlockPos pos : BlockPos.betweenClosed(home.offset(-12, -5, -12), home.offset(12, 5, 12))) {
+            BlockState state = level.getBlockState(pos);
+            if (state.is(Blocks.FURNACE) || state.is(Blocks.SMOKER) || state.is(Blocks.BLAST_FURNACE)
+                    || state.is(Blocks.CRAFTING_TABLE) || state.is(Blocks.CARTOGRAPHY_TABLE)
+                    || state.is(Blocks.FLETCHING_TABLE) || state.is(Blocks.LOOM)
+                    || state.is(Blocks.SMITHING_TABLE) || state.is(Blocks.GRINDSTONE)
+                    || state.is(Blocks.STONECUTTER) || state.is(Blocks.LECTERN)
+                    || state.is(Blocks.BREWING_STAND)) count++;
+        }
+        return count;
+    }
+
     private static <T extends Entity> List<T> getLoadedEntities(ServerLevel level, Class<T> type) {
         List<T> found = new ArrayList<>();
         for (Entity entity : level.getAllEntities()) {
