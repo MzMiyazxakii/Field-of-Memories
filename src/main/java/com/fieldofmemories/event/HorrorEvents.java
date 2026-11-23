@@ -44,7 +44,6 @@ public final class HorrorEvents {
                 || !level.dimension().equals(Level.OVERWORLD)) return;
 
         long now = level.getGameTime();
-        if (now % 100L != 0L) return;
 
         List<ServerPlayer> players = new ArrayList<>();
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
@@ -54,8 +53,9 @@ public final class HorrorEvents {
         }
         if (players.isEmpty()) return;
 
-        // A distant scarecrow may disappear when nobody is watching it.
-        updateScarecrowPresence(level, players, level.random);
+        // Check visibility every tick so the scarecrow cannot vanish during a glance.
+        updateScarecrowPresence(level, players, level.random, now % 100L == 0L);
+        if (now % 100L != 0L) return;
 
         int danger = HorrorWorldData.getDangerLevel(level);
         int activity = HorrorWorldData.getActivityMultiplier(level);
@@ -187,23 +187,33 @@ public final class HorrorEvents {
     }
 
     private static void updateScarecrowPresence(ServerLevel level, List<ServerPlayer> players,
-                                                 RandomSource random) {
+                                                 RandomSource random, boolean mayVanish) {
         List<ScarecrowEntity> scarecrows = getLoadedEntities(level, ScarecrowEntity.class);
         for (int i = 1; i < scarecrows.size(); i++) scarecrows.get(i).discard();
         if (scarecrows.isEmpty()) return;
 
         ScarecrowEntity scarecrow = scarecrows.get(0);
-        boolean watched = false;
+        boolean inView = false;
         for (ServerPlayer player : players) {
-            if (isLookingAt(player, scarecrow, 96.0D)) {
-                BookProgress.discover(player, BookProgress.SCARECROW);
-                watched = true;
+            if (isInView(player, scarecrow, 96.0D)) {
+                inView = true;
                 break;
             }
         }
-        if (!watched && random.nextInt(100) < 8) {
+        // It remains still while visible; only roll to vanish while out of frame.
+        if (!inView && mayVanish && random.nextInt(100) < 8) {
             scarecrow.discard();
         }
+    }
+
+    private static boolean isInView(ServerPlayer player, ScarecrowEntity entity, double maxDistance) {
+        if (player.distanceToSqr(entity) > maxDistance * maxDistance || !player.hasLineOfSight(entity)) {
+            return false;
+        }
+        Vec3 target = entity.position().add(0.0D, entity.getBbHeight() * 0.5D, 0.0D);
+        Vec3 direction = target.subtract(player.getEyePosition()).normalize();
+        // About an 80-degree viewing cone, covering the visible center of the screen.
+        return direction.dot(player.getLookAngle()) > 0.766D;
     }
 
     private static void manageScarecrow(ServerLevel level, List<ServerPlayer> players,
