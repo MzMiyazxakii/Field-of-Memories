@@ -1,6 +1,7 @@
 package com.fieldofmemories.event;
 
 import com.fieldofmemories.FieldOfMemories;
+import com.fieldofmemories.data.BookProgress;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,6 +37,8 @@ public final class FarmMemoryDiscEvent {
         boolean matureBeetroot = state.is(Blocks.BEETROOTS)
                 && state.getValue(BlockStateProperties.AGE_3) == 3;
         if (!matureRegularCrop && !matureBeetroot) return;
+
+        BookProgress.discover(player, BookProgress.MEMORY_DISCS);
 
         if (player.getPersistentData().getBoolean(FOUND_KEY)) return;
 
