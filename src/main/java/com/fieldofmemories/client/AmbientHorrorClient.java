@@ -8,6 +8,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.util.RandomSource;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
@@ -67,15 +68,32 @@ public final class AmbientHorrorClient {
         boolean track2Stopped = backgroundMusic2 == null || backgroundMusic2.isStopped();
         boolean track4Stopped = backgroundMusic4 == null || backgroundMusic4.isStopped();
         if (track2Stopped && track4Stopped) {
-            if (playAmbient4Next) {
-                backgroundMusic4 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_4.get(), 0.01F);
-                mc.getSoundManager().play(backgroundMusic4);
-            } else {
-                backgroundMusic2 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_2.get(), 0.015F);
-                mc.getSoundManager().play(backgroundMusic2);
-            }
-            playAmbient4Next = !playAmbient4Next;
+            startNextAmbientTrack(mc);
         }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggingIn(ClientPlayerNetworkEvent.LoggingIn event) {
+        Minecraft mc = Minecraft.getInstance();
+        stopBackgroundMusic(mc);
+        playAmbient4Next = false;
+        startNextAmbientTrack(mc);
+    }
+
+    private static void startNextAmbientTrack(Minecraft mc) {
+        if (mc.level == null || mc.player == null
+                || !mc.level.dimension().equals(Level.OVERWORLD) || silenceTicks > 0) {
+            return;
+        }
+
+        if (playAmbient4Next) {
+            backgroundMusic4 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_4.get(), 0.01F);
+            mc.getSoundManager().play(backgroundMusic4);
+        } else {
+            backgroundMusic2 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_2.get(), 0.015F);
+            mc.getSoundManager().play(backgroundMusic2);
+        }
+        playAmbient4Next = !playAmbient4Next;
     }
 
     @SubscribeEvent
