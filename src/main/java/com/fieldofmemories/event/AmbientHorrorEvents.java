@@ -115,6 +115,25 @@ public final class AmbientHorrorEvents {
             case "silence" -> AmbientHorrorNetwork.sendToLevel(level,
                     com.fieldofmemories.client.AmbientHorrorClient.EFFECT_SILENCE, 100);
             case "glass" -> breakNearbyWindow(level, target, random);
+            case "recolor", "bed_carpet" -> recolorHomeItem(level, target, random);
+            case "death_sound" -> playSomewhereNearby(level, target, random,
+                    random.nextBoolean() ? SoundEvents.COW_DEATH : SoundEvents.VILLAGER_DEATH,
+                    1.2F, 0.85F + random.nextFloat() * 0.3F);
+            case "screamsoul" -> playSomewhereNearby(level, target, random,
+                    FieldOfMemories.SCREAMSOUL_SOUND.get(), 1.0F, 0.9F);
+            case "spirit_presence" -> playSomewhereNearby(level, target, random,
+                    FieldOfMemories.SPIRIT_PRESENCE_SOUND.get(), 0.85F, 1.0F);
+            case "face_scream" -> playSomewhereNearby(level, target, random,
+                    random.nextBoolean() ? FieldOfMemories.SMILE_FACE_SCREAM_1.get()
+                            : FieldOfMemories.SMILE_FACE_SCREAM_2.get(), 1.0F, 1.0F);
+            case "knock" -> {
+                BlockPos doorPos = BlockPos.findClosestMatch(target.blockPosition(), 16, 6,
+                        pos -> level.getBlockState(pos).getBlock() instanceof DoorBlock).orElse(null);
+                if (doorPos == null) return false;
+                level.playSound(null, doorPos, random.nextBoolean()
+                        ? FieldOfMemories.KNOCK_1.get() : FieldOfMemories.KNOCK_2.get(),
+                        SoundSource.BLOCKS, 2.2F, 0.9F + random.nextFloat() * 0.2F);
+            }
             case "cake" -> placeCakeOutsideHome(level, target, random);
             case "door_open" -> {
                 BlockPos doorPos = BlockPos.findClosestMatch(target.blockPosition(), 12, 5,
