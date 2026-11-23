@@ -39,7 +39,7 @@ public final class AmbientHorrorClient {
         } else if (effect == EFFECT_SILENCE) {
             silenceTicks = Math.max(silenceTicks, safeDuration);
             if (backgroundMusic != null) {
-                backgroundMusic.stop();
+                mc.getSoundManager().stop(backgroundMusic);
                 backgroundMusic = null;
             }
             mc.getSoundManager().stop();
@@ -61,7 +61,7 @@ public final class AmbientHorrorClient {
         if (mc.level == null || mc.player == null
                 || !mc.level.dimension().equals(Level.OVERWORLD) || mc.screen != null || silenceTicks > 0) {
             if (backgroundMusic != null) {
-                backgroundMusic.stop();
+                mc.getSoundManager().stop(backgroundMusic);
                 backgroundMusic = null;
             }
             return;
