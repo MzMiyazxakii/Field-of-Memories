@@ -38,7 +38,7 @@ public final class FarmMemoryDiscEvent {
                 && state.getValue(BlockStateProperties.AGE_3) == 3;
         if (!matureRegularCrop && !matureBeetroot) return;
 
-        BookProgress.discover(player, BookProgress.MEMORY_DISCS);
+        BookProgress.discover(player, BookProgress.FARM_CLUE);
 
         if (player.getPersistentData().getBoolean(FOUND_KEY)) return;
 
