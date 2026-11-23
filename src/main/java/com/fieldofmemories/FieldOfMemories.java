@@ -141,6 +141,16 @@ public class FieldOfMemories {
             "screamsoul",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "screamsoul"))
     );
+    public static final RegistryObject<SoundEvent> KID_LAUGH = SOUND_EVENTS.register(
+            "kid_laugh", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "kid_laugh")));
+    public static final RegistryObject<SoundEvent> CLOCK_CLOCK = SOUND_EVENTS.register(
+            "clock_clock", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "clock_clock")));
+    public static final RegistryObject<SoundEvent> HORROR_PIPI = SOUND_EVENTS.register(
+            "horror_pipi", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "horror_pipi")));
+    public static final RegistryObject<SoundEvent> NIGHT_AMBIENT_2 = SOUND_EVENTS.register(
+            "night_ambient_2", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "night_ambient_2")));
+    public static final RegistryObject<SoundEvent> NIGHT_AMBIENT_4 = SOUND_EVENTS.register(
+            "night_ambient_4", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "night_ambient_4")));
 
     public static final DeferredRegister<Feature<?>> FEATURES =
             DeferredRegister.create(ForgeRegistries.FEATURES, MOD_ID);
@@ -159,5 +169,6 @@ public class FieldOfMemories {
         NetworkHandler.register();
         BookNetwork.register();
         HorrorNetwork.register();
+        com.fieldofmemories.network.AmbientHorrorNetwork.register();
     }
 }
