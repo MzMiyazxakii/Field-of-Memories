@@ -20,6 +20,8 @@ public final class OldCameraClientEvents {
 
     private OldCameraClientEvents() {}
 
+    public static int getPhotoFlashTicksForScreenEffects() { return photoFlashTicks; }
+
 
     @SubscribeEvent
     public static void oldCameraTooltip(ItemTooltipEvent event) {
