@@ -124,8 +124,7 @@ public final class HorrorEvents {
             return moveHouseWorkstation(level, home, random);
         }
         if ("sign".equals(event)) {
-            HorrorSignEvent.tryTrigger(level, List.of(target), random, 100, 300);
-            return true;
+            return HorrorSignEvent.triggerAdmin(level, target, random);
         }
         if ("fake_item".equals(event)) {
             return FakeItemEvent.spawnForAdmin(level, target);
