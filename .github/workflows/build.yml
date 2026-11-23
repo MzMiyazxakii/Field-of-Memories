@@ -45,6 +45,8 @@ jobs:
           mkdir -p src/main/resources/assets/fieldofmemories/textures/item
           mkdir -p src/main/resources/assets/fieldofmemories/textures/block
           mkdir -p src/main/resources/assets/fieldofmemories/sounds
+          git show origin/assets-library:soulnastal.ogg > src/main/resources/assets/fieldofmemories/sounds/soulnastal.ogg
+          test -s src/main/resources/assets/fieldofmemories/sounds/soulnastal.ogg
           HEARTBOUND_FILE="$(find /tmp/converted-audio -type f -name heatrbound.ogg -print -quit)"
           if [ -z "$HEARTBOUND_FILE" ]; then HEARTBOUND_FILE="$(find /tmp/converted-audio -type f -name heartbound.ogg -print -quit)"; fi
           SCREAMSOUL_FILE="$(find /tmp/converted-audio -type f -name screamsoul.ogg -print -quit)"
