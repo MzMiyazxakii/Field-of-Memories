@@ -214,7 +214,7 @@ public final class HorrorEvents {
         int configuredChance = HorrorWorldData.getScarecrowChance(level);
         int chance = configuredChance == 0 ? 0
                 : Math.min(70, 18 + scaleChance(configuredChance, danger, activity, 65));
-        if (random.nextInt(100) < chance) {
+        if (HorrorWorldData.rollEventChance(level, random, chance)) {
             spawnScarecrow(level, players.get(random.nextInt(players.size())), random);
         }
     }
@@ -230,7 +230,7 @@ public final class HorrorEvents {
         int configuredChance = HorrorWorldData.getSpiritChance(level);
         int chance = configuredChance == 0 ? 0
                 : Math.min(10, (configuredChance + danger / 20) * activity / 100);
-        if (random.nextInt(100) >= chance) return;
+        if (!HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
         double angle = random.nextDouble() * Math.PI * 2.0D;
@@ -249,7 +249,7 @@ public final class HorrorEvents {
                                        RandomSource random, int danger, int activity) {
         if (!getLoadedEntities(level, RiftEntity.class).isEmpty()) return;
         int chance = Math.min(12, (2 + danger / 18) * activity / 100);
-        if (random.nextInt(100) >= chance) return;
+        if (!HorrorWorldData.rollEventChance(level, random, chance)) return;
         ServerPlayer target = players.get(random.nextInt(players.size()));
         double angle = random.nextDouble() * Math.PI * 2.0D;
         double distance = 18.0D + random.nextDouble() * 30.0D;
@@ -286,7 +286,7 @@ public final class HorrorEvents {
             return;
         }
         int chance = Math.min(18, Math.max(1, activity / 12));
-        if (random.nextInt(100) >= chance) return;
+        if (!HorrorWorldData.rollEventChance(level, random, chance)) return;
         ServerPlayer target = players.get(random.nextInt(players.size()));
         for (int attempt = 0; attempt < 12; attempt++) {
             double angle = random.nextDouble() * Math.PI * 2.0D;
@@ -313,7 +313,7 @@ public final class HorrorEvents {
         int configuredChance = HorrorWorldData.getFaceChance(level);
         int chance = configuredChance == 0 ? 0
                 : Math.min(90, (configuredChance + 5 + danger / 4) * (activity - 100) / 100);
-        if (random.nextInt(100) >= chance) return;
+        if (!HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
         if (!level.getEntitiesOfClass(SmileFaceEntity.class,
@@ -341,7 +341,7 @@ public final class HorrorEvents {
         int configuredChance = HorrorWorldData.getMimicChance(level);
         int chance = configuredChance == 0 ? 0
                 : Math.min(40, (configuredChance + danger / 10) * activity / 100);
-        if (random.nextInt(100) >= chance) return;
+        if (!HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
         if (!level.getEntitiesOfClass(PlayerEchoEntity.class,
@@ -413,7 +413,7 @@ public final class HorrorEvents {
 
 
     private static void maybePlayDistantDeath(ServerLevel level, List<ServerPlayer> players, RandomSource random) {
-        if (random.nextInt(4) != 0) return;
+        if (!HorrorWorldData.rollEventChance(level, random, 25.0D)) return;
         ServerPlayer target = players.get(random.nextInt(players.size()));
         double angle = random.nextDouble() * Math.PI * 2.0D;
         double distance = 10.0D + random.nextDouble() * 18.0D;
@@ -433,7 +433,7 @@ public final class HorrorEvents {
         BlockPos home = HomeMemoryTracker.getHorrorAnchor(target);
         if (home == null) return;
 
-        if (random.nextInt(100) < 18) {
+        if (HorrorWorldData.rollEventChance(level, random, 18.0D)) {
             BlockPos doorPos = BlockPos.findClosestMatch(home, 14, 6, pos -> {
                 BlockState state = level.getBlockState(pos);
                 return state.getBlock() instanceof DoorBlock && !state.getValue(DoorBlock.OPEN);
@@ -451,7 +451,7 @@ public final class HorrorEvents {
                 }
             }
         }
-        if (random.nextInt(100) < 9) moveHouseWorkstation(level, home, random);
+        if (HorrorWorldData.rollEventChance(level, random, 9.0D)) moveHouseWorkstation(level, home, random);
     }
 
     private static boolean moveHouseWorkstation(ServerLevel level, BlockPos home, RandomSource random) {
@@ -504,7 +504,7 @@ public final class HorrorEvents {
                                                  RandomSource random, int danger, int activity) {
         if (!getLoadedEntities(level, com.fieldofmemories.entity.WindowStalkerEntity.class).isEmpty()) return;
         int chance = Math.min(16, (3 + danger / 16) * activity / 100);
-        if (random.nextInt(100) >= chance) return;
+        if (!HorrorWorldData.rollEventChance(level, random, chance)) return;
         List<ServerPlayer> atHome = new ArrayList<>();
         for (ServerPlayer player : players) {
             if (HomeMemoryTracker.getHorrorAnchor(player) != null) atHome.add(player);
