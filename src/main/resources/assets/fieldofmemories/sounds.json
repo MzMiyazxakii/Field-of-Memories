@@ -95,5 +95,45 @@
         "stream": false
       }
     ]
+  },
+  "kid_laugh": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:kid_laugh",
+        "stream": false
+      }
+    ]
+  },
+  "clock_clock": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:clock_clock",
+        "stream": true
+      }
+    ]
+  },
+  "horror_pipi": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:horror_pipi",
+        "stream": false
+      }
+    ]
+  },
+  "night_ambient_2": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:night_ambient_2",
+        "stream": true
+      }
+    ]
+  },
+  "night_ambient_4": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:night_ambient_4",
+        "stream": true
+      }
+    ]
   }
 }
