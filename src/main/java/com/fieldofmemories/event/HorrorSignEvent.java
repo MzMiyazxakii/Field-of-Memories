@@ -69,7 +69,7 @@ public final class HorrorSignEvent {
         if (players.isEmpty()) return;
 
         int chance = Math.min(55, (16 + danger / 3) * activity / 100);
-        if (random.nextInt(100) >= chance) return;
+        if (!com.fieldofmemories.data.HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
         boolean blue = random.nextInt(100) < 32;
