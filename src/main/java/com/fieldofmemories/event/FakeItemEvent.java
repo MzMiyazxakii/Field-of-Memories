@@ -46,7 +46,7 @@ public final class FakeItemEvent {
         tryPopulateNearbyChests(level, players, random, danger, activity);
 
         int chance = Math.min(4, 1 + danger / 50 + Math.max(0, activity - 100) / 150);
-        if (random.nextInt(100) >= chance) return;
+        if (!com.fieldofmemories.data.HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
         double angle = random.nextDouble() * Math.PI * 2.0D;
@@ -87,7 +87,7 @@ public final class FakeItemEvent {
 
                         persistent.putBoolean(CHEST_CHECKED_TAG, true);
                         chest.setChanged();
-                        if (random.nextInt(100) >= chance) continue;
+                        if (!com.fieldofmemories.data.HorrorWorldData.rollEventChance(level, random, chance)) continue;
 
                         int size = chest.getContainerSize();
                         int start = random.nextInt(Math.max(1, size));
