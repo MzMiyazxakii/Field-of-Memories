@@ -9,8 +9,7 @@ import com.fieldofmemories.entity.SpiritEntity;
 import java.util.Random;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -59,12 +58,10 @@ public final class HorrorClient {
     }
 
     @SubscribeEvent
-    public static void onSpiritInterference(RenderGuiOverlayEvent.Post event) {
-        // Render once per frame, not once for every HUD layer.
-        if (event.getOverlay() != VanillaGuiOverlay.CROSSHAIR.type()) return;
+    public static void onSpiritInterference(RenderGuiEvent.Post event) {
         if (spiritInterference < 0.015F || Minecraft.getInstance().player == null) return;
-        int width = event.getWindow().getGuiScaledWidth();
-        int height = event.getWindow().getGuiScaledHeight();
+        int width = event.getGuiGraphics().guiWidth();
+        int height = event.getGuiGraphics().guiHeight();
         float strength = Math.min(1.0F, spiritInterference);
         var gui = event.getGuiGraphics();
 
@@ -104,7 +101,7 @@ public final class HorrorClient {
     }
 
     @SubscribeEvent
-    public static void onOverlay(RenderGuiOverlayEvent.Post event) {
+    public static void onOverlay(RenderGuiEvent.Post event) {
         if (screamTicks <= 0 || Minecraft.getInstance().player == null) return;
         int width = event.getWindow().getGuiScaledWidth();
         int height = event.getWindow().getGuiScaledHeight();
