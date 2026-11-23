@@ -59,7 +59,7 @@ public final class HorrorClient {
 
     @SubscribeEvent
     public static void onSpiritInterference(RenderGuiEvent.Post event) {
-        if (spiritInterference < 0.015F || Minecraft.getInstance().player == null) return;
+        if (Minecraft.getInstance().screen != null || spiritInterference < 0.015F || Minecraft.getInstance().player == null) return;
         int width = event.getGuiGraphics().guiWidth();
         int height = event.getGuiGraphics().guiHeight();
         float strength = Math.min(1.0F, spiritInterference);
@@ -102,7 +102,7 @@ public final class HorrorClient {
 
     @SubscribeEvent
     public static void onOverlay(RenderGuiEvent.Post event) {
-        if (screamTicks <= 0 || Minecraft.getInstance().player == null) return;
+        if (Minecraft.getInstance().screen != null || screamTicks <= 0 || Minecraft.getInstance().player == null) return;
         int width = event.getWindow().getGuiScaledWidth();
         int height = event.getWindow().getGuiScaledHeight();
         float alpha = Math.min(1.0F, screamTicks / 12.0F);
