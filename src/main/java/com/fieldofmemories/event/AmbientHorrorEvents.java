@@ -118,7 +118,7 @@ public final class AmbientHorrorEvents {
             case "recolor", "bed_carpet" -> recolorHomeItem(level, target, random);
             case "death_sound", "distant_death" -> playSomewhereNearby(level, target, random,
                     random.nextBoolean() ? SoundEvents.COW_DEATH : SoundEvents.VILLAGER_DEATH,
-                    1.2F, 0.85F + random.nextFloat() * 0.3F);
+                    2.2F, 0.85F + random.nextFloat() * 0.3F);
             case "screamsoul" -> playSomewhereNearby(level, target, random,
                     FieldOfMemories.SCREAMSOUL_SOUND.get(), 1.0F, 0.9F);
             case "spirit_presence" -> playSomewhereNearby(level, target, random,
@@ -156,6 +156,7 @@ public final class AmbientHorrorEvents {
                 if (doorPos == null) return false;
                 BlockState state = level.getBlockState(doorPos);
                 ((DoorBlock) state.getBlock()).setOpen(target, level, state, doorPos, true);
+                level.playSound(null, doorPos, SoundEvents.WOODEN_DOOR_OPEN, SoundSource.BLOCKS, 1.25F, 0.9F + random.nextFloat() * 0.15F);
             }
             case "stalker" -> {
                 BlockPos window = BlockPos.findClosestMatch(target.blockPosition(), 16, 6, pos -> {
