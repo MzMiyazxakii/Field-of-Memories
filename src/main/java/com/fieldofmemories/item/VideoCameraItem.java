@@ -1,5 +1,7 @@
 package com.fieldofmemories.item;
 
+import com.fieldofmemories.data.BookProgress;
+
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
@@ -75,6 +77,7 @@ public class VideoCameraItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, net.minecraft.world.InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide) {
+            if (player instanceof ServerPlayer serverPlayer) BookProgress.discover(serverPlayer, BookProgress.VIDEO_CAMERA);
             if (!stack.getOrCreateTag().contains(BATTERY_TAG)) setBattery(stack, MAX_BATTERY);
             stack.getOrCreateTag().putBoolean(OPEN_TAG, !isOpen(stack));
             player.getCooldowns().addCooldown(this, 8);
