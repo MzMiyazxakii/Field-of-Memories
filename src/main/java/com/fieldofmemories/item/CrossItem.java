@@ -2,6 +2,7 @@ package com.fieldofmemories.item;
 
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.data.MemoryDiscWorldData;
+import com.fieldofmemories.data.BookProgress;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -53,7 +54,9 @@ public class CrossItem extends Item {
     public static boolean tryProtect(ServerPlayer player, boolean guaranteed) {
         // A cross that protects against a rift or fake item stays usable.
         // Protection itself never drains or empties the cross.
-        return !findUsableCrosses(player).isEmpty();
+        boolean hasCross = !findUsableCrosses(player).isEmpty();
+        if (hasCross) BookProgress.discover(player, BookProgress.CROSS);
+        return hasCross;
     }
 
     // Every usable cross in the player's inventory has its own chance to be drained.
@@ -61,9 +64,11 @@ public class CrossItem extends Item {
     public static void tryDepleteOnAttack(ServerPlayer player) {
         RandomSource random = player.serverLevel().random;
         boolean depletedAny = false;
+        if (!findUsableCrosses(player).isEmpty()) BookProgress.discover(player, BookProgress.CROSS);
         for (ItemStack cross : findUsableCrosses(player)) {
             if (random.nextInt(100) < ATTACK_DEPLETION_CHANCE) {
                 setState(cross, EMPTY);
+                BookProgress.discover(player, BookProgress.EMPTY_CROSS);
                 depletedAny = true;
             }
         }
@@ -103,6 +108,9 @@ public class CrossItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (getState(stack) != EMPTY) return InteractionResultHolder.pass(stack);
+        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+            BookProgress.discover(serverPlayer, BookProgress.EMPTY_CROSS);
+        }
         if (level.isClientSide) return InteractionResultHolder.sidedSuccess(stack, true);
         if (!(level instanceof ServerLevel serverLevel) || !MemoryDiscWorldData.hasReadAll(serverLevel)) {
             return InteractionResultHolder.fail(stack);
