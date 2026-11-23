@@ -76,7 +76,7 @@ public class LootContainerBlock extends Block {
             level.addFreshEntity(entity);
         }
         // A cardboard box can contain at most one battery, regardless of its regular loot rolls.
-        if (level.random.nextFloat() < 0.20F) {
+        if (level.random.nextFloat() < 0.16F) {
             Block.popResource(level, pos, new ItemStack(com.fieldofmemories.FieldOfMemories.BATTERY.get()));
         }
         ItemStack memoryDisc = table.rollMemoryDisc(level.random);
