@@ -80,7 +80,6 @@ public final class AmbientHorrorEvents {
             case 0 -> playKidLaugh(level, target, random);
             case 1 -> {
                 if (level.isNight()) playClock(level, target, random);
-                else if (random.nextInt(100) < 18) playClock(level, target, random);
             }
             case 2 -> playHorrorPipi(level, target, random);
             case 3 -> startDarkPeriod(level);
