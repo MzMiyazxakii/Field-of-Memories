@@ -28,7 +28,11 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import net.minecraftforge.event.TickEvent;
 
 @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class AmbientHorrorEvents {
@@ -44,7 +48,27 @@ public final class AmbientHorrorEvents {
             "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
     };
 
+    private static final Map<ServerLevel, List<PendingFootstep>> PENDING_STEPS = new HashMap<>();
+
     private AmbientHorrorEvents() {}
+
+    @SubscribeEvent
+    public static void onFootstepSequenceTick(TickEvent.LevelTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level)) return;
+        List<PendingFootstep> pending = PENDING_STEPS.get(level);
+        if (pending == null || pending.isEmpty()) return;
+        long now = level.getGameTime();
+        Iterator<PendingFootstep> iterator = pending.iterator();
+        while (iterator.hasNext()) {
+            PendingFootstep step = iterator.next();
+            if (step.tick() > now) continue;
+            level.playSound(null, step.pos(), step.sound(), SoundSource.PLAYERS, 1.5F, step.pitch());
+            iterator.remove();
+        }
+        if (pending.isEmpty()) PENDING_STEPS.remove(level);
+    }
+
+    private record PendingFootstep(long tick, BlockPos pos, SoundEvent sound, float pitch) {}
 
     public static void tryTrigger(ServerLevel level, List<ServerPlayer> players,
                                   net.minecraft.util.RandomSource random, int danger, int activity) {
@@ -112,13 +136,15 @@ public final class AmbientHorrorEvents {
         back = back.normalize();
         Vec3 side = new Vec3(-back.z, 0.0D, back.x);
         Vec3 start = target.position().add(back.scale(2.2D));
-        for (int i = 0; i < 4; i++) {
+        List<PendingFootstep> sequence = PENDING_STEPS.computeIfAbsent(level, ignored -> new ArrayList<>());
+        long startTick = level.getGameTime() + 1L;
+        for (int i = 0; i < 5; i++) {
             Vec3 foot = start.add(back.scale(i * 0.48D)).add(side.scale((i % 2 == 0 ? -1 : 1) * 0.18D));
             BlockPos pos = BlockPos.containing(foot.x, foot.y, foot.z);
             BlockState ground = level.getBlockState(pos.below());
             SoundEvent step = ground.getSoundType(level, pos.below(), target).getStepSound();
-            level.playSound(null, pos, step, SoundSource.PLAYERS, 1.45F,
-                    0.78F + random.nextFloat() * 0.22F);
+            sequence.add(new PendingFootstep(startTick + i * 3L, pos, step,
+                    0.78F + random.nextFloat() * 0.22F));
         }
     }
 
