@@ -121,9 +121,7 @@ public final class HorrorEvents {
         if ("workstation".equals(event)) {
             BlockPos home = HomeMemoryTracker.getHorrorAnchor(target);
             if (home == null) return false;
-            int before = countWorkstations(level, home);
-            moveHouseWorkstation(level, home, random);
-            return countWorkstations(level, home) == before;
+            return moveHouseWorkstation(level, home, random);
         }
         if ("sign".equals(event)) {
             HorrorSignEvent.tryTrigger(level, List.of(target), random, 100, 300);
@@ -179,20 +177,6 @@ public final class HorrorEvents {
             return level.noCollision(entity) && level.addFreshEntity(entity);
         }
         return false;
-    }
-
-    private static int countWorkstations(ServerLevel level, BlockPos home) {
-        int count = 0;
-        for (BlockPos pos : BlockPos.betweenClosed(home.offset(-12, -5, -12), home.offset(12, 5, 12))) {
-            BlockState state = level.getBlockState(pos);
-            if (state.is(Blocks.FURNACE) || state.is(Blocks.SMOKER) || state.is(Blocks.BLAST_FURNACE)
-                    || state.is(Blocks.CRAFTING_TABLE) || state.is(Blocks.CARTOGRAPHY_TABLE)
-                    || state.is(Blocks.FLETCHING_TABLE) || state.is(Blocks.LOOM)
-                    || state.is(Blocks.SMITHING_TABLE) || state.is(Blocks.GRINDSTONE)
-                    || state.is(Blocks.STONECUTTER) || state.is(Blocks.LECTERN)
-                    || state.is(Blocks.BREWING_STAND)) count++;
-        }
-        return count;
     }
 
     private static <T extends Entity> List<T> getLoadedEntities(ServerLevel level, Class<T> type) {
@@ -471,7 +455,7 @@ public final class HorrorEvents {
         if (random.nextInt(100) < 9) moveHouseWorkstation(level, home, random);
     }
 
-    private static void moveHouseWorkstation(ServerLevel level, BlockPos home, RandomSource random) {
+    private static boolean moveHouseWorkstation(ServerLevel level, BlockPos home, RandomSource random) {
         List<BlockPos> candidates = new ArrayList<>();
         for (BlockPos pos : BlockPos.betweenClosed(home.offset(-12, -5, -12), home.offset(12, 5, 12))) {
             BlockState state = level.getBlockState(pos);
@@ -484,7 +468,7 @@ public final class HorrorEvents {
                 candidates.add(pos.immutable());
             }
         }
-        if (candidates.isEmpty()) return;
+        if (candidates.isEmpty()) return false;
         BlockPos source = candidates.get(random.nextInt(candidates.size()));
         BlockState state = level.getBlockState(source);
         BlockEntity sourceEntity = level.getBlockEntity(source);
@@ -503,7 +487,7 @@ public final class HorrorEvents {
                 BlockEntity moved = level.getBlockEntity(destination);
                 if (moved == null) {
                     level.setBlock(destination, Blocks.AIR.defaultBlockState(), 3);
-                    return;
+                    return false;
                 }
                 saved.putInt("x", destination.getX());
                 saved.putInt("y", destination.getY());
@@ -512,8 +496,9 @@ public final class HorrorEvents {
                 moved.setChanged();
             }
             level.setBlock(source, Blocks.AIR.defaultBlockState(), 3);
-            return;
+            return true;
         }
+        return false;
     }
 
     private static void maybeSpawnWindowStalker(ServerLevel level, List<ServerPlayer> players,
