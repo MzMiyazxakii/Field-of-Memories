@@ -68,10 +68,10 @@ public final class AmbientHorrorClient {
         boolean track4Stopped = backgroundMusic4 == null || backgroundMusic4.isStopped();
         if (track2Stopped && track4Stopped) {
             if (playAmbient4Next) {
-                backgroundMusic4 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_4.get(), 0.012F);
+                backgroundMusic4 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_4.get(), 0.01F);
                 mc.getSoundManager().play(backgroundMusic4);
             } else {
-                backgroundMusic2 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_2.get(), 0.02F);
+                backgroundMusic2 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_2.get(), 0.015F);
                 mc.getSoundManager().play(backgroundMusic2);
             }
             playAmbient4Next = !playAmbient4Next;
@@ -124,7 +124,7 @@ public final class AmbientHorrorClient {
 
     private static final class BackgroundMusicSound extends AbstractTickableSoundInstance {
         private BackgroundMusicSound(SoundEvent sound, float volume) {
-            super(sound, SoundSource.MUSIC, RandomSource.create());
+            super(sound, SoundSource.MASTER, RandomSource.create());
             this.looping = false;
             this.delay = 0;
             this.volume = volume;
