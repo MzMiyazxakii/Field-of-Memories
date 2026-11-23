@@ -79,5 +79,21 @@
         "stream": false
       }
     ]
+  },
+  "heartbound": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:heartbound",
+        "stream": true
+      }
+    ]
+  },
+  "screamsoul": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:screamsoul",
+        "stream": false
+      }
+    ]
   }
 }
