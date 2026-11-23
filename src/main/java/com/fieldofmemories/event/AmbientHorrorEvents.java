@@ -73,7 +73,7 @@ public final class AmbientHorrorEvents {
     public static void tryTrigger(ServerLevel level, List<ServerPlayer> players,
                                   net.minecraft.util.RandomSource random, int danger, int activity) {
         int chance = Math.min(42, 12 + danger / 5 + activity / 20);
-        if (random.nextInt(100) >= chance) return;
+        if (!com.fieldofmemories.data.HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
         switch (random.nextInt(11)) {
@@ -392,7 +392,7 @@ public final class AmbientHorrorEvents {
 
         if (!active) {
             data.remove(JAM_ACTIVE);
-            if (level.random.nextInt(220) != 0) return;
+            if (!com.fieldofmemories.data.HorrorWorldData.rollEventChance(level, level.random, 100.0D / 220.0D)) return;
             data.putBoolean(JAM_ACTIVE, true);
             data.putInt(JAM_X, pos.getX());
             data.putInt(JAM_Y, pos.getY());
