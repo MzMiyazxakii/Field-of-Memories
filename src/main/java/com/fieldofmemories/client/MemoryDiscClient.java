@@ -18,6 +18,8 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraft.client.gui.Gui;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -152,6 +154,13 @@ public final class MemoryDiscClient {
 
         @Override
         public void tick() {}
+    }
+
+    @SubscribeEvent
+    public static void hideChatWhileReading(RenderGuiOverlayEvent.Pre event) {
+        if (reading && event.getOverlay().id().equals(Gui.CHAT)) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
