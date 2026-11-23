@@ -60,8 +60,9 @@ public final class OldCameraClientEvents {
         }
         useWasDown = cameraUseDown;
 
-        boolean canAim = cameraUseDown && getHeldCameraCharge(mc) >= 10;
-        boolean useDown = canAim;
+        boolean canAim = mc.player != null && mc.screen == null && cameraInHand
+                && getHeldCameraCharge(mc) >= 10;
+        boolean useDown = canAim && mc.options.keyUse.isDown();
 
         if (useDown) {
             aiming = true;
