@@ -141,6 +141,12 @@ public final class ScreenEffectsRenderer {
             gui.fill(0, Math.max(0, h - 3), w, h, 0x28000000);
         }
 
+        int photoFlashTicks = OldCameraClientEvents.getPhotoFlashTicksForScreenEffects();
+        if (photoFlashTicks > 0) {
+            int flashAlpha = Math.min(220, photoFlashTicks * 34);
+            gui.fill(0, 0, w, h, (flashAlpha << 24) | 0x00FFFFFF);
+        }
+
         int screamTicks = HorrorClient.getScreamTicksForScreenEffects();
         if (screamTicks > 0) {
             float alpha = Math.min(1.0F, screamTicks / 12.0F);
