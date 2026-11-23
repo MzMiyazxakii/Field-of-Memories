@@ -1,6 +1,7 @@
 package com.fieldofmemories.event;
 
 import com.fieldofmemories.FieldOfMemories;
+import com.fieldofmemories.data.BookProgress;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -135,6 +136,7 @@ public final class FakeItemEvent {
             ItemStack stack = player.getInventory().items.get(slot);
             if (stack.isEmpty() || !stack.hasTag() || !stack.getTag().getBoolean(FAKE_TAG)) continue;
 
+            BookProgress.discover(player, BookProgress.MIMIC_ITEM);
             player.getInventory().setItem(slot, ItemStack.EMPTY);
             if (!com.fieldofmemories.item.CrossItem.tryProtect(player, true)) triggerForPlayer(player);
             return;
