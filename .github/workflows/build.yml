@@ -51,16 +51,17 @@ jobs:
           test -n "$HEARTBOUND_FILE" && test -n "$SCREAMSOUL_FILE"
           cp "$HEARTBOUND_FILE" src/main/resources/assets/fieldofmemories/sounds/heartbound.ogg
           cp "$SCREAMSOUL_FILE" src/main/resources/assets/fieldofmemories/sounds/screamsoul.ogg
-          if [ -f /tmp/HorrorSound/HorrorSound/ClockClock.ogg ]; then
-            cp /tmp/HorrorSound/HorrorSound/ClockClock.ogg src/main/resources/assets/fieldofmemories/sounds/clock_clock.ogg
-            cp /tmp/HorrorSound/HorrorSound/KidLaugh.ogg src/main/resources/assets/fieldofmemories/sounds/kid_laugh.ogg
-            cp /tmp/HorrorSound/HorrorSound/HorrorPipi.ogg src/main/resources/assets/fieldofmemories/sounds/horror_pipi.ogg
-             NIGHT2_FILE="$(find /tmp/HorrorSound -type f -name night2.ogg -print -quit)"
-            NIGHT4_FILE="$(find /tmp/HorrorSound -type f -name night4.ogg -print -quit)"
-            test -n "$NIGHT2_FILE" && test -n "$NIGHT4_FILE"
-            cp "$NIGHT2_FILE" src/main/resources/assets/fieldofmemories/sounds/night_ambient_2.ogg
-            cp "$NIGHT4_FILE" src/main/resources/assets/fieldofmemories/sounds/night_ambient_4.ogg
-          fi
+          KID_LAUGH_FILE="$(find /tmp/HorrorSound -type f -iname KidLaugh.ogg -print -quit)"
+          CLOCK_FILE="$(find /tmp/HorrorSound -type f -iname ClockClock.ogg -print -quit)"
+          PIPI_FILE="$(find /tmp/HorrorSound -type f -iname HorrorPipi.ogg -print -quit)"
+          NIGHT2_FILE="$(find /tmp/HorrorSound -type f -iname night2.ogg -print -quit)"
+          NIGHT4_FILE="$(find /tmp/HorrorSound -type f -iname night4.ogg -print -quit)"
+          test -n "$KID_LAUGH_FILE" && test -n "$CLOCK_FILE" && test -n "$PIPI_FILE" && test -n "$NIGHT2_FILE" && test -n "$NIGHT4_FILE"
+          cp "$CLOCK_FILE" src/main/resources/assets/fieldofmemories/sounds/clock_clock.ogg
+          cp "$KID_LAUGH_FILE" src/main/resources/assets/fieldofmemories/sounds/kid_laugh.ogg
+          cp "$PIPI_FILE" src/main/resources/assets/fieldofmemories/sounds/horror_pipi.ogg
+          cp "$NIGHT2_FILE" src/main/resources/assets/fieldofmemories/sounds/night_ambient_2.ogg
+          cp "$NIGHT4_FILE" src/main/resources/assets/fieldofmemories/sounds/night_ambient_4.ogg
           cp "$CAMERA_DIR/VideoCameraOpen.png" src/main/resources/assets/fieldofmemories/textures/item/video_camera.png
           cp "$LEAFLET_DIR/cardboard.png" src/main/resources/assets/fieldofmemories/textures/block/tree_leaflet.png
           python3 - "$LEAFLET_FILE" <<'PY'
