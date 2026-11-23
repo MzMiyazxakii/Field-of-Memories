@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -59,11 +60,25 @@ public final class BookProgress {
     public static void onItemPickup(EntityItemPickupEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         ItemStack stack = event.getItem().getItem();
-        if (stack.getItem() instanceof MemoryDiscItem) {
-            discover(player, MEMORY_DISCS);
-        }
         if (stack.is(FieldOfMemories.CROSS.get()) && CrossItem.getState(stack) == CrossItem.EMPTY) {
             discover(player, EMPTY_CROSS);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
+        for (ItemStack stack : player.getInventory().items) {
+            if (stack.getItem() instanceof MemoryDiscItem) {
+                discover(player, MEMORY_DISCS);
+                return;
+            }
+        }
+        for (ItemStack stack : player.getInventory().offhand) {
+            if (stack.getItem() instanceof MemoryDiscItem) {
+                discover(player, MEMORY_DISCS);
+                return;
+            }
         }
     }
 
