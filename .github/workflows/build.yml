@@ -55,8 +55,11 @@ jobs:
             cp /tmp/HorrorSound/HorrorSound/ClockClock.ogg src/main/resources/assets/fieldofmemories/sounds/clock_clock.ogg
             cp /tmp/HorrorSound/HorrorSound/KidLaugh.ogg src/main/resources/assets/fieldofmemories/sounds/kid_laugh.ogg
             cp /tmp/HorrorSound/HorrorSound/HorrorPipi.ogg src/main/resources/assets/fieldofmemories/sounds/horror_pipi.ogg
-            cp "/tmp/HorrorSound/HorrorSound/Фоновая музыка/night2.ogg" src/main/resources/assets/fieldofmemories/sounds/night_ambient_2.ogg
-            cp "/tmp/HorrorSound/HorrorSound/Фоновая музыка/night4.ogg" src/main/resources/assets/fieldofmemories/sounds/night_ambient_4.ogg
+             NIGHT2_FILE="$(find /tmp/HorrorSound -type f -name night2.ogg -print -quit)"
+            NIGHT4_FILE="$(find /tmp/HorrorSound -type f -name night4.ogg -print -quit)"
+            test -n "$NIGHT2_FILE" && test -n "$NIGHT4_FILE"
+            cp "$NIGHT2_FILE" src/main/resources/assets/fieldofmemories/sounds/night_ambient_2.ogg
+            cp "$NIGHT4_FILE" src/main/resources/assets/fieldofmemories/sounds/night_ambient_4.ogg
           fi
           cp "$CAMERA_DIR/VideoCameraOpen.png" src/main/resources/assets/fieldofmemories/textures/item/video_camera.png
           cp "$LEAFLET_DIR/cardboard.png" src/main/resources/assets/fieldofmemories/textures/block/tree_leaflet.png
@@ -85,7 +88,7 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/main/resources/assets/fieldofmemories/models src/main/resources/assets/fieldofmemories/blockstates/tree_leaflet.json src/main/resources/assets/fieldofmemories/textures src/main/resources/assets/fieldofmemories/sounds/heartbound.ogg src/main/resources/assets/fieldofmemories/sounds/screamsoul.ogg
+          git add src/main/resources/assets/fieldofmemories/models src/main/resources/assets/fieldofmemories/blockstates/tree_leaflet.json src/main/resources/assets/fieldofmemories/textures src/main/resources/assets/fieldofmemories/sounds
           if ! git diff --cached --quiet; then
             git commit -m "Import supplied camera and leaflet models [skip ci]"
             git push origin HEAD:main
