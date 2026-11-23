@@ -1,5 +1,7 @@
 package com.fieldofmemories.entity;
 
+import com.fieldofmemories.data.BookProgress;
+
 import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.nbt.CompoundTag;
@@ -68,6 +70,10 @@ public class RiftEntity extends Entity {
         if (--lifetime <= 0) {
             discard();
             return;
+        }
+        for (ServerPlayer player : level().getEntitiesOfClass(ServerPlayer.class, getBoundingBox().inflate(12.0D))) {
+            if (!player.isAlive() || player.isCreative() || player.isSpectator()) continue;
+            BookProgress.discover(player, isPinkRift() ? BookProgress.PINK_RIFT : BookProgress.DARK_RIFT);
         }
         if (isPinkRift()) {
             tickPinkRift();
