@@ -17,10 +17,15 @@ import net.minecraftforge.fml.common.Mod;
 public final class OldCameraClientEvents {
     private static boolean aiming;
     private static int photoFlashTicks;
+    private static int emptyChargeShakeTicks;
+    private static int emptyChargeShakePhase;
+    private static boolean useWasDown;
 
     private OldCameraClientEvents() {}
 
     public static int getPhotoFlashTicksForScreenEffects() { return photoFlashTicks; }
+    public static int getEmptyChargeShakeTicks() { return emptyChargeShakeTicks; }
+    public static int getEmptyChargeShakePhase() { return emptyChargeShakePhase; }
 
 
     @SubscribeEvent
@@ -41,13 +46,22 @@ public final class OldCameraClientEvents {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getInstance();
         if (photoFlashTicks > 0) photoFlashTicks--;
+        if (emptyChargeShakeTicks > 0) emptyChargeShakeTicks--;
+        emptyChargeShakePhase++;
 
         boolean cameraInHand = mc.player != null
                 && (mc.player.getMainHandItem().getItem() instanceof OldCameraItem
                 || mc.player.getOffhandItem().getItem() instanceof OldCameraItem);
-        boolean canAim = mc.player != null && mc.screen == null && cameraInHand
-                && getHeldCameraCharge(mc) >= 10;
-        boolean useDown = canAim && mc.options.keyUse.isDown();
+        boolean cameraUseDown = mc.player != null && mc.screen == null && cameraInHand
+                && mc.options.keyUse.isDown();
+        if (cameraUseDown && !useWasDown && getHeldCameraCharge(mc) < 10) {
+            emptyChargeShakeTicks = 14;
+            emptyChargeShakePhase = 0;
+        }
+        useWasDown = cameraUseDown;
+
+        boolean canAim = cameraUseDown && getHeldCameraCharge(mc) >= 10;
+        boolean useDown = canAim;
 
         if (useDown) {
             aiming = true;
