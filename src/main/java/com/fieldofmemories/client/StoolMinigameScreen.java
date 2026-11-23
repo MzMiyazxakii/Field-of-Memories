@@ -5,14 +5,40 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
+import net.minecraft.client.resources.sounds.AbstractSoundInstance;
+import net.minecraftforge.client.event.sound.PlaySoundEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import java.util.Random;
 
+@Mod.EventBusSubscriber(modid = "fieldofmemories", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class StoolMinigameScreen extends Screen {
     private static StoolMinigameScreen activeScreen;
+    @SubscribeEvent
+    public static void onPlaySound(PlaySoundEvent event) {
+        var sound = event.getSound();
+        if (sound == null) return;
+
+        // Completely suppress Minecraft's background music.
+        if (sound.getSource() == SoundSource.MUSIC) {
+            event.setSound(null);
+            return;
+        }
+
+        // During the stool sequence, keep its own heartbeat loud and duck all
+        // other newly-started sounds substantially.
+        StoolMinigameScreen active = activeScreen;
+        if (active != null && !active.finished && sound != active.loopSound
+                && sound instanceof AbstractSoundInstance adjustable) {
+            adjustable.volume *= 0.08F;
+        }
+    }
+
     public static float cameraMadness() { return activeScreen == null || activeScreen.finished ? 0.0F : Math.min(1.0F, 0.25F + activeScreen.progress / (float)Math.max(1, activeScreen.sequence.length()) * 0.75F); }
     public static float cameraPhase(float partialTick) { return activeScreen == null ? 0.0F : activeScreen.ticks + partialTick; }
     private final String sequence;
@@ -33,6 +59,7 @@ public final class StoolMinigameScreen extends Screen {
         super(Component.literal("Аномальный табурет"));
         this.sequence = sequence;
         activeScreen = this;
+        Minecraft.getInstance().getSoundManager().stop(null, SoundSource.MUSIC);
         loopSound = new StoolLoopSound(this);
         Minecraft.getInstance().getSoundManager().play(loopSound);
     }
@@ -176,7 +203,7 @@ public final class StoolMinigameScreen extends Screen {
             this.owner = owner;
             this.looping = true;
             this.delay = 0;
-            this.volume = 0.85F;
+            this.volume = 1.5F;
             this.pitch = 1.0F;
             this.relative = true;
         }
