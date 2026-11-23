@@ -16,6 +16,9 @@ jobs:
         run: |
           git fetch origin assets-library
           git show origin/assets-library:WWW.zip > /tmp/WWW.zip
+          git show origin/assets-library:converted-audio.zip > /tmp/converted-audio.zip
+          mkdir -p /tmp/converted-audio
+          unzip -q /tmp/converted-audio.zip -d /tmp/converted-audio
           mkdir -p /tmp/WWW-assets
           unzip -q /tmp/WWW.zip -d /tmp/WWW-assets
           cd /tmp
@@ -36,6 +39,13 @@ jobs:
           mkdir -p src/main/resources/assets/fieldofmemories/blockstates
           mkdir -p src/main/resources/assets/fieldofmemories/textures/item
           mkdir -p src/main/resources/assets/fieldofmemories/textures/block
+          mkdir -p src/main/resources/assets/fieldofmemories/sounds
+          HEARTBOUND_FILE="$(find /tmp/converted-audio -type f -name heatrbound.ogg -print -quit)"
+          if [ -z "$HEARTBOUND_FILE" ]; then HEARTBOUND_FILE="$(find /tmp/converted-audio -type f -name heartbound.ogg -print -quit)"; fi
+          SCREAMSOUL_FILE="$(find /tmp/converted-audio -type f -name screamsoul.ogg -print -quit)"
+          test -n "$HEARTBOUND_FILE" && test -n "$SCREAMSOUL_FILE"
+          cp "$HEARTBOUND_FILE" src/main/resources/assets/fieldofmemories/sounds/heartbound.ogg
+          cp "$SCREAMSOUL_FILE" src/main/resources/assets/fieldofmemories/sounds/screamsoul.ogg
           cp "$CAMERA_DIR/VideoCameraOpen.png" src/main/resources/assets/fieldofmemories/textures/item/video_camera.png
           cp "$LEAFLET_DIR/cardboard.png" src/main/resources/assets/fieldofmemories/textures/block/tree_leaflet.png
           python3 - "$LEAFLET_FILE" <<'PY'
@@ -63,7 +73,7 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/main/resources/assets/fieldofmemories/models src/main/resources/assets/fieldofmemories/blockstates/tree_leaflet.json src/main/resources/assets/fieldofmemories/textures
+          git add src/main/resources/assets/fieldofmemories/models src/main/resources/assets/fieldofmemories/blockstates/tree_leaflet.json src/main/resources/assets/fieldofmemories/textures src/main/resources/assets/fieldofmemories/sounds/heartbound.ogg src/main/resources/assets/fieldofmemories/sounds/screamsoul.ogg
           if ! git diff --cached --quiet; then
             git commit -m "Import supplied camera and leaflet models [skip ci]"
             git push origin HEAD:main
