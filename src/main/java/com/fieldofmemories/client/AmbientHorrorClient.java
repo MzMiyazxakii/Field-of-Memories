@@ -59,10 +59,7 @@ public final class AmbientHorrorClient {
 
         if (mc.level == null || mc.player == null
                 || !mc.level.dimension().equals(Level.OVERWORLD) || silenceTicks > 0) {
-            if (backgroundMusic != null) {
-                mc.getSoundManager().stop(backgroundMusic);
-                backgroundMusic = null;
-            }
+            stopBackgroundMusic(mc);
             return;
         }
 
