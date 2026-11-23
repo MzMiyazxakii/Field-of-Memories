@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.client.resources.sounds.AbstractSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -33,9 +34,8 @@ public final class StoolMinigameScreen extends Screen {
         // During the stool sequence, keep its own heartbeat loud and duck all
         // other newly-started sounds substantially.
         StoolMinigameScreen active = activeScreen;
-        if (active != null && !active.finished && sound != active.loopSound
-                && sound instanceof AbstractSoundInstance adjustable) {
-            adjustable.volume *= 0.08F;
+        if (active != null && !active.finished && sound != active.loopSound) {
+            event.setSound(new QuietSoundInstance(sound));
         }
     }
 
@@ -192,6 +192,21 @@ public final class StoolMinigameScreen extends Screen {
         if (loopSound != null && minecraft != null) {
             minecraft.getSoundManager().stop(loopSound);
             loopSound = null;
+        }
+    }
+
+    private static final class QuietSoundInstance extends AbstractSoundInstance {
+        private QuietSoundInstance(SoundInstance original) {
+            super(original.getLocation(), original.getSource(), RandomSource.create());
+            this.volume = original.getVolume() * 0.08F;
+            this.pitch = original.getPitch();
+            this.x = original.getX();
+            this.y = original.getY();
+            this.z = original.getZ();
+            this.looping = original.isLooping();
+            this.delay = original.getDelay();
+            this.relative = original.isRelative();
+            this.attenuation = original.getAttenuation();
         }
     }
 
