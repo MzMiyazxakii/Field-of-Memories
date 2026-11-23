@@ -69,6 +69,14 @@ public class CrossItem extends Item {
         }
         if (depletedAny) {
             player.playSound(SoundEvents.ITEM_BREAK, 1.0F, 0.85F + random.nextFloat() * 0.3F);
+
+            // A burst of nearly-black dust marks the moment the cross is drained.
+            ServerLevel level = player.serverLevel();
+            DustParticleOptions blackDust = new DustParticleOptions(new Vector3f(0.005F, 0.005F, 0.005F), 1.15F);
+            level.sendParticles(blackDust,
+                    player.getX(), player.getY() + 0.9D, player.getZ(),
+                    28, 0.42D, 0.72D, 0.42D, 0.025D);
+
             player.getInventory().setChanged();
             player.containerMenu.broadcastChanges();
         }
