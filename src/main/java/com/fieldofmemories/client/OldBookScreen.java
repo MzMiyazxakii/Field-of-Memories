@@ -89,11 +89,16 @@ public final class OldBookScreen extends Screen {
     public void render(GuiGraphics gui, int mouseX, int mouseY, float partialTick) {
         renderBackground(gui);
         int mid = left + bookWidth / 2;
-        gui.fill(left - 3, top + 4, left + bookWidth + 3, top + bookHeight + 4, 0xFF211912);
-        gui.fill(left, top, left + bookWidth, top + bookHeight, 0xFF6B452C);
+        // Purple leather cover to match the Old Book item texture.
+        gui.fill(left - 3, top + 4, left + bookWidth + 3, top + bookHeight + 4, 0xFF171020);
+        gui.fill(left, top, left + bookWidth, top + bookHeight, 0xFF39234F);
+        gui.fill(left + 2, top + 2, left + bookWidth - 2, top + bookHeight - 2, 0xFF765391);
         gui.fill(left + 5, top + 5, mid - 2, top + bookHeight - 5, 0xFFE4D5B4);
         gui.fill(mid + 2, top + 5, left + bookWidth - 5, top + bookHeight - 5, 0xFFE9DDBF);
         gui.fill(mid - 2, top + 5, mid + 2, top + bookHeight - 5, 0xFF9C8060);
+        // Subtle bevel on the purple cover edges.
+        gui.fill(left + 2, top + 2, left + bookWidth - 2, top + 3, 0xFF9877B4);
+        gui.fill(left + 2, top + bookHeight - 3, left + bookWidth - 2, top + bookHeight - 2, 0xFF241532);
         gui.fill(left + 9, top + 9, mid - 6, top + 11, 0x22906E4C);
         gui.fill(mid + 6, top + 9, left + bookWidth - 9, top + 11, 0x22906E4C);
 
