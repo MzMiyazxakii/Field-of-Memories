@@ -56,6 +56,10 @@ public class LootContainerBlock extends Block {
                               BlockEntity blockEntity, ItemStack tool) {
         super.playerDestroy(level, player, pos, state, blockEntity, tool);
         if (level instanceof ServerLevel server && !legacyBackpack) {
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                com.fieldofmemories.data.BookProgress.discover(serverPlayer,
+                        com.fieldofmemories.data.BookProgress.BOX_CLUE);
+            }
             dropLoot(server, pos);
         }
     }
