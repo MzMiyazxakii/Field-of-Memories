@@ -108,6 +108,29 @@ public final class FakeItemEvent {
         }
     }
 
+
+    public static boolean spawnForAdmin(ServerLevel level, ServerPlayer target) {
+        RandomSource random = level.random;
+        for (int attempt = 0; attempt < 24; attempt++) {
+            double angle = random.nextDouble() * Math.PI * 2.0D;
+            double distance = 4.0D + random.nextDouble() * 7.0D;
+            int x = (int) Math.floor(target.getX() + Math.cos(angle) * distance);
+            int z = (int) Math.floor(target.getZ() + Math.sin(angle) * distance);
+            int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            net.minecraft.core.BlockPos ground = new net.minecraft.core.BlockPos(x, y - 1, z);
+            net.minecraft.core.BlockPos spawn = new net.minecraft.core.BlockPos(x, y, z);
+            if (!level.isLoaded(spawn) || !level.getBlockState(ground).isSolidRender(level, ground)
+                    || !level.getBlockState(spawn).isAir()) continue;
+            ItemStack fake = createFakeStack(random);
+            if (fake.isEmpty()) return false;
+            ItemEntity entity = new ItemEntity(level, x + 0.5D, y + 0.15D, z + 0.5D, fake);
+            entity.setDefaultPickUpDelay();
+            entity.setUnlimitedLifetime();
+            return level.addFreshEntity(entity);
+        }
+        return false;
+    }
+
     private static ItemStack createFakeStack(RandomSource random) {
         List<Item> candidates = new ArrayList<>();
         for (Item item : ForgeRegistries.ITEMS.getValues()) {
