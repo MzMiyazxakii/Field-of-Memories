@@ -3,6 +3,10 @@ package com.fieldofmemories.client;
 import com.fieldofmemories.network.NetworkHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import java.util.Random;
@@ -18,6 +22,7 @@ public final class StoolMinigameScreen extends Screen {
     private int escapePresses;
     private boolean finished;
     private final Random hallucinationRandom = new Random();
+    private StoolLoopSound loopSound;
     private int hallucinationTimer = 35;
     private String hallucination = "";
     private int hallucinationLife;
@@ -28,6 +33,8 @@ public final class StoolMinigameScreen extends Screen {
         super(Component.literal("Аномальный табурет"));
         this.sequence = sequence;
         activeScreen = this;
+        loopSound = new StoolLoopSound(this);
+        Minecraft.getInstance().getSoundManager().play(loopSound);
     }
 
     @Override
@@ -54,6 +61,7 @@ public final class StoolMinigameScreen extends Screen {
         if (attempts <= 0) {
             finished = true;
             activeScreen = null;
+            stopLoopSound();
             NetworkHandler.finishStoolMinigame(-1);
             if (minecraft != null) minecraft.setScreen(null);
         } else {
@@ -65,6 +73,7 @@ public final class StoolMinigameScreen extends Screen {
         if (finished) return;
         finished = true;
         activeScreen = null;
+        stopLoopSound();
         NetworkHandler.finishStoolMinigame(1);
         if (minecraft != null) minecraft.setScreen(null);
     }
@@ -73,6 +82,7 @@ public final class StoolMinigameScreen extends Screen {
         if (finished) return;
         finished = true;
         activeScreen = null;
+        stopLoopSound();
         NetworkHandler.finishStoolMinigame(0);
         if (minecraft != null) minecraft.setScreen(null);
     }
@@ -151,7 +161,35 @@ public final class StoolMinigameScreen extends Screen {
         return true;
     }
 
-    @Override public void removed() { if (activeScreen == this) activeScreen = null; super.removed(); }
+    private void stopLoopSound() {
+        if (loopSound != null && minecraft != null) {
+            minecraft.getSoundManager().stop(loopSound);
+            loopSound = null;
+        }
+    }
+
+    private static final class StoolLoopSound extends AbstractTickableSoundInstance {
+        private final StoolMinigameScreen owner;
+
+        private StoolLoopSound(StoolMinigameScreen owner) {
+            super(com.fieldofmemories.FieldOfMemories.HEARTBOUND_SOUND.get(), SoundSource.AMBIENT, RandomSource.create());
+            this.owner = owner;
+            this.looping = true;
+            this.delay = 0;
+            this.volume = 0.85F;
+            this.pitch = 1.0F;
+            this.relative = true;
+        }
+
+        @Override
+        public void tick() {
+            if (owner.finished || Minecraft.getInstance().screen != owner) {
+                Minecraft.getInstance().getSoundManager().stop(this);
+            }
+        }
+    }
+
+    @Override public void removed() { stopLoopSound(); if (activeScreen == this) activeScreen = null; super.removed(); }
 
     @Override public boolean isPauseScreen() { return false; }
 }
