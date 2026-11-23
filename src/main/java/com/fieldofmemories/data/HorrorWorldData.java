@@ -16,6 +16,7 @@ public class HorrorWorldData extends SavedData {
     private static final String HOUSE_CAMERA_CHANCE_KEY = "HouseCameraChance";
     private static final String NEXT_EVENT_KEY = "NextAmbientEvent";
     private static final String SPIRIT_DISC_FAILURES_KEY = "SpiritDiscFailures";
+    private static final String EVENT_RAMP_START_DAY_KEY = "EventRampStartDay";
 
     private int activityMultiplier = 100;
     private int scarecrowChance = 10;
@@ -26,6 +27,7 @@ public class HorrorWorldData extends SavedData {
     private int houseCameraChance = 32;
     private long nextAmbientEvent;
     private int spiritDiscFailures;
+    private int eventRampStartDay = -1;
 
     public static HorrorWorldData get(ServerLevel level) {
         ServerLevel overworld = level.getServer().overworld();
@@ -43,6 +45,31 @@ public class HorrorWorldData extends SavedData {
 
     public static int getActivityMultiplier(ServerLevel level) {
         return get(level).activityMultiplier;
+    }
+
+    /**
+     * Each world gets a saved 2-4 day quiet opening. After that, event frequency
+     * rises gradually until it reaches the normal configured chances.
+     */
+    public static int getEventChanceScalePercent(ServerLevel level) {
+        ServerLevel overworld = level.getServer().overworld();
+        HorrorWorldData data = get(overworld);
+        if (data.eventRampStartDay < 0) {
+            data.eventRampStartDay = 2 + overworld.random.nextInt(3);
+            data.setDirty();
+        }
+
+        long worldDays = Math.max(0L, overworld.getGameTime()) / 24000L;
+        if (worldDays < data.eventRampStartDay) return 5;
+        return Math.min(100, 10 + (int) (worldDays - data.eventRampStartDay) * 12);
+    }
+
+    public static boolean rollEventChance(ServerLevel level, net.minecraft.util.RandomSource random,
+                                          double baseChancePercent) {
+        if (baseChancePercent <= 0.0D) return false;
+        double scaledChance = Math.min(100.0D, baseChancePercent)
+                * getEventChanceScalePercent(level) / 100.0D;
+        return random.nextDouble() * 100.0D < scaledChance;
     }
 
     public static int getScarecrowChance(ServerLevel level) {
@@ -143,6 +170,8 @@ public class HorrorWorldData extends SavedData {
         data.houseCameraChance = clamp(tag.contains(HOUSE_CAMERA_CHANCE_KEY) ? tag.getInt(HOUSE_CAMERA_CHANCE_KEY) : 32, 0, 100);
         data.nextAmbientEvent = Math.max(0L, tag.getLong(NEXT_EVENT_KEY));
         data.spiritDiscFailures = clamp(tag.getInt(SPIRIT_DISC_FAILURES_KEY), 0, 19);
+        data.eventRampStartDay = tag.contains(EVENT_RAMP_START_DAY_KEY)
+                ? clamp(tag.getInt(EVENT_RAMP_START_DAY_KEY), 2, 4) : -1;
         return data;
     }
 
@@ -157,6 +186,7 @@ public class HorrorWorldData extends SavedData {
         tag.putInt(HOUSE_CAMERA_CHANCE_KEY, houseCameraChance);
         tag.putLong(NEXT_EVENT_KEY, nextAmbientEvent);
         tag.putInt(SPIRIT_DISC_FAILURES_KEY, spiritDiscFailures);
+        tag.putInt(EVENT_RAMP_START_DAY_KEY, eventRampStartDay);
         return tag;
     }
 }
