@@ -92,8 +92,11 @@ public final class AmbientHorrorEvents {
             case 8 -> placeCakeOutsideHome(level, target, random);
             case 9 -> recolorHomeItem(level, target, random);
             case 10 -> {
-                if (level.isNight()) playKidLaugh(level, target, random);
-                else playHorrorPipi(level, target, random);
+                // Both sounds are weighted toward night; either can still happen during the day.
+                if (level.isNight()) {
+                    if (random.nextBoolean()) playKidLaugh(level, target, random);
+                    else playHorrorPipi(level, target, random);
+                }
             }
         }
     }
@@ -138,7 +141,8 @@ public final class AmbientHorrorEvents {
         List<PendingFootstep> sequence = PENDING_STEPS.computeIfAbsent(level, ignored -> new ArrayList<>());
         long startTick = level.getGameTime() + 1L;
         for (int i = 0; i < 5; i++) {
-            Vec3 foot = start.add(back.scale(i * 0.48D)).add(side.scale((i % 2 == 0 ? -1 : 1) * 0.18D));
+            // The sequence approaches the player instead of moving farther away.
+            Vec3 foot = start.subtract(back.scale(i * 0.48D)).add(side.scale((i % 2 == 0 ? -1 : 1) * 0.18D));
             BlockPos pos = BlockPos.containing(foot.x, foot.y, foot.z);
             BlockState ground = level.getBlockState(pos.below());
             SoundEvent step = ground.getSoundType(level, pos.below(), target).getStepSound();
@@ -159,11 +163,11 @@ public final class AmbientHorrorEvents {
         List<BlockPos> glass = new ArrayList<>();
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-9, -5, -9), center.offset(9, 5, 9))) {
             if (!level.isLoaded(pos)) continue;
-            String path = BuiltInRegistries.BLOCK.getKey(level.getBlockState(pos).getBlock()).getPath();
-            if (path.equals("glass") || path.equals("glass_pane")
-                    || path.endsWith("_stained_glass") || path.endsWith("_stained_glass_pane")) {
-                glass.add(pos.immutable());
-            }
+            BlockState state = level.getBlockState(pos);
+            String blockPath = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
+            boolean glassBlock = blockPath.equals("glass") || blockPath.equals("glass_pane")
+                    || blockPath.endsWith("_stained_glass") || blockPath.endsWith("_stained_glass_pane");
+            if (glassBlock && isWindowGlass(level, pos)) glass.add(pos.immutable());
         }
         if (glass.isEmpty()) return;
         BlockPos broken = glass.get(random.nextInt(glass.size()));
@@ -175,8 +179,8 @@ public final class AmbientHorrorEvents {
     private static void placeCakeOutsideHome(ServerLevel level, ServerPlayer target,
                                              net.minecraft.util.RandomSource random) {
         BlockPos home = HomeMemoryTracker.getHorrorAnchor(target);
-        if (home == null) return;
-        BlockPos doorPos = BlockPos.findClosestMatch(home, 14, 6,
+        BlockPos center = home == null ? target.blockPosition() : home;
+        BlockPos doorPos = BlockPos.findClosestMatch(center, 14, 6,
                 pos -> level.getBlockState(pos).getBlock() instanceof DoorBlock).orElse(null);
         if (doorPos == null) return;
         BlockState doorState = level.getBlockState(doorPos);
@@ -184,7 +188,12 @@ public final class AmbientHorrorEvents {
         Direction facing = doorState.getValue(DoorBlock.FACING);
         BlockPos first = doorPos.relative(facing);
         BlockPos second = doorPos.relative(facing.getOpposite());
-        BlockPos[] candidates = random.nextBoolean()
+        // Prefer the side with more open space; if tied, prefer the side farther from the home anchor.
+        int firstOpen = outsideSpaceScore(level, first);
+        int secondOpen = outsideSpaceScore(level, second);
+        double firstDistance = first.distSqr(center);
+        double secondDistance = second.distSqr(center);
+        BlockPos[] candidates = firstOpen > secondOpen || (firstOpen == secondOpen && firstDistance >= secondDistance)
                 ? new BlockPos[]{first, second} : new BlockPos[]{second, first};
         for (BlockPos pos : candidates) {
             if (level.isLoaded(pos) && level.getBlockState(pos).isAir()
@@ -195,13 +204,38 @@ public final class AmbientHorrorEvents {
         }
     }
 
+
+    private static boolean isWindowGlass(ServerLevel level, BlockPos pos) {
+        BlockPos north = pos.north();
+        BlockPos south = pos.south();
+        BlockPos east = pos.east();
+        BlockPos west = pos.west();
+        boolean northSouthWall = level.getBlockState(north).isSolidRender(level, north)
+                && level.getBlockState(south).isSolidRender(level, south);
+        boolean eastWestWall = level.getBlockState(east).isSolidRender(level, east)
+                && level.getBlockState(west).isSolidRender(level, west);
+        BlockPos above = pos.above();
+        BlockPos below = pos.below();
+        boolean verticalFrame = level.getBlockState(above).isSolidRender(level, above)
+                || level.getBlockState(below).isSolidRender(level, below);
+        return (northSouthWall || eastWestWall) && verticalFrame;
+    }
+
+    private static int outsideSpaceScore(ServerLevel level, BlockPos center) {
+        int score = 0;
+        for (BlockPos check : BlockPos.betweenClosed(center.offset(-2, -1, -2), center.offset(2, 1, 2))) {
+            if (level.isLoaded(check) && level.getBlockState(check).isAir()) score++;
+        }
+        return score;
+    }
+
     private static void recolorHomeItem(ServerLevel level, ServerPlayer target,
                                         net.minecraft.util.RandomSource random) {
         BlockPos home = HomeMemoryTracker.getHorrorAnchor(target);
-        if (home == null) return;
+        BlockPos center = home == null ? target.blockPosition() : home;
         List<BlockPos> beds = new ArrayList<>();
         List<BlockPos> carpets = new ArrayList<>();
-        for (BlockPos pos : BlockPos.betweenClosed(home.offset(-10, -5, -10), home.offset(10, 5, 10))) {
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-10, -5, -10), center.offset(10, 5, 10))) {
             BlockState state = level.getBlockState(pos);
             if (state.getBlock() instanceof BedBlock) beds.add(pos.immutable());
             else if (state.getBlock() instanceof CarpetBlock) carpets.add(pos.immutable());
@@ -280,7 +314,7 @@ public final class AmbientHorrorEvents {
             data.putInt(JAM_Z, pos.getZ());
             data.putInt(JAM_COUNT, 1);
             data.putLong(JAM_UNTIL, now + 100L);
-            player.displayClientMessage(Component.literal("Дверь не открывается"), true);
+            player.displayClientMessage(Component.literal("дверь не открывается"), true);
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.FAIL);
             return;
