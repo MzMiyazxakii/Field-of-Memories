@@ -116,7 +116,7 @@ public final class AmbientHorrorEvents {
                     com.fieldofmemories.client.AmbientHorrorClient.EFFECT_SILENCE, 100);
             case "glass" -> breakNearbyWindow(level, target, random);
             case "recolor", "bed_carpet" -> recolorHomeItem(level, target, random);
-            case "death_sound" -> playSomewhereNearby(level, target, random,
+            case "death_sound", "distant_death" -> playSomewhereNearby(level, target, random,
                     random.nextBoolean() ? SoundEvents.COW_DEATH : SoundEvents.VILLAGER_DEATH,
                     1.2F, 0.85F + random.nextFloat() * 0.3F);
             case "screamsoul" -> playSomewhereNearby(level, target, random,
