@@ -1,5 +1,7 @@
 package com.fieldofmemories.entity;
 
+import com.fieldofmemories.data.BookProgress;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -58,6 +60,7 @@ public class WindowStalkerEntity extends PathfinderMob {
         if (!fleeing) {
             Vec3 toEntity = position().subtract(closest.getEyePosition()).normalize();
             boolean noticed = closest.hasLineOfSight(this) && toEntity.dot(closest.getLookAngle()) > 0.982D;
+            if (noticed) BookProgress.discover(closest, BookProgress.WINDOW_STALKER);
             noticedTicks = noticed ? noticedTicks + 1 : Math.max(0, noticedTicks - 2);
             if (noticedTicks >= 12) {
                 fleeing = true;
