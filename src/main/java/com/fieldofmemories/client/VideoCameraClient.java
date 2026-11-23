@@ -234,6 +234,12 @@ public final class VideoCameraClient {
                 int barWidth = 64;
                 int x = w - barWidth - 10;
                 int y = h / 2 - 4;
+                int shakeTicks = OldCameraClientEvents.getEmptyChargeShakeTicks();
+                if (shakeTicks > 0 && charge < 10) {
+                    x += Math.round((float) Math.sin(
+                            OldCameraClientEvents.getEmptyChargeShakePhase() * 2.7F) * 3.0F
+                            * (shakeTicks / 14.0F));
+                }
                 gui.fill(x - 1, y - 1, x + barWidth + 1, y + 7, 0xCC080808);
                 gui.fill(x, y, x + barWidth, y + 5, 0xFF282828);
                 int filled = Math.round(barWidth * charge / (float) OldCameraItem.MAX_CHARGE);
