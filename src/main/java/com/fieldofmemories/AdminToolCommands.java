@@ -1,6 +1,7 @@
 package com.fieldofmemories;
 
 import com.fieldofmemories.event.AmbientHorrorEvents;
+import com.fieldofmemories.event.HorrorEvents;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -24,8 +25,11 @@ public final class AdminToolCommands {
                 .requires(source -> source.hasPermission(2))
                 .executes(context -> {
                     context.getSource().sendSuccess(() -> Component.literal(
-                            "События: stalker, door_open, laugh, pipi, clock, steps, cake, glass, dark, blackout, silence. "
-                                    + "Можно указать игрока: /fomhorror cake Steve"), false);
+                            "События: stalker, scarecrow, spirit, face, mimic, rift, pink_rift, black_rift, "
+                                    + "door_open, knock, laugh, pipi, clock, steps, death_sound, screamsoul, "
+                                    + "spirit_presence, face_scream, cake, glass, recolor, dark, blackout, silence, "
+                                    + "stool, workstation, sign, fake_item. "
+                                    + "Можно указать игрока: /fomhorror death_sound Steve"), false);
                     return 1;
                 });
 
@@ -40,6 +44,24 @@ public final class AdminToolCommands {
         root.then(eventCommand("dark"));
         root.then(eventCommand("blackout"));
         root.then(eventCommand("silence"));
+        root.then(eventCommand("scarecrow"));
+        root.then(eventCommand("spirit"));
+        root.then(eventCommand("face"));
+        root.then(eventCommand("mimic"));
+        root.then(eventCommand("rift"));
+        root.then(eventCommand("pink_rift"));
+        root.then(eventCommand("black_rift"));
+        root.then(eventCommand("knock"));
+        root.then(eventCommand("death_sound"));
+        root.then(eventCommand("screamsoul"));
+        root.then(eventCommand("spirit_presence"));
+        root.then(eventCommand("face_scream"));
+        root.then(eventCommand("recolor"));
+        root.then(eventCommand("bed_carpet"));
+        root.then(eventCommand("stool"));
+        root.then(eventCommand("workstation"));
+        root.then(eventCommand("sign"));
+        root.then(eventCommand("fake_item"));
         event.getDispatcher().register(root);
 
         event.getDispatcher().register(Commands.literal("admintool")
@@ -64,7 +86,8 @@ public final class AdminToolCommands {
     private static int executeEvent(CommandSourceStack source, ServerPlayer selected, String event) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer target = selected != null ? selected : source.getPlayerOrException();
         if (!(target.level() instanceof ServerLevel level)) return 0;
-        boolean triggered = AmbientHorrorEvents.triggerAdminEvent(level, target, event);
+        boolean triggered = AmbientHorrorEvents.triggerAdminEvent(level, target, event)
+                || HorrorEvents.triggerAdminEvent(level, target, event);
         if (!triggered) {
             source.sendFailure(Component.literal("Не удалось запустить событие '" + event
                     + "': рядом с игроком нет подходящего окна, двери или места."));
