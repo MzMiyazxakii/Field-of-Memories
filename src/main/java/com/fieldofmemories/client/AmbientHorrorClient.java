@@ -68,10 +68,10 @@ public final class AmbientHorrorClient {
         boolean track4Stopped = backgroundMusic4 == null || backgroundMusic4.isStopped();
         if (track2Stopped && track4Stopped) {
             if (playAmbient4Next) {
-                backgroundMusic4 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_4.get(), 0.065F);
+                backgroundMusic4 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_4.get(), 0.012F);
                 mc.getSoundManager().play(backgroundMusic4);
             } else {
-                backgroundMusic2 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_2.get(), 0.22F);
+                backgroundMusic2 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_2.get(), 0.02F);
                 mc.getSoundManager().play(backgroundMusic2);
             }
             playAmbient4Next = !playAmbient4Next;
