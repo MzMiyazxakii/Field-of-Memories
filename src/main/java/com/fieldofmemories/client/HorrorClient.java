@@ -26,6 +26,10 @@ public final class HorrorClient {
 
     private HorrorClient() {}
 
+    public static float getSpiritInterferenceForScreenEffects() { return spiritInterference; }
+    public static int getScreamTicksForScreenEffects() { return screamTicks; }
+    public static int getInterferenceTicksForScreenEffects() { return interferenceTicks; }
+
     public static void startScream() {
         screamTicks = 50;
         Minecraft mc = Minecraft.getInstance();
