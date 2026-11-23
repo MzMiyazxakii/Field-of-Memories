@@ -1,5 +1,7 @@
 package com.fieldofmemories.entity;
 
+import com.fieldofmemories.data.BookProgress;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,6 +49,7 @@ public class SpiritEntity extends PathfinderMob {
 
     private void attackPlayer(ServerPlayer player) {
         if (player == null || !player.isAlive() || player.isCreative() || player.isSpectator()) return;
+        BookProgress.discover(player, BookProgress.SPIRIT);
         com.fieldofmemories.item.CrossItem.tryDepleteOnAttack(player);
         level().playSound(null, player.blockPosition(), com.fieldofmemories.FieldOfMemories.SCREAMSOUL_SOUND.get(), net.minecraft.sounds.SoundSource.HOSTILE, 1.0F, 0.82F);
         if (player.getHealth() > 1.0F) player.setHealth(1.0F);
@@ -76,6 +79,10 @@ public class SpiritEntity extends PathfinderMob {
             return;
         }
 
+        if (target instanceof ServerPlayer serverPlayer && distanceToSqr(target) <= 36.0D * 36.0D
+                && serverPlayer.hasLineOfSight(this)) {
+            BookProgress.discover(serverPlayer, BookProgress.SPIRIT);
+        }
         getLookControl().setLookAt(target, 30.0F, 30.0F);
 
         // Touching the spirit is an immediate attack; no circling timer is required.
