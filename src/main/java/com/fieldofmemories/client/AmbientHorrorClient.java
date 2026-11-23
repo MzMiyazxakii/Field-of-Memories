@@ -82,7 +82,7 @@ public final class AmbientHorrorClient {
 
     @SubscribeEvent
     public static void onAmbientOverlay(RenderGuiEvent.Post event) {
-        if (darkTicks <= 0 && blackoutTicks <= 0) return;
+        if (Minecraft.getInstance().screen != null || (darkTicks <= 0 && blackoutTicks <= 0)) return;
         int width = event.getGuiGraphics().guiWidth();
         int height = event.getGuiGraphics().guiHeight();
         if (blackoutTicks > 0) {
