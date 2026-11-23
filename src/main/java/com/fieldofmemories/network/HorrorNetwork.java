@@ -302,6 +302,7 @@ public final class HorrorNetwork {
                 continue;
             }
             if (target instanceof com.fieldofmemories.entity.SmileFaceEntity face) {
+                BookProgress.discover(player, BookProgress.FACE_SHARDS);
                 int photos = player.getPersistentData().getInt("FOMClosedDoorPhotoCount") + 1;
                 boolean guaranteed = photos >= 20;
                 boolean dropped = guaranteed || level.random.nextFloat() < 0.10F;
