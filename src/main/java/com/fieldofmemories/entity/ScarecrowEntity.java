@@ -24,10 +24,6 @@ public class ScarecrowEntity extends Entity {
     @Override
     public void tick() {
         super.tick();
-        if (!level().isClientSide && tickCount > 1800) {
-            discard();
-            return;
-        }
         setDeltaMovement(Vec3.ZERO);
         this.noPhysics = true;
         // Static world prop: never turn toward players.
