@@ -94,13 +94,13 @@ public final class OldBookScreen extends Screen {
             gui.drawCenteredString(font, TITLES[entry], pageCenter, top + 24, 0xFF352719);
             gui.fill(pageLeft + 12, top + 44, pageRight - 12, top + 45, 0x55765A3A);
             List<FormattedCharSequence> lines = font.split(Component.literal(NOTES[entry]),
-                    Math.max(70, pageRight - pageLeft - 30));
+                    Math.max(70, pageRight - pageLeft - 20));
             int y = top + 57;
             int maxY = top + bookHeight - 32;
             for (FormattedCharSequence line : lines) {
                 if (y > maxY) break;
-                gui.drawString(font, line, pageLeft + 15, y, 0xFF403326, false);
-                y += 10;
+                gui.drawString(font, line, pageLeft + 10, y, 0xFF403326, false);
+                y += 9;
             }
             String pageLabel = (pageIndex + 1) + " / " + pages.size();
             gui.drawCenteredString(font, pageLabel, pageCenter, top + bookHeight - 20, 0xFF705A42);
