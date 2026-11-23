@@ -2,7 +2,6 @@ package com.fieldofmemories.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
@@ -44,7 +43,7 @@ public final class ScreenEffectsRenderer {
         try {
             RenderSystem.setProjectionMatrix(
                     new Matrix4f().setOrtho(0.0F, width, height, 0.0F, 1000.0F, 3000.0F),
-                    VertexSorting.ORTHOGRAPHIC);
+                    VertexSorting.ORTHOGRAPHIC_Z);
             modelView.setIdentity();
             modelView.translate(0.0D, 0.0D, -2000.0D);
             RenderSystem.applyModelViewMatrix();
