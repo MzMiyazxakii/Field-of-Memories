@@ -7,6 +7,9 @@ import com.fieldofmemories.item.OldCameraItem;
 import com.fieldofmemories.item.VideoCameraItem;
 import com.fieldofmemories.network.BookNetwork;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -48,7 +51,9 @@ public final class BookProgress {
         int updated = mask | (1 << entry);
         if (updated == mask) return;
         player.getPersistentData().putInt(ENTRIES_TAG, updated);
-        player.sendSystemMessage(Component.literal("Вы о чём-то задумались..."));
+        player.sendSystemMessage(Component.literal("Вы о чём-то задумались...")
+                .withStyle(style -> style.withFont(new ResourceLocation("minecraft", "uniform"))));
+        player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.18F, 0.78F);
         BookNetwork.sync(player, updated);
     }
 
