@@ -66,7 +66,6 @@ public class RiftEntity extends Entity {
             return;
         }
         if (--lifetime <= 0) {
-            clearExamining();
             discard();
             return;
         }
@@ -162,6 +161,28 @@ public class RiftEntity extends Entity {
         examineTicks = 0;
     }
 
+    private void returnExaminingItem() {
+        if (examining.isEmpty() || level().isClientSide) return;
+        ItemEntity returned = new ItemEntity(level(), getX(), getY() + 0.45D, getZ(), examining.copy());
+        returned.setDefaultPickUpDelay();
+        returned.setDeltaMovement(0.0D, 0.16D, 0.0D);
+        level().addFreshEntity(returned);
+        clearExamining();
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        if (!level().isClientSide && isPinkRift() && !examining.isEmpty()) {
+            if (reason == RemovalReason.UNLOADED_TO_CHUNK) {
+                if (heldVisual != null && heldVisual.isAlive()) heldVisual.discard();
+                heldVisual = null;
+            } else {
+                returnExaminingItem();
+            }
+        }
+        super.remove(reason);
+    }
+
     private List<ItemStack> process(ItemStack input) {
         List<ItemStack> outputs = new ArrayList<>();
         if (input.isEmpty()) return outputs;
@@ -203,15 +224,36 @@ public class RiftEntity extends Entity {
 
             if (groups.isEmpty()) break;
 
-            for (int craft = 0; craft < input.getCount(); craft++) {
-                for (int i = 0; i < groups.size(); i++) {
-                    int returnedCount = 1 + random.nextInt(groupSizes.get(i));
-                    ItemStack material = chooseIngredientItem(groups.get(i), recipe, crafted);
-                    if (!material.isEmpty()) {
-                        material.setCount(returnedCount);
-                        outputs.add(material);
-                    }
+            // A recipe can only be reversed for complete output batches.
+            // For example, one plank is not enough to exchange for a log:
+            // one log crafts into four planks, so four planks are required.
+            int outputPerCraft = Math.max(1, crafted.getCount());
+            int completeCrafts = input.getCount() / outputPerCraft;
+            int remainder = input.getCount() % outputPerCraft;
+
+            if (completeCrafts == 0) {
+                outputs.add(input.copy());
+                return outputs;
+            }
+
+            for (int i = 0; i < groups.size(); i++) {
+                ItemStack material = chooseIngredientItem(groups.get(i), recipe, crafted);
+                if (material.isEmpty()) continue;
+                int totalCount = groupSizes.get(i) * completeCrafts;
+                while (totalCount > 0) {
+                    ItemStack stack = material.copy();
+                    int amount = Math.min(totalCount, stack.getMaxStackSize());
+                    stack.setCount(amount);
+                    outputs.add(stack);
+                    totalCount -= amount;
                 }
+            }
+
+            // Keep any input that did not complete another full recipe.
+            if (remainder > 0) {
+                ItemStack leftover = input.copy();
+                leftover.setCount(remainder);
+                outputs.add(leftover);
             }
             return outputs;
         }
