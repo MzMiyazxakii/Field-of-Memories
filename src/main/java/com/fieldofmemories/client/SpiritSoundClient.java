@@ -48,7 +48,6 @@ public final class SpiritSoundClient {
 
     private static void stopPresenceSound(Minecraft mc) {
         if (activeSound != null) {
-            activeSound.stop();
             mc.getSoundManager().stop(activeSound);
             activeSound = null;
         }
