@@ -126,13 +126,27 @@ public final class AmbientHorrorEvents {
             case "face_scream" -> playSomewhereNearby(level, target, random,
                     random.nextBoolean() ? FieldOfMemories.SMILE_FACE_SCREAM_1.get()
                             : FieldOfMemories.SMILE_FACE_SCREAM_2.get(), 1.0F, 1.0F);
-            case "knock" -> {
+            case "knock", "door_knock" -> {
                 BlockPos doorPos = BlockPos.findClosestMatch(target.blockPosition(), 16, 6,
                         pos -> level.getBlockState(pos).getBlock() instanceof DoorBlock).orElse(null);
                 if (doorPos == null) return false;
                 level.playSound(null, doorPos, random.nextBoolean()
                         ? FieldOfMemories.KNOCK_1.get() : FieldOfMemories.KNOCK_2.get(),
                         SoundSource.BLOCKS, 2.2F, 0.9F + random.nextFloat() * 0.2F);
+            }
+            case "door_jam" -> {
+                BlockPos doorPos = BlockPos.findClosestMatch(target.blockPosition(), 12, 5,
+                        pos -> level.getBlockState(pos).getBlock() instanceof DoorBlock
+                                && !level.getBlockState(pos).getValue(DoorBlock.OPEN)).orElse(null);
+                if (doorPos == null) return false;
+                var data = target.getPersistentData();
+                data.putBoolean(JAM_ACTIVE, true);
+                data.putInt(JAM_X, doorPos.getX());
+                data.putInt(JAM_Y, doorPos.getY());
+                data.putInt(JAM_Z, doorPos.getZ());
+                data.putInt(JAM_COUNT, 1);
+                data.putLong(JAM_UNTIL, level.getGameTime() + 100L);
+                target.displayClientMessage(Component.literal("дверь не открывается"), true);
             }
             case "cake" -> placeCakeOutsideHome(level, target, random);
             case "door_open" -> {
