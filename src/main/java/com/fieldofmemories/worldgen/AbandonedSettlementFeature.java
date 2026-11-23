@@ -35,7 +35,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         boolean forest=l.getBiome(g).is(FOREST), edge=l.getBiome(g).is(EDGE), valid=forest||l.getBiome(g).is(FIELD)||edge;
         if (valid && r.nextFloat() < 0.08F && placeLootContainer(l, x, z, com.fieldofmemories.FieldOfMemories.CARDBOARD_BOX_BLOCK.get())) return true;
         if(valid&&r.nextFloat()<(edge?0.003F:0.006F)){ if(!forest&&r.nextFloat()<0.30F) village(l,x,z,r); else house(l,x,z,r.nextInt(3),r); return true; }
-        if(valid&&r.nextFloat()<(edge?0.006F:0.012F)){ if(forest||r.nextBoolean())stable(l,x,z); else well(l,x,z); return true; }
+        if(valid&&r.nextFloat()<(edge?0.006F:0.012F)){ if(forest||r.nextBoolean())stable(l,x,z,r); else well(l,x,z); return true; }
         if(valid&&r.nextFloat()<(edge?0.007F:0.018F)){cart(l,x,z,r);return true;}
         if(forest&&r.nextFloat()<0.018F)lamp(l,x,z);
         else if(r.nextFloat()<(edge?0.0015F:0.006F))pillar(l,x,z,r);
@@ -147,7 +147,7 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         for(int dx=-2;dx<=2;dx++)for(int dz=-2;dz<=2;dz++)if(Math.abs(dx)==2||Math.abs(dz)==2)put(l,x+dx,y+4,z+dz,Blocks.SPRUCE_SLAB);
         for(int[] c:new int[][]{{-1,-1},{-1,1},{1,-1},{1,1}})put(l,x+c[0],y+3,z+c[1],Blocks.SPRUCE_FENCE);
     }
-    private static void stable(WorldGenLevel l,int x,int z){
+    private static void stable(WorldGenLevel l,int x,int z,RandomSource r){
         if(!clear(l,x,z,4,5))return;BlockPos p=surface(l,x,z);if(p==null)return;int y=p.getY();fill(l,x-3,y,z-2,7,5,Blocks.COARSE_DIRT);
         for(int dx:new int[]{-3,3})for(int dz:new int[]{-2,2})for(int dy=1;dy<=3;dy++)put(l,x+dx,y+dy,z+dz,Blocks.SPRUCE_LOG);
         for(int dx=-3;dx<=3;dx++){put(l,x+dx,y+4,z-2,Blocks.SPRUCE_PLANKS);put(l,x+dx,y+4,z+2,Blocks.SPRUCE_PLANKS);put(l,x+dx,y+4,z,Blocks.SPRUCE_SLAB);}
