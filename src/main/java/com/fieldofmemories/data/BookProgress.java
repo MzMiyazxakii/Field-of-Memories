@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class BookProgress {
     private static final String ENTRIES_TAG = "FOMBookEntries";
+    private static final String OLD_BOOK_GIVEN_TAG = "FOMOldBookGiven";
     public static final int MIMIC = 0;
     public static final int MIMIC_ITEM = 1;
     public static final int SMILE_FACE = 2;
@@ -59,6 +60,14 @@ public final class BookProgress {
 
     public static int getMask(Player player) {
         return player.getPersistentData().getInt(ENTRIES_TAG);
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || player.getPersistentData().getBoolean(OLD_BOOK_GIVEN_TAG)) return;
+        ItemStack book = new ItemStack(FieldOfMemories.OLD_BOOK.get());
+        if (!player.getInventory().add(book)) player.drop(book, false);
+        player.getPersistentData().putBoolean(OLD_BOOK_GIVEN_TAG, true);
     }
 
     @SubscribeEvent
@@ -104,5 +113,6 @@ public final class BookProgress {
         if (!event.isWasDeath()) return;
         int mask = event.getOriginal().getPersistentData().getInt(ENTRIES_TAG);
         if (mask != 0) event.getEntity().getPersistentData().putInt(ENTRIES_TAG, mask);
+        if (event.getOriginal().getPersistentData().getBoolean(OLD_BOOK_GIVEN_TAG)) event.getEntity().getPersistentData().putBoolean(OLD_BOOK_GIVEN_TAG, true);
     }
 }
