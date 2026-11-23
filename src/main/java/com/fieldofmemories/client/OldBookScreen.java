@@ -60,8 +60,8 @@ public final class OldBookScreen extends Screen {
 
     @Override
     protected void init() {
-        bookWidth = Math.min(330, width - 24);
-        bookHeight = Math.min(236, height - 24);
+        bookWidth = Math.min(420, width - 24);
+        bookHeight = Math.min(300, height - 24);
         left = (width - bookWidth) / 2;
         top = (height - bookHeight) / 2;
     }
@@ -80,21 +80,25 @@ public final class OldBookScreen extends Screen {
 
         if (!pages.isEmpty()) {
             int entry = pages.get(pageIndex);
-            gui.drawCenteredString(font, TITLES[entry], mid, top + 22, 0xFF352719);
-            gui.fill(left + 24, top + 42, left + bookWidth - 24, top + 43, 0x55765A3A);
+            boolean onLeftPage = (pageIndex & 1) == 1;
+            int pageLeft = onLeftPage ? left + 12 : mid + 8;
+            int pageRight = onLeftPage ? mid - 8 : left + bookWidth - 12;
+            int pageCenter = (pageLeft + pageRight) / 2;
+            gui.drawCenteredString(font, TITLES[entry], pageCenter, top + 24, 0xFF352719);
+            gui.fill(pageLeft + 12, top + 44, pageRight - 12, top + 45, 0x55765A3A);
             List<FormattedCharSequence> lines = font.split(Component.literal(NOTES[entry]),
-                    Math.max(80, bookWidth - 48));
-            int y = top + 54;
-            int maxY = top + bookHeight - 28;
+                    Math.max(70, pageRight - pageLeft - 30));
+            int y = top + 57;
+            int maxY = top + bookHeight - 32;
             for (FormattedCharSequence line : lines) {
                 if (y > maxY) break;
-                gui.drawString(font, line, left + 24, y, 0xFF403326, false);
+                gui.drawString(font, line, pageLeft + 15, y, 0xFF403326, false);
                 y += 10;
             }
             String pageLabel = (pageIndex + 1) + " / " + pages.size();
-            gui.drawCenteredString(font, pageLabel, mid, top + bookHeight - 18, 0xFF705A42);
-            if (pageIndex > 0) gui.drawString(font, "‹", left + 14, top + bookHeight - 22, 0xFF493321, false);
-            if (pageIndex + 1 < pages.size()) gui.drawString(font, "›", left + bookWidth - 20, top + bookHeight - 22, 0xFF493321, false);
+            gui.drawCenteredString(font, pageLabel, pageCenter, top + bookHeight - 20, 0xFF705A42);
+            gui.drawString(font, "‹", left + 14, top + bookHeight - 22, 0xFF493321, false);
+            gui.drawString(font, "›", left + bookWidth - 20, top + bookHeight - 22, 0xFF493321, false);
         }
         super.render(gui, mouseX, mouseY, partialTick);
     }
