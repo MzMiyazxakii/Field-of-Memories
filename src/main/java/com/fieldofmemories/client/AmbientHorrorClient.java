@@ -67,10 +67,15 @@ public final class AmbientHorrorClient {
             return;
         }
 
-        // Play exactly one ambient track at a time, switching when it finishes.
-        boolean track2Stopped = backgroundMusic2 == null || backgroundMusic2.isStopped();
-        boolean track4Stopped = backgroundMusic4 == null || backgroundMusic4.isStopped();
-        if (track2Stopped && track4Stopped) {
+        // A sound can finish naturally without setting AbstractSoundInstance.isStopped().
+        // Check the sound manager and release references to tracks that have ended.
+        boolean track2Playing = backgroundMusic2 != null && mc.getSoundManager().isActive(backgroundMusic2);
+        boolean track4Playing = backgroundMusic4 != null && mc.getSoundManager().isActive(backgroundMusic4);
+        if (!track2Playing) backgroundMusic2 = null;
+        if (!track4Playing) backgroundMusic4 = null;
+
+        // Play exactly one ambient track at a time, switching when the previous one ends.
+        if (!track2Playing && !track4Playing) {
             startNextAmbientTrack(mc);
         }
     }
