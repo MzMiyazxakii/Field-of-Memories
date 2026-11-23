@@ -60,15 +60,6 @@ public final class HorrorClient {
     }
 
     @SubscribeEvent
-    public static void renderHorrorEffectsWhileHudHidden(RenderGuiOverlayEvent.Post event) {
-        Minecraft mc = Minecraft.getInstance();
-        if (!mc.options.hideGui || mc.screen != null || mc.player == null || event.getOverlay() != VanillaGuiOverlay.VIGNETTE.type()) return;
-        int w = event.getGuiGraphics().guiWidth(), h = event.getGuiGraphics().guiHeight();
-        if (spiritInterference >= 0.015F) { int a = (int)(5 + Math.min(1.0F, spiritInterference) * 42); event.getGuiGraphics().fill(0, 0, w, h, (a << 24) | 0x00E6C94F); }
-        if (screamTicks > 0) { float a = Math.min(1.0F, screamTicks / 12.0F); RenderSystem.enableBlend(); RenderSystem.defaultBlendFunc(); event.getGuiGraphics().fill(0, 0, w, h, ((int)(150.0F * a) << 24)); RenderSystem.setShaderColor(1, 1, 1, a); event.getGuiGraphics().blit(SCREAM_TEXTURE, 0, 0, 0, 0, w, h, 64, 64); RenderSystem.setShaderColor(1, 1, 1, 1); RenderSystem.disableBlend(); }
-    }
-
-    @SubscribeEvent
     public static void onSpiritInterference(RenderGuiEvent.Post event) {
         if (Minecraft.getInstance().screen != null || spiritInterference < 0.015F || Minecraft.getInstance().player == null) return;
         int width = event.getGuiGraphics().guiWidth();
