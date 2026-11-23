@@ -83,6 +83,10 @@ public final class MovementClient {
 
     private MovementClient() {}
 
+    public static boolean isProneForScreenEffects() { return prone; }
+    public static boolean isWaitingForSpaceForScreenEffects() { return waitingForSpace; }
+    public static int getFallRecoveryTicksForScreenEffects() { return fallRecoveryTicks; }
+
     @SubscribeEvent
     public static void onLogin(ClientPlayerNetworkEvent.LoggingIn event) { enterProne(); }
 
