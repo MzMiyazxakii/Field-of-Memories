@@ -21,6 +21,11 @@ jobs:
           unzip -q /tmp/converted-audio.zip -d /tmp/converted-audio
           mkdir -p /tmp/WWW-assets
           unzip -q /tmp/WWW.zip -d /tmp/WWW-assets
+          mkdir -p /tmp/HorrorSound
+          if git cat-file -e origin/assets-library:HorrorSound.zip 2>/dev/null; then
+            git show origin/assets-library:HorrorSound.zip > /tmp/HorrorSound.zip
+            unzip -oq /tmp/HorrorSound.zip -d /tmp/HorrorSound
+          fi
           cd /tmp
           zip -qr /tmp/WWW-assets-extracted.zip WWW-assets
       - name: Upload extracted asset archive
@@ -46,6 +51,13 @@ jobs:
           test -n "$HEARTBOUND_FILE" && test -n "$SCREAMSOUL_FILE"
           cp "$HEARTBOUND_FILE" src/main/resources/assets/fieldofmemories/sounds/heartbound.ogg
           cp "$SCREAMSOUL_FILE" src/main/resources/assets/fieldofmemories/sounds/screamsoul.ogg
+          if [ -f /tmp/HorrorSound/HorrorSound/ClockClock.ogg ]; then
+            cp /tmp/HorrorSound/HorrorSound/ClockClock.ogg src/main/resources/assets/fieldofmemories/sounds/clock_clock.ogg
+            cp /tmp/HorrorSound/HorrorSound/KidLaugh.ogg src/main/resources/assets/fieldofmemories/sounds/kid_laugh.ogg
+            cp /tmp/HorrorSound/HorrorSound/HorrorPipi.ogg src/main/resources/assets/fieldofmemories/sounds/horror_pipi.ogg
+            cp "/tmp/HorrorSound/HorrorSound/Фоновая музыка/night2.ogg" src/main/resources/assets/fieldofmemories/sounds/night_ambient_2.ogg
+            cp "/tmp/HorrorSound/HorrorSound/Фоновая музыка/night4.ogg" src/main/resources/assets/fieldofmemories/sounds/night_ambient_4.ogg
+          fi
           cp "$CAMERA_DIR/VideoCameraOpen.png" src/main/resources/assets/fieldofmemories/textures/item/video_camera.png
           cp "$LEAFLET_DIR/cardboard.png" src/main/resources/assets/fieldofmemories/textures/block/tree_leaflet.png
           python3 - "$LEAFLET_FILE" <<'PY'
