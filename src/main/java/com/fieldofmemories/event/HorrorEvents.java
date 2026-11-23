@@ -74,6 +74,7 @@ public final class HorrorEvents {
         maybeSpawnWindowStalker(level, players, random, danger, activity);
         manageAnomalousStool(level, players, random, activity);
         HorrorSignEvent.tryTrigger(level, players, random, danger, activity);
+        AmbientHorrorEvents.tryTrigger(level, players, random, danger, activity);
 
         double dangerFactor = 1.0D - danger * 0.006D;
         // A world event window every 2-3 minutes: enough downtime between scares,
