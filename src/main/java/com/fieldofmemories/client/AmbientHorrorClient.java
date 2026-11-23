@@ -10,6 +10,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.util.RandomSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -73,6 +75,20 @@ public final class AmbientHorrorClient {
             backgroundMusic = new BackgroundMusicSound(selected);
             mc.getSoundManager().play(backgroundMusic);
         }
+    }
+
+    @SubscribeEvent
+    public static void hideChatDuringBlackout(RenderGuiOverlayEvent.Pre event) {
+        if (blackoutTicks > 0 && event.getOverlay().id().getPath().equals("chat")) event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public static void renderEffectsWhileHudHidden(RenderGuiOverlayEvent.Post event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (!mc.options.hideGui || mc.screen != null || mc.player == null || event.getOverlay() != VanillaGuiOverlay.VIGNETTE.type()) return;
+        int width = event.getGuiGraphics().guiWidth(), height = event.getGuiGraphics().guiHeight();
+        if (blackoutTicks > 0) event.getGuiGraphics().fill(0, 0, width, height, 0xF5000000);
+        else if (darkTicks > 0) { int alpha = darkTicks < 100 ? Math.max(0, 34 * darkTicks / 100) : 34; event.getGuiGraphics().fill(0, 0, width, height, alpha << 24); }
     }
 
     @SubscribeEvent
