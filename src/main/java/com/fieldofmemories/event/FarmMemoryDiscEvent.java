@@ -2,15 +2,15 @@ package com.fieldofmemories.event;
 
 import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -30,10 +30,12 @@ public final class FarmMemoryDiscEvent {
                 || player.isCreative() || player.isSpectator()) return;
 
         BlockState state = event.getState();
-        if (!(state.getBlock() instanceof CropBlock crop)
-                || !(state.is(Blocks.WHEAT) || state.is(Blocks.CARROTS)
-                || state.is(Blocks.POTATOES) || state.is(Blocks.BEETROOTS))
-                || state.getValue(crop.getAgeProperty()) < crop.getMaxAge()) return;
+        boolean matureRegularCrop = (state.is(Blocks.WHEAT) || state.is(Blocks.CARROTS)
+                || state.is(Blocks.POTATOES))
+                && state.getValue(BlockStateProperties.AGE_7) == 7;
+        boolean matureBeetroot = state.is(Blocks.BEETROOTS)
+                && state.getValue(BlockStateProperties.AGE_3) == 3;
+        if (!matureRegularCrop && !matureBeetroot) return;
 
         if (player.getPersistentData().getBoolean(FOUND_KEY)) return;
 
