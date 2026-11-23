@@ -49,6 +49,21 @@ public final class HorrorSignEvent {
 
     private HorrorSignEvent() {}
 
+
+    public static boolean triggerAdmin(ServerLevel level, ServerPlayer target, RandomSource random) {
+        boolean blue = random.nextInt(100) < 32;
+        String message = blue
+                ? BLUE_MESSAGES[random.nextInt(BLUE_MESSAGES.length)]
+                : WHITE_MESSAGES[random.nextInt(WHITE_MESSAGES.length)];
+        if (replaceNearbySign(level, target, random, message, blue, 24)) return true;
+        BlockPos home = HomeMemoryTracker.getHorrorAnchor(target);
+        BlockPos anchor = home != null ? home : target.blockPosition();
+        int minDistance = home != null ? 4 : 9;
+        int maxDistance = home != null ? 9 : 15;
+        if (placeNewSign(level, anchor, random, message, blue, minDistance, maxDistance)) return true;
+        return replaceNearbySign(level, target, random, message, blue, 28);
+    }
+
     public static void tryTrigger(ServerLevel level, List<ServerPlayer> players,
                                   RandomSource random, int danger, int activity) {
         if (players.isEmpty()) return;
