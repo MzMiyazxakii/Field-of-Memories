@@ -1,5 +1,7 @@
 package com.fieldofmemories.entity;
 
+import com.fieldofmemories.data.BookProgress;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -78,6 +80,13 @@ public class PlayerEchoEntity extends PathfinderMob {
     public void tick() {
         super.tick();
         if (!level().isClientSide) {
+            for (net.minecraft.server.level.ServerPlayer player : level().getEntitiesOfClass(
+                    net.minecraft.server.level.ServerPlayer.class, getBoundingBox().inflate(40.0D))) {
+                if (player.isAlive() && !player.isSpectator() && !player.isCreative()
+                        && player.hasLineOfSight(this)) {
+                    BookProgress.discover(player, BookProgress.MIMIC);
+                }
+            }
             if (tickCount % 45 == 0 && getNavigation().isDone() && random.nextFloat() < 0.75F) {
                 getNavigation().moveTo(getX() + (random.nextDouble() - 0.5D) * 12.0D,
                         getY(), getZ() + (random.nextDouble() - 0.5D) * 12.0D, 1.2D);
