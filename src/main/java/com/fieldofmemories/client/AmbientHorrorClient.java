@@ -32,6 +32,9 @@ public final class AmbientHorrorClient {
 
     private AmbientHorrorClient() {}
 
+    public static int getDarkTicksForScreenEffects() { return darkTicks; }
+    public static int getBlackoutTicksForScreenEffects() { return blackoutTicks; }
+
     public static void startEffect(int effect, int duration) {
         Minecraft mc = Minecraft.getInstance();
         int safeDuration = Math.max(1, Math.min(24000, duration));
