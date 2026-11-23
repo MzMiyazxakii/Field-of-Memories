@@ -5,6 +5,7 @@ license="All Rights Reserved"
 modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
+logoFile="logo.png"
 authors="MzMiyazaki"
 description='''Field of Memories'''
 [[dependencies.${mod_id}]]
