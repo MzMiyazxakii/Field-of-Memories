@@ -33,11 +33,16 @@ public final class BookProgress {
     public static final int STOOL = 11;
     public static final int DARK_RIFT = 12;
     public static final int PINK_RIFT = 13;
+    public static final int CROSS_SAVED = 14;
+    public static final int FARM_CLUE = 15;
+    public static final int FACE_SHARDS = 16;
+    public static final int BOX_CLUE = 17;
+    public static final int RIFT_CROSS_CLUE = 18;
 
     private BookProgress() {}
 
     public static void discover(ServerPlayer player, int entry) {
-        if (entry < 0 || entry >= 14) return;
+        if (entry < 0 || entry >= 19) return;
         int mask = player.getPersistentData().getInt(ENTRIES_TAG);
         int updated = mask | (1 << entry);
         if (updated == mask) return;
