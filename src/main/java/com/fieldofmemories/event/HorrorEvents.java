@@ -1,6 +1,7 @@
 package com.fieldofmemories.event;
 
 import com.fieldofmemories.data.HorrorWorldData;
+import com.fieldofmemories.data.BookProgress;
 import com.fieldofmemories.entity.ScarecrowEntity;
 import com.fieldofmemories.entity.SmileFaceEntity;
 import com.fieldofmemories.entity.PlayerEchoEntity;
@@ -99,6 +100,7 @@ public final class HorrorEvents {
         boolean watched = false;
         for (ServerPlayer player : players) {
             if (isLookingAt(player, scarecrow, 96.0D)) {
+                BookProgress.discover(player, BookProgress.SCARECROW);
                 watched = true;
                 break;
             }
