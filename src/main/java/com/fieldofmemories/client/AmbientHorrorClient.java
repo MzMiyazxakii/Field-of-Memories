@@ -9,9 +9,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.util.RandomSource;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -59,7 +58,7 @@ public final class AmbientHorrorClient {
         if (silenceTicks > 0) silenceTicks--;
 
         if (mc.level == null || mc.player == null
-                || !mc.level.dimension().equals(Level.OVERWORLD) || mc.screen != null || silenceTicks > 0) {
+                || !mc.level.dimension().equals(Level.OVERWORLD) || silenceTicks > 0) {
             if (backgroundMusic != null) {
                 mc.getSoundManager().stop(backgroundMusic);
                 backgroundMusic = null;
@@ -82,11 +81,10 @@ public final class AmbientHorrorClient {
     }
 
     @SubscribeEvent
-    public static void onAmbientOverlay(RenderGuiOverlayEvent.Post event) {
-        if (event.getOverlay() != VanillaGuiOverlay.CROSSHAIR.type()) return;
+    public static void onAmbientOverlay(RenderGuiEvent.Post event) {
         if (darkTicks <= 0 && blackoutTicks <= 0) return;
-        int width = event.getWindow().getGuiScaledWidth();
-        int height = event.getWindow().getGuiScaledHeight();
+        int width = event.getGuiGraphics().guiWidth();
+        int height = event.getGuiGraphics().guiHeight();
         if (blackoutTicks > 0) {
             event.getGuiGraphics().fill(0, 0, width, height, 0xF5000000);
         } else {
@@ -111,7 +109,7 @@ public final class AmbientHorrorClient {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null || mc.level == null
                     || !mc.level.dimension().equals(Level.OVERWORLD)
-                    || mc.screen != null || AmbientHorrorClient.isSilent()) {
+                    || AmbientHorrorClient.isSilent()) {
                 stop();
                 return;
             }
