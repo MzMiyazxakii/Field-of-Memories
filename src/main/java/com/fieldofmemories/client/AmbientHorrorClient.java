@@ -102,15 +102,6 @@ public final class AmbientHorrorClient {
     }
 
     @SubscribeEvent
-    public static void renderEffectsWhileHudHidden(RenderGuiOverlayEvent.Post event) {
-        Minecraft mc = Minecraft.getInstance();
-        if (!mc.options.hideGui || mc.screen != null || mc.player == null || event.getOverlay() != VanillaGuiOverlay.VIGNETTE.type()) return;
-        int width = event.getGuiGraphics().guiWidth(), height = event.getGuiGraphics().guiHeight();
-        if (blackoutTicks > 0) event.getGuiGraphics().fill(0, 0, width, height, 0xF5000000);
-        else if (darkTicks > 0) { int alpha = darkTicks < 100 ? Math.max(0, 34 * darkTicks / 100) : 34; event.getGuiGraphics().fill(0, 0, width, height, alpha << 24); }
-    }
-
-    @SubscribeEvent
     public static void onSound(PlaySoundEvent event) {
         if (silenceTicks > 0) event.setSound(null);
     }
