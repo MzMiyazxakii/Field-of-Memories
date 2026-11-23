@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -28,6 +29,9 @@ public final class CemeteryWorldSetup {
                 ? level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1
                 : existingCemetery.getY();
         if (y <= level.getMinBuildHeight()) y = level.getSeaLevel();
+
+        // Remove natural tree trunks/branches and leaves hanging over the cemetery.
+        clearTreeCanopy(level, x, y, z);
 
         if (existingCemetery == null) {
             flatten(level, x, y, z);
@@ -61,6 +65,21 @@ public final class CemeteryWorldSetup {
             }
         }
         return null;
+    }
+
+    private static void clearTreeCanopy(ServerLevel level, int x, int y, int z) {
+        for (int dx = -16; dx <= 16; dx++) {
+            for (int dz = -16; dz <= 16; dz++) {
+                for (int yy = y + 9; yy < level.getMaxBuildHeight(); yy++) {
+                    BlockPos pos = new BlockPos(x + dx, yy, z + dz);
+                    if (!level.isLoaded(pos)) continue;
+                    var state = level.getBlockState(pos);
+                    if (state.is(BlockTags.LEAVES) || state.is(BlockTags.LOGS)) {
+                        level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+                    }
+                }
+            }
+        }
     }
 
     private static void flatten(ServerLevel level, int x, int y, int z) {
