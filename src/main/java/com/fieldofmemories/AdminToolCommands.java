@@ -26,7 +26,7 @@ public final class AdminToolCommands {
                 .executes(context -> {
                     context.getSource().sendSuccess(() -> Component.literal(
                             "События: stalker, scarecrow, spirit, face, mimic, rift, pink_rift, black_rift, "
-                                    + "door_open, knock, laugh, pipi, clock, steps, death_sound, screamsoul, "
+                                    + "door_open, door_jam, knock, door_knock, laugh, pipi, clock, steps, death_sound, distant_death, screamsoul, "
                                     + "spirit_presence, face_scream, cake, glass, recolor, dark, blackout, silence, "
                                     + "stool, workstation, sign, fake_item. "
                                     + "Можно указать игрока: /fomhorror death_sound Steve"), false);
@@ -35,6 +35,9 @@ public final class AdminToolCommands {
 
         root.then(eventCommand("stalker"));
         root.then(eventCommand("door_open"));
+        root.then(eventCommand("distant_death"));
+        root.then(eventCommand("door_knock"));
+        root.then(eventCommand("door_jam"));
         root.then(eventCommand("laugh"));
         root.then(eventCommand("pipi"));
         root.then(eventCommand("clock"));
