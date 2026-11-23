@@ -26,7 +26,8 @@ public final class AmbientHorrorClient {
     private static int darkTicks;
     private static int blackoutTicks;
     private static int silenceTicks;
-    private static BackgroundMusicSound backgroundMusic;
+    private static BackgroundMusicSound backgroundMusic2;
+    private static BackgroundMusicSound backgroundMusic4;
 
     private AmbientHorrorClient() {}
 
@@ -39,10 +40,7 @@ public final class AmbientHorrorClient {
             blackoutTicks = Math.max(blackoutTicks, safeDuration);
         } else if (effect == EFFECT_SILENCE) {
             silenceTicks = Math.max(silenceTicks, safeDuration);
-            if (backgroundMusic != null) {
-                mc.getSoundManager().stop(backgroundMusic);
-                backgroundMusic = null;
-            }
+            stopBackgroundMusic(mc);
             mc.getSoundManager().stop();
         }
     }
@@ -68,12 +66,15 @@ public final class AmbientHorrorClient {
             return;
         }
 
-        if (backgroundMusic == null || backgroundMusic.isStopped()) {
-            SoundEvent selected = mc.level.random.nextBoolean()
-                    ? FieldOfMemories.NIGHT_AMBIENT_2.get()
-                    : FieldOfMemories.NIGHT_AMBIENT_4.get();
-            backgroundMusic = new BackgroundMusicSound(selected);
-            mc.getSoundManager().play(backgroundMusic);
+        // Both ambient layers begin as soon as the player enters the Overworld.
+        if (backgroundMusic2 == null || backgroundMusic2.isStopped()) {
+            backgroundMusic2 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_2.get(), 0.22F);
+            mc.getSoundManager().play(backgroundMusic2);
+        }
+        if (backgroundMusic4 == null || backgroundMusic4.isStopped()) {
+            // This recording is mastered much louder, so keep its in-game level low.
+            backgroundMusic4 = new BackgroundMusicSound(FieldOfMemories.NIGHT_AMBIENT_4.get(), 0.065F);
+            mc.getSoundManager().play(backgroundMusic4);
         }
     }
 
@@ -110,12 +111,23 @@ public final class AmbientHorrorClient {
         }
     }
 
+    private static void stopBackgroundMusic(Minecraft mc) {
+        if (backgroundMusic2 != null) {
+            mc.getSoundManager().stop(backgroundMusic2);
+            backgroundMusic2 = null;
+        }
+        if (backgroundMusic4 != null) {
+            mc.getSoundManager().stop(backgroundMusic4);
+            backgroundMusic4 = null;
+        }
+    }
+
     private static final class BackgroundMusicSound extends AbstractTickableSoundInstance {
-        private BackgroundMusicSound(SoundEvent sound) {
+        private BackgroundMusicSound(SoundEvent sound, float volume) {
             super(sound, SoundSource.MUSIC, RandomSource.create());
             this.looping = true;
             this.delay = 0;
-            this.volume = 0.22F;
+            this.volume = volume;
             this.pitch = 1.0F;
             this.attenuation = Attenuation.NONE;
         }
