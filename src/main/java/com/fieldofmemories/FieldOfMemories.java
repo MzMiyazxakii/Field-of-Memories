@@ -23,6 +23,8 @@ import com.fieldofmemories.item.VideoCameraItem;
 import com.fieldofmemories.item.OldCameraItem;
 import com.fieldofmemories.item.BatteryItem;
 import com.fieldofmemories.item.CrossItem;
+import com.fieldofmemories.item.OldBookItem;
+import com.fieldofmemories.network.BookNetwork;
 import com.fieldofmemories.network.NetworkHandler;
 import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.entity.ScarecrowEntity;
@@ -70,7 +72,7 @@ public class FieldOfMemories {
     public static final RegistryObject<Item> CROSS = ITEMS.register("cross", () -> new CrossItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> VIDEO_CAMERA = ITEMS.register("video_camera", () -> new VideoCameraItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> OLD_CAMERA = ITEMS.register("old_camera", () -> new OldCameraItem(new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<Item> OLD_BOOK = ITEMS.register("old_book", () -> new Item(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> OLD_BOOK = ITEMS.register("old_book", () -> new OldBookItem(new Item.Properties()));
     public static final RegistryObject<Item> ADMIN_TOOL = ITEMS.register("admin_tool", () -> new AdminToolItem(new Item.Properties()));
     public static final RegistryObject<Item> MEMORY_DISC_1 = registerMemoryDisc("memory_disc_1", 0);
     public static final RegistryObject<Item> MEMORY_DISC_2 = registerMemoryDisc("memory_disc_2", 1);
@@ -155,6 +157,7 @@ public class FieldOfMemories {
         SOUND_EVENTS.register(modBus);
         FEATURES.register(modBus);
         NetworkHandler.register();
+        BookNetwork.register();
         HorrorNetwork.register();
     }
 }
