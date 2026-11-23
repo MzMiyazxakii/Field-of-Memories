@@ -173,6 +173,6 @@ public final class FakeItemEvent {
 
         player.playNotifySound(scream, SoundSource.MASTER, 1.0F, 1.0F);
         player.hurt(player.damageSources().magic(), 6.0F);
-        player.sendSystemMessage(Component.literal("это мои вещи"));
+        player.sendSystemMessage(Component.literal("это мои вещи").withStyle(net.minecraft.ChatFormatting.RED));
     }
 }
