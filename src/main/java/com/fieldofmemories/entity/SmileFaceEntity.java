@@ -1,5 +1,7 @@
 package com.fieldofmemories.entity;
 
+import com.fieldofmemories.data.BookProgress;
+
 import com.fieldofmemories.network.HorrorNetwork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -58,6 +60,7 @@ public class SmileFaceEntity extends Entity {
                     && hasClearHorrorSight(serverLevel, eyePosition, faceCenter)
                     && toFace.dot(player.getLookAngle()) > 0.992D;
             if (watching) {
+                BookProgress.discover(player, BookProgress.SMILE_FACE);
                 int ticks = gazeTicks.getOrDefault(player.getUUID(), 0) + 1;
                 gazeTicks.put(player.getUUID(), ticks);
                 if (ticks >= 12) {
