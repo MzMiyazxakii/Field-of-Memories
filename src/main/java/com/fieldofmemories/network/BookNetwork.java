@@ -23,16 +23,21 @@ public final class BookNetwork {
                 .decoder(buffer -> new OpenRequest())
                 .consumerMainThread((packet, context) -> {
                     ServerPlayer player = context.get().getSender();
-                    if (player != null) sync(player, player.getPersistentData().getInt("FOMBookEntries"));
+                    if (player != null) sync(player, player.getPersistentData().getInt("FOMBookEntries"), true);
                     context.get().setPacketHandled(true);
                 }).add();
 
         CHANNEL.messageBuilder(SyncEntries.class, 1)
-                .encoder((packet, buffer) -> buffer.writeInt(packet.mask()))
-                .decoder(buffer -> new SyncEntries(buffer.readInt()))
+                .encoder((packet, buffer) -> {
+                    buffer.writeInt(packet.mask());
+                    buffer.writeBoolean(packet.open());
+                })
+                .decoder(buffer -> new SyncEntries(buffer.readInt(), buffer.readBoolean()))
                 .consumerMainThread((packet, context) -> {
-                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
-                            () -> () -> com.fieldofmemories.client.OldBookScreen.open(packet.mask()));
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+                        if (packet.open()) com.fieldofmemories.client.OldBookScreen.open(packet.mask());
+                        else com.fieldofmemories.client.OldBookScreen.updateEntries(packet.mask());
+                    });
                     context.get().setPacketHandled(true);
                 }).add();
     }
@@ -42,9 +47,13 @@ public final class BookNetwork {
     }
 
     public static void sync(ServerPlayer player, int mask) {
-        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new SyncEntries(mask));
+        sync(player, mask, false);
+    }
+
+    private static void sync(ServerPlayer player, int mask, boolean open) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new SyncEntries(mask, open));
     }
 
     private record OpenRequest() {}
-    private record SyncEntries(int mask) {}
+    private record SyncEntries(int mask, boolean open) {}
 }
