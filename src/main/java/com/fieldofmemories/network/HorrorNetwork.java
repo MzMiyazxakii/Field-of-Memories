@@ -2,6 +2,7 @@ package com.fieldofmemories.network;
 
 import com.fieldofmemories.FieldOfMemories;
 import com.fieldofmemories.data.HorrorWorldData;
+import com.fieldofmemories.data.BookProgress;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
@@ -251,6 +252,7 @@ public final class HorrorNetwork {
                 : player.getOffhandItem().getItem() instanceof com.fieldofmemories.item.OldCameraItem
                 ? player.getOffhandItem() : net.minecraft.world.item.ItemStack.EMPTY;
         if (camera.isEmpty()) return;
+        BookProgress.discover(player, BookProgress.OLD_CAMERA);
         long now = player.level().getGameTime();
         long next = player.getPersistentData().getLong("FOMOldCameraNextFlash");
         if (now < next) return;
