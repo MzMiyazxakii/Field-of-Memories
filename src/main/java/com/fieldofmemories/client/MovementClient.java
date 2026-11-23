@@ -570,6 +570,7 @@ public final class MovementClient {
         if (prone && !waitingForSpace) { int a = Math.min(72, Math.max(0, Math.round(72.0F * fallRecoveryTicks / 40.0F))); if (a > 0) gui.fill(0, 0, w, h, a << 24); }
     }
 
+    @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui) return;
