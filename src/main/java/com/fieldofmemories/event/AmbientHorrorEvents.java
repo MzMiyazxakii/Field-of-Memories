@@ -258,7 +258,8 @@ public final class AmbientHorrorEvents {
 
     @SubscribeEvent
     public static void onDoorRightClick(PlayerInteractEvent.RightClickBlock event) {
-        if (event.getLevel().isClientSide() || !(event.getLevel() instanceof ServerLevel level)
+        if (event.getHand() != net.minecraft.world.InteractionHand.MAIN_HAND
+                || event.getLevel().isClientSide() || !(event.getLevel() instanceof ServerLevel level)
                 || !(event.getEntity() instanceof ServerPlayer player)) return;
         BlockPos pos = event.getPos();
         BlockState state = level.getBlockState(pos);
