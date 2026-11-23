@@ -55,7 +55,10 @@ public class CrossItem extends Item {
         // A cross that protects against a rift or fake item stays usable.
         // Protection itself never drains or empties the cross.
         boolean hasCross = !findUsableCrosses(player).isEmpty();
-        if (hasCross) BookProgress.discover(player, BookProgress.CROSS);
+        if (hasCross) {
+            BookProgress.discover(player, BookProgress.CROSS);
+            BookProgress.discover(player, BookProgress.CROSS_SAVED);
+        }
         return hasCross;
     }
 
