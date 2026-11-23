@@ -131,6 +131,14 @@ public class FieldOfMemories {
             "spirit_presence",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "spirit_presence"))
     );
+    public static final RegistryObject<SoundEvent> HEARTBOUND_SOUND = SOUND_EVENTS.register(
+            "heartbound",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "heartbound"))
+    );
+    public static final RegistryObject<SoundEvent> SCREAMSOUL_SOUND = SOUND_EVENTS.register(
+            "screamsoul",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "screamsoul"))
+    );
 
     public static final DeferredRegister<Feature<?>> FEATURES =
             DeferredRegister.create(ForgeRegistries.FEATURES, MOD_ID);
