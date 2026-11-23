@@ -8,6 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
 import com.fieldofmemories.network.NetworkHandler;
+import com.fieldofmemories.data.BookProgress;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -27,6 +28,7 @@ public class AnomalousStoolBlock extends Block {
                                  InteractionHand hand, BlockHitResult hit) {
         if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
         if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+            BookProgress.discover(serverPlayer, BookProgress.STOOL);
             NetworkHandler.startStoolMinigame(serverPlayer, pos);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
