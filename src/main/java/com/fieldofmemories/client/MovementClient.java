@@ -555,21 +555,6 @@ public final class MovementClient {
         }
     }
 
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void renderScreenEffectsWhileHudHidden(RenderGuiOverlayEvent.Post event) {
-        Minecraft mc = Minecraft.getInstance();
-        if (!mc.options.hideGui || mc.player == null || mc.screen != null || event.getOverlay() != VanillaGuiOverlay.VIGNETTE.type()) return;
-        GuiGraphics gui = event.getGuiGraphics(); int w = gui.guiWidth(), h = gui.guiHeight();
-        if (MemoryDiscClient.shouldDarkenScreen()) gui.fill(0, 0, w, h, 0xEA000000);
-        if (MemoryDiscClient.isReading() && !MemoryDiscClient.shouldDarkenScreen()) gui.fill(0, 0, w, h, 0x16A00020);
-        if (!waitingForSpace) { gui.fill(0, 0, w, h, 0x12000000); if (prone) gui.fill(0, 0, w, h, 0x40000000);
-            for (int y = 0; y < h; y += 2) gui.fill(0, y, w, Math.min(h, y + 1), 0x1B000000);
-            int band = (mc.player.tickCount * 3) % Math.max(1, h); gui.fill(0, band, w, Math.min(h, band + 3), 0x18D5E0E5);
-            int phase = mc.player.tickCount / 2; for (int i = 0; i < 13; i++) { int seed = phase * 1664525 + i * 1013904223; int x = Math.floorMod(seed ^ (seed >>> 15), Math.max(1, w)); int y = Math.floorMod(seed * 17 + i * 7919, Math.max(1, h)); int sw = 2 + Math.floorMod(seed >>> 5, 9); gui.fill(x, y, Math.min(w, x + sw), Math.min(h, y + 1), 0x24DDE5E8); }
-        }
-        if (prone && !waitingForSpace) { int a = Math.min(72, Math.max(0, Math.round(72.0F * fallRecoveryTicks / 40.0F))); if (a > 0) gui.fill(0, 0, w, h, a << 24); }
-    }
-
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
