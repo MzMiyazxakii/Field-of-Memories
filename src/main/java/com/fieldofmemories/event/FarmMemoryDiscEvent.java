@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -54,6 +55,19 @@ public final class FarmMemoryDiscEvent {
             item.setDefaultPickUpDelay();
             item.setDeltaMovement(0.0D, 0.18D, 0.0D);
             player.level().addFreshEntity(item);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        if (!event.isWasDeath()) return;
+        var originalData = event.getOriginal().getPersistentData();
+        var newData = event.getEntity().getPersistentData();
+        if (originalData.contains(HARVEST_COUNT_KEY)) {
+            newData.putInt(HARVEST_COUNT_KEY, originalData.getInt(HARVEST_COUNT_KEY));
+        }
+        if (originalData.getBoolean(FOUND_KEY)) {
+            newData.putBoolean(FOUND_KEY, true);
         }
     }
 
