@@ -193,7 +193,7 @@ public final class AmbientHorrorEvents {
     private static void playCaveSound(ServerLevel level, ServerPlayer target,
                                        net.minecraft.util.RandomSource random) {
         // Play the vanilla cave ambience at a distant point around the selected player.
-        playSomewhereNearby(level, target, random, SoundEvents.AMBIENT_CAVE,
+        playSomewhereNearby(level, target, random, SoundEvents.AMBIENT_CAVE.value(),
                 1.8F, 0.75F + random.nextFloat() * 0.5F);
     }
 
