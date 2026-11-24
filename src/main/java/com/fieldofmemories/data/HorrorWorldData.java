@@ -69,9 +69,9 @@ public class HorrorWorldData extends SavedData {
     public static boolean rollEventChance(ServerLevel level, net.minecraft.util.RandomSource random,
                                           double baseChancePercent) {
         if (baseChancePercent <= 0.0D) return false;
-        double scaledChance = Math.min(100.0D, baseChancePercent)
-                * getEventChanceScalePercent(level) / 100.0D
-                + get(level).horrorActiveBonus;
+        double scaledChance = Math.max(0.0D, Math.min(100.0D,
+                Math.min(100.0D, baseChancePercent) * getEventChanceScalePercent(level) / 100.0D
+                        + get(level).horrorActiveBonus));
         return random.nextDouble() * 100.0D < scaledChance;
     }
 
