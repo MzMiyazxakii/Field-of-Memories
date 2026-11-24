@@ -38,8 +38,9 @@ public class RevolverItem extends Item {
         return count;
     }
 
+    // HUD color follows the next shot, not the presence of any holy round in the cylinder.
     public static boolean hasHolyAmmo(ItemStack stack) {
-        return getHolyAmmoCount(stack) > 0;
+        return isNextRoundHoly(stack);
     }
 
     public static boolean addRound(ItemStack stack, boolean holy) {
