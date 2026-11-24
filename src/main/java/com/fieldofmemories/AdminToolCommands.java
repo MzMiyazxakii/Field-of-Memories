@@ -73,7 +73,7 @@ public final class AdminToolCommands {
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("status")
                         .executes(context -> {
-                            if (!(context.getSource().getLevel() instanceof ServerLevel level)) return 0;
+                            ServerLevel level = context.getSource().getLevel();
                             int bonus = HorrorWorldData.getHorrorActiveBonus(level);
                             int scale = HorrorWorldData.getEventChanceScalePercent(level);
                             context.getSource().sendSuccess(() -> Component.literal(
