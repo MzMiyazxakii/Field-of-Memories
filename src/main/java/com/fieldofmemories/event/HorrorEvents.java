@@ -5,6 +5,7 @@ import com.fieldofmemories.data.BookProgress;
 import com.fieldofmemories.entity.ScarecrowEntity;
 import com.fieldofmemories.entity.SmileFaceEntity;
 import com.fieldofmemories.entity.PlayerEchoEntity;
+import com.fieldofmemories.entity.RunningShadowEntity;
 import com.fieldofmemories.entity.SpiritEntity;
 import com.fieldofmemories.entity.RiftEntity;
 import com.fieldofmemories.block.AnomalousStoolBlock;
@@ -68,6 +69,7 @@ public final class HorrorEvents {
         maybeSpawnSpirit(level, players, random, danger, activity);
         maybeSpawnFace(level, players, random, danger, activity);
         maybeSpawnPlayerEcho(level, players, random, danger, activity);
+        maybeSpawnRunningShadow(level, players, random);
         maybeSpawnRift(level, players, random, danger, activity);
         maybePlayDistantDeath(level, players, random);
         maybeTriggerHomeEvent(level, players, random);
@@ -373,6 +375,34 @@ public final class HorrorEvents {
         echo.setSkinOwner(skinOwner.getUUID());
         echo.moveTo(x + 0.5D, y, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
         if (level.noCollision(echo)) level.addFreshEntity(echo);
+    }
+
+    private static void maybeSpawnRunningShadow(ServerLevel level, List<ServerPlayer> players,
+                                                RandomSource random) {
+        if (!HorrorWorldData.rollEventChance(level, random, 8.0D)) return;
+        ServerPlayer target = players.get(random.nextInt(players.size()));
+        if (!target.onGround() || target.isSleeping()) return;
+
+        Vec3 look = target.getLookAngle();
+        Vec3 forward = new Vec3(look.x, 0.0D, look.z);
+        if (forward.lengthSqr() < 0.001D) return;
+        forward = forward.normalize();
+        Vec3 side = new Vec3(-forward.z, 0.0D, forward.x);
+        Vec3 start = target.position().add(forward.scale(9.0D + random.nextDouble() * 3.0D))
+                .add(side.scale(-7.0D));
+        int x = net.minecraft.util.Mth.floor(start.x);
+        int z = net.minecraft.util.Mth.floor(start.z);
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        BlockPos ground = new BlockPos(x, y - 1, z);
+        if (!level.isLoaded(ground) || !level.getBlockState(ground).isSolidRender(level, ground)) return;
+
+        RunningShadowEntity shadow = FieldOfMemories.RUNNING_SHADOW_ENTITY.get().create(level);
+        if (shadow == null) return;
+        shadow.moveTo(x + 0.5D, y, z + 0.5D,
+                (float) Math.toDegrees(Math.atan2(-forward.x, forward.z)), 0.0F);
+        shadow.setRunDirection(side.scale(0.82D));
+        shadow.setTargetPlayer(target.getUUID());
+        if (level.noCollision(shadow)) level.addFreshEntity(shadow);
     }
 
     private static void spawnScarecrow(ServerLevel level, ServerPlayer target, RandomSource random) {
