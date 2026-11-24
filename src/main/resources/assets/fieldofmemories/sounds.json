@@ -135,5 +135,13 @@
         "stream": true
       }
     ]
+  },
+  "nottrycommand": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:nottrycommand",
+        "stream": false
+      }
+    ]
   }
 }
