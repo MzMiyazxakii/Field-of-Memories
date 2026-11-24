@@ -76,7 +76,7 @@ public final class AmbientHorrorEvents {
         if (!com.fieldofmemories.data.HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
-        switch (random.nextInt(11)) {
+        switch (random.nextInt(12)) {
             case 0 -> playKidLaugh(level, target, random);
             case 1 -> {
                 if (level.isNight()) playClock(level, target, random);
@@ -98,6 +98,7 @@ public final class AmbientHorrorEvents {
                     else playHorrorPipi(level, target, random);
                 }
             }
+            case 11 -> startBloodRain(level);
         }
     }
 
@@ -110,6 +111,7 @@ public final class AmbientHorrorEvents {
             case "clock" -> playClock(level, target, random);
             case "steps" -> playRunningSteps(level, target, random);
             case "dark" -> startDarkPeriod(level);
+            case "blood_rain" -> startBloodRain(level);
             case "blackout" -> AmbientHorrorNetwork.sendToLevel(level,
                     com.fieldofmemories.client.AmbientHorrorClient.EFFECT_BLACKOUT, 80);
             case "silence" -> AmbientHorrorNetwork.sendToLevel(level,
@@ -234,6 +236,13 @@ public final class AmbientHorrorEvents {
             sequence.add(new PendingFootstep(startTick + i * 3L, pos, step,
                     0.78F + random.nextFloat() * 0.22F));
         }
+    }
+
+    private static void startBloodRain(ServerLevel level) {
+        // A world-wide weather event: ordinary rain, with a blood-red client-side appearance.
+        level.setWeatherParameters(0, 20 * 60 * 3, true, false);
+        AmbientHorrorNetwork.sendToLevel(level,
+                com.fieldofmemories.client.AmbientHorrorClient.EFFECT_BLOOD_RAIN, 20 * 60 * 3);
     }
 
     private static void startDarkPeriod(ServerLevel level) {
