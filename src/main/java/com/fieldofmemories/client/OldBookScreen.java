@@ -156,7 +156,7 @@ public final class OldBookScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (!pages.isEmpty() && mouseX >= left + bookWidth / 2.0D) {
+        if (!pages.isEmpty()) {
             int entry = pages.get(pageIndex);
             int pageLeft = (pageIndex & 1) == 1 ? left + 12 : left + bookWidth / 2 + 8;
             int pageRight = (pageIndex & 1) == 1 ? left + bookWidth / 2 - 8 : left + bookWidth - 12;
