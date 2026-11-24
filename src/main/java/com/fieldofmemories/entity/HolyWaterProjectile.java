@@ -2,6 +2,7 @@ package com.fieldofmemories.entity;
 
 import com.fieldofmemories.FieldOfMemories;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
@@ -20,8 +21,10 @@ public class HolyWaterProjectile extends ThrowableItemProjectile {
     protected void onHit(HitResult result) {
         super.onHit(result);
         if (!level().isClientSide) {
-            level().sendParticles(new DustParticleOptions(new Vector3f(0.12F, 0.55F, 1.0F), 1.15F),
-                    getX(), getY(), getZ(), 24, 0.24D, 0.18D, 0.24D, 0.025D);
+            if (level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(new DustParticleOptions(new Vector3f(0.12F, 0.55F, 1.0F), 1.15F),
+                        getX(), getY(), getZ(), 24, 0.24D, 0.18D, 0.24D, 0.025D);
+            }
             discard();
         }
     }
