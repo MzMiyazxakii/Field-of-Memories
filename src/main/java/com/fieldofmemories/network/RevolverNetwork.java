@@ -5,6 +5,7 @@ import com.fieldofmemories.item.RevolverItem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
@@ -124,13 +125,12 @@ public final class RevolverNetwork {
         Vec3 end = start.add(look.scale(48.0D));
         AABB search = player.getBoundingBox().expandTowards(look.scale(48.0D)).inflate(1.0D);
         EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(player, start, end, search,
-                entity -> entity instanceof Player && entity != player && entity.isPickable(), 0.0D);
+                entity -> entity instanceof LivingEntity && entity != player && entity.isPickable(), 0.0D);
         BlockHitResult blockHit = player.level().clip(new ClipContext(start, end,
                 ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
         if (entityHit != null && (blockHit.getType() == HitResult.Type.MISS
                 || entityHit.getLocation().distanceToSqr(start) <= blockHit.getLocation().distanceToSqr(start))) {
-            if (entityHit.getEntity() instanceof Player target)
-                target.hurt(player.damageSources().playerAttack(player), 6.5F);
+            entityHit.getEntity().hurt(player.damageSources().playerAttack(player), 6.5F);
         }
     }
 
