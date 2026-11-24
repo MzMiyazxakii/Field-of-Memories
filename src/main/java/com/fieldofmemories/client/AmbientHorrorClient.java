@@ -22,10 +22,12 @@ public final class AmbientHorrorClient {
     public static final int EFFECT_DARK_PERIOD = 0;
     public static final int EFFECT_BLACKOUT = 1;
     public static final int EFFECT_SILENCE = 2;
+    public static final int EFFECT_BLOOD_RAIN = 3;
 
     private static int darkTicks;
     private static int blackoutTicks;
     private static int silenceTicks;
+    private static int bloodRainTicks;
     private static BackgroundMusicSound backgroundMusic2;
     private static BackgroundMusicSound backgroundMusic4;
     private static boolean playAmbient4Next;
@@ -42,6 +44,8 @@ public final class AmbientHorrorClient {
             darkTicks = Math.max(darkTicks, safeDuration);
         } else if (effect == EFFECT_BLACKOUT) {
             blackoutTicks = Math.max(blackoutTicks, safeDuration);
+        } else if (effect == EFFECT_BLOOD_RAIN) {
+            bloodRainTicks = Math.max(bloodRainTicks, safeDuration);
         } else if (effect == EFFECT_SILENCE) {
             silenceTicks = Math.max(silenceTicks, safeDuration);
             stopBackgroundMusic(mc);
@@ -60,6 +64,8 @@ public final class AmbientHorrorClient {
         if (darkTicks > 0) darkTicks--;
         if (blackoutTicks > 0) blackoutTicks--;
         if (silenceTicks > 0) silenceTicks--;
+        if (bloodRainTicks > 0) bloodRainTicks--;
+        if (mc.level == null) bloodRainTicks = 0;
 
         if (mc.level == null || mc.player == null
                 || !mc.level.dimension().equals(Level.OVERWORLD) || silenceTicks > 0) {
@@ -116,9 +122,30 @@ public final class AmbientHorrorClient {
 
     @SubscribeEvent
     public static void onAmbientOverlay(RenderGuiEvent.Post event) {
-        if (Minecraft.getInstance().screen != null || (darkTicks <= 0 && blackoutTicks <= 0)) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen != null || (darkTicks <= 0 && blackoutTicks <= 0
+                && (bloodRainTicks <= 0 || mc.level == null || !mc.level.isRaining()))) return;
         int width = event.getGuiGraphics().guiWidth();
         int height = event.getGuiGraphics().guiHeight();
+        if (bloodRainTicks > 0 && mc.level != null && mc.level.isRaining()) {
+            // A restrained red cast plus fast, narrow streaks makes the normal rain read as blood.
+            event.getGuiGraphics().fill(0, 0, width, height, 0x0D8B0000);
+            java.util.Random rainRandom = new java.util.Random(mc.level.getGameTime() * 31L
+                    + (mc.player == null ? 0L : mc.player.tickCount / 2L));
+            int streaks = Math.max(42, width / 12);
+            for (int i = 0; i < streaks; i++) {
+                int x = rainRandom.nextInt(Math.max(1, width));
+                int y = rainRandom.nextInt(Math.max(1, height));
+                int length = 7 + rainRandom.nextInt(11);
+                int alpha = 105 + rainRandom.nextInt(95);
+                int color = (alpha << 24) | 0x00A60008;
+                event.getGuiGraphics().fill(x, y, Math.min(width, x + 1), Math.min(height, y + length), color);
+                if (x + 1 < width && y + length < height) {
+                    event.getGuiGraphics().fill(x + 1, y + length, x + 2,
+                            Math.min(height, y + length + 3), color);
+                }
+            }
+        }
         if (blackoutTicks > 0) {
             event.getGuiGraphics().fill(0, 0, width, height, 0xF5000000);
         } else {
