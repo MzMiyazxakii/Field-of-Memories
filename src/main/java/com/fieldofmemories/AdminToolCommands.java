@@ -2,6 +2,8 @@ package com.fieldofmemories;
 
 import com.fieldofmemories.event.AmbientHorrorEvents;
 import com.fieldofmemories.event.HorrorEvents;
+import com.fieldofmemories.data.HorrorWorldData;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -66,6 +68,29 @@ public final class AdminToolCommands {
         root.then(eventCommand("sign"));
         root.then(eventCommand("fake_item"));
         event.getDispatcher().register(root);
+
+        event.getDispatcher().register(Commands.literal("sethorroractive")
+                .requires(source -> source.hasPermission(2))
+                .then(Commands.literal("status")
+                        .executes(context -> {
+                            if (!(context.getSource().getLevel() instanceof ServerLevel level)) return 0;
+                            int bonus = HorrorWorldData.getHorrorActiveBonus(level);
+                            int scale = HorrorWorldData.getEventChanceScalePercent(level);
+                            context.getSource().sendSuccess(() -> Component.literal(
+                                    "Общий шанс хоррор-событий: активность мира " + scale
+                                            + "%, бонус команды " + (bonus >= 0 ? "+" : "") + bonus + "%."), false);
+                            return 1;
+                        }))
+                .then(Commands.argument("percent", IntegerArgumentType.integer(-100, 100))
+                        .executes(context -> {
+                            if (!(context.getSource().getLevel() instanceof ServerLevel level)) return 0;
+                            int amount = IntegerArgumentType.getInteger(context, "percent");
+                            int updated = HorrorWorldData.changeHorrorActive(level, amount);
+                            context.getSource().sendSuccess(() -> Component.literal(
+                                    "Общий бонус к шансам хоррор-событий: " + (updated >= 0 ? "+" : "") + updated + "%."), true);
+                            return 1;
+                        })));
+
 
         event.getDispatcher().register(Commands.literal("admintool")
                 .requires(source -> source.hasPermission(2))
