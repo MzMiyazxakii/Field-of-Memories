@@ -7,6 +7,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ public final class OldBookScreen extends Screen {
     private int unlockedMask;
     private List<Integer> pages = List.of();
     private int pageIndex;
+    private int textScroll;
     private int left, top, bookWidth, bookHeight;
 
     private OldBookScreen(int mask) {
@@ -115,10 +117,23 @@ public final class OldBookScreen extends Screen {
                     Math.max(70, pageRight - pageLeft - 20));
             int y = top + 57;
             int maxY = top + bookHeight - 32;
-            for (FormattedCharSequence line : lines) {
-                if (y > maxY) break;
-                gui.drawString(font, line, pageLeft + 10, y, 0xFF403326, false);
+            int visibleLines = Math.max(1, (maxY - y) / 9 + 1);
+            int maxScroll = Math.max(0, lines.size() - visibleLines);
+            textScroll = Mth.clamp(textScroll, 0, maxScroll);
+            gui.enableScissor(pageLeft + 7, y - 1, pageRight - 7, maxY + 9);
+            for (int i = textScroll; i < Math.min(lines.size(), textScroll + visibleLines); i++) {
+                gui.drawString(font, lines.get(i), pageLeft + 10, y, 0xFF403326, false);
                 y += 9;
+            }
+            gui.disableScissor();
+            if (maxScroll > 0) {
+                int trackX = pageRight - 5;
+                int trackTop = top + 57;
+                int trackBottom = maxY + 8;
+                gui.fill(trackX, trackTop, trackX + 2, trackBottom, 0x55765A3A);
+                int thumbHeight = Math.max(8, (trackBottom - trackTop) * visibleLines / lines.size());
+                int thumbY = trackTop + (trackBottom - trackTop - thumbHeight) * textScroll / maxScroll;
+                gui.fill(trackX, thumbY, trackX + 2, thumbY + thumbHeight, 0xFF765391);
             }
             String pageLabel = (pageIndex + 1) + " / " + pages.size();
             gui.drawCenteredString(font, pageLabel, pageCenter, top + bookHeight - 20, 0xFF705A42);
@@ -133,9 +148,29 @@ public final class OldBookScreen extends Screen {
         int next = Math.max(0, Math.min(pages.size() - 1, pageIndex + direction));
         if (next != pageIndex) {
             pageIndex = next;
+            textScroll = 0;
             Minecraft.getInstance().getSoundManager().play(
                     SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 0.65F));
         }
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (!pages.isEmpty() && mouseX >= left + bookWidth / 2.0D) {
+            int entry = pages.get(pageIndex);
+            int pageLeft = (pageIndex & 1) == 1 ? left + 12 : left + bookWidth / 2 + 8;
+            int pageRight = (pageIndex & 1) == 1 ? left + bookWidth / 2 - 8 : left + bookWidth - 12;
+            List<FormattedCharSequence> lines = font.split(Component.literal(NOTES[entry]),
+                    Math.max(70, pageRight - pageLeft - 20));
+            int visibleLines = Math.max(1, (top + bookHeight - 32 - (top + 57)) / 9 + 1);
+            int maxScroll = Math.max(0, lines.size() - visibleLines);
+            int next = Mth.clamp(textScroll - (int) Math.signum(delta) * 3, 0, maxScroll);
+            if (next != textScroll) {
+                textScroll = next;
+                return true;
+            }
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     @Override
