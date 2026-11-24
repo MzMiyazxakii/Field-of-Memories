@@ -24,6 +24,8 @@ public final class RevolverNetwork {
     private static final String RELOAD_TICKS = "FOMRevolverReloadTicks";
     private static final String RELOAD_SLOT = "FOMRevolverReloadSlot";
     private static final String RELOAD_HOLY = "FOMRevolverReloadHoly";
+    private static final String ACTION_COOLDOWN = "FOMRevolverActionCooldown";
+    private static final int RELOAD_COOLDOWN_TICKS = 5;
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(FieldOfMemories.MOD_ID, "revolver"),
             () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
@@ -51,6 +53,7 @@ public final class RevolverNetwork {
     private static void startReload(ServerPlayer player) {
         ItemStack revolver = player.getMainHandItem();
         if (!revolver.is(FieldOfMemories.REVOLVER.get()) || player.getPersistentData().getInt(RELOAD_TICKS) > 0
+                || player.getPersistentData().getInt(ACTION_COOLDOWN) > 0
                 || RevolverItem.getAmmoCount(revolver) >= 4) return;
 
         boolean holy = false;
@@ -103,13 +106,15 @@ public final class RevolverNetwork {
             ItemStack refund = new ItemStack(holy ? FieldOfMemories.HOLY_BULLET.get() : FieldOfMemories.BULLET.get());
             if (!serverPlayer.getInventory().add(refund)) serverPlayer.drop(refund, false);
         }
+        serverPlayer.getPersistentData().putInt(ACTION_COOLDOWN, RELOAD_COOLDOWN_TICKS);
         serverPlayer.level().playSound(null, serverPlayer.blockPosition(), FieldOfMemories.CLOSE_BARABAN_RV_SOUND.get(),
                 SoundSource.PLAYERS, 0.9F, 1.0F);
     }
 
     private static void fire(ServerPlayer player) {
         ItemStack stack = player.getMainHandItem();
-        if (!stack.is(FieldOfMemories.REVOLVER.get()) || player.getPersistentData().getInt(RELOAD_TICKS) > 0) return;
+        if (!stack.is(FieldOfMemories.REVOLVER.get()) || player.getPersistentData().getInt(RELOAD_TICKS) > 0
+                || player.getPersistentData().getInt(ACTION_COOLDOWN) > 0) return;
         if (RevolverItem.getAmmoCount(stack) <= 0) {
             player.level().playSound(null, player.blockPosition(), FieldOfMemories.NOT_BULLETS_SOUND.get(),
                     SoundSource.PLAYERS, 0.9F, 1.0F);
