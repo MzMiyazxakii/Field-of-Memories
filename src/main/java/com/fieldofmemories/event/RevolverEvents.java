@@ -12,7 +12,14 @@ public final class RevolverEvents {
     private RevolverEvents() {}
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer)
+        if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer) {
             RevolverNetwork.tickReload(event.player);
+            var data = event.player.getPersistentData();
+            int cooldown = data.getInt("FOMRevolverActionCooldown");
+            if (cooldown > 0) {
+                if (cooldown == 1) data.remove("FOMRevolverActionCooldown");
+                else data.putInt("FOMRevolverActionCooldown", cooldown - 1);
+            }
+        }
     }
 }
