@@ -99,10 +99,10 @@
   "item.fieldofmemories.cross.soul": "Крест с воспоминаниями",
   "tooltip.fieldofmemories.cross.dead": "Кристалл в центре теперь пуст",
   "tooltip.fieldofmemories.cross.soul": "Вы заполнили центр чужими воспоминаниями",
-  "item.fieldofmemories.gotya_revolver": "Револьвер «Аготи»",
+  "item.fieldofmemories.gotya_revolver": "Револьвер «Аготинга»",
   "item.fieldofmemories.bullet": "Пуля",
   "item.fieldofmemories.holy_bullet": "Святая пуля",
   "item.fieldofmemories.holy_water": "Святая вода",
-  "item.fieldofmemories.gotya_revolver.description": "Старый, непонятный на ощупь револьвер с подписью «Аготи».",
+  "item.fieldofmemories.gotya_revolver.description": "Старый, непонятный на ощупь револьвер с подписью «Аготинга».",
   "key.fieldofmemories.revolver_reload": "Перезарядить револьвер"
 }
