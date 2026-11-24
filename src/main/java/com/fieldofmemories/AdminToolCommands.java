@@ -83,7 +83,7 @@ public final class AdminToolCommands {
                         }))
                 .then(Commands.argument("percent", IntegerArgumentType.integer(-100, 100))
                         .executes(context -> {
-                            if (!(context.getSource().getLevel() instanceof ServerLevel level)) return 0;
+                            ServerLevel level = context.getSource().getLevel();
                             int amount = IntegerArgumentType.getInteger(context, "percent");
                             int updated = HorrorWorldData.changeHorrorActive(level, amount);
                             context.getSource().sendSuccess(() -> Component.literal(
