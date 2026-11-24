@@ -67,7 +67,7 @@ public final class RevolverClientEvents {
             var stack = mc.player.getMainHandItem();
             if (!stack.is(FieldOfMemories.REVOLVER.get())) return;
             String count = RevolverItem.getAmmoCount(stack) + "/4";
-            int color = RevolverItem.hasHolyAmmo(stack) ? 0xFF64C8FF : 0xFFFFFFFF;
+            int color = RevolverItem.isNextRoundHoly(stack) ? 0xFF64C8FF : 0xFFFFFFFF;
             int x = event.getGuiGraphics().guiWidth() - mc.font.width(count) - 10;
             event.getGuiGraphics().drawString(mc.font, count, x, 10, color, true);
         }
