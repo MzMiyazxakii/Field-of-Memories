@@ -34,7 +34,7 @@ public final class ForbiddenCommands {
         var source = event.getParseResults().getContext().getSource();
         if (source.getEntity() instanceof net.minecraft.server.level.ServerPlayer player) {
             player.sendSystemMessage(Component.literal("Но...ничего не произошло").withStyle(ChatFormatting.RED));
-            player.playNotifySound(FieldOfMemories.SPIRIT_PRESENCE_SOUND.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+            player.playNotifySound(FieldOfMemories.NOT_TRY_COMMAND_SOUND.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
         }
     }
 }
