@@ -19,12 +19,27 @@ public class RevolverItem extends Item {
         return tag == null ? 0 : Math.min(4, tag.getList(AMMO_TAG, 10).size());
     }
 
-    public static boolean hasHolyAmmo(ItemStack stack) {
+    // The first stored round is the next one that will be fired.
+    public static boolean isNextRoundHoly(ItemStack stack) {
         CompoundTag tag = stack.getTag();
         if (tag == null) return false;
         ListTag ammo = tag.getList(AMMO_TAG, 10);
-        for (int i = 0; i < ammo.size(); i++) if (ammo.getCompound(i).getBoolean("Holy")) return true;
-        return false;
+        return !ammo.isEmpty() && ammo.getCompound(0).getBoolean("Holy");
+    }
+
+    public static int getHolyAmmoCount(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        if (tag == null) return 0;
+        ListTag ammo = tag.getList(AMMO_TAG, 10);
+        int count = 0;
+        for (int i = 0; i < ammo.size(); i++) {
+            if (ammo.getCompound(i).getBoolean("Holy")) count++;
+        }
+        return count;
+    }
+
+    public static boolean hasHolyAmmo(ItemStack stack) {
+        return getHolyAmmoCount(stack) > 0;
     }
 
     public static boolean addRound(ItemStack stack, boolean holy) {
