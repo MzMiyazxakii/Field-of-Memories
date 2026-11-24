@@ -169,6 +169,8 @@ public class FieldOfMemories {
             "fire_rv", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "fire_rv")));
     public static final RegistryObject<SoundEvent> NOT_BULLETS_SOUND = SOUND_EVENTS.register(
             "not_bullets", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "not_bullets")));
+    public static final RegistryObject<SoundEvent> NOT_TRY_COMMAND_SOUND = SOUND_EVENTS.register(
+            "nottrycommand", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "nottrycommand")));
 
     public static final DeferredRegister<Feature<?>> FEATURES =
             DeferredRegister.create(ForgeRegistries.FEATURES, MOD_ID);
