@@ -9,20 +9,19 @@ import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.List;
-import com.mojang.brigadier.tree.CommandNode;
-
 @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class ForbiddenCommandsEvent {
     private ForbiddenCommandsEvent() {}
 
     @SubscribeEvent
     public static void onCommand(CommandEvent event) {
-        var context = event.getParseResults().getContext();
-        var nodes = context.getNodes();
-        if (nodes.isEmpty()) return;
+        String input = event.getParseResults().getReader().getString().stripLeading();
+        if (input.startsWith("/")) input = input.substring(1);
 
-        String root = nodes.get(0).getNode().getName();
+        String[] parts = input.split("\\s+", 3);
+        if (parts.length == 0) return;
+
+        String root = parts[0];
         int namespace = root.indexOf(':');
         if (namespace >= 0) root = root.substring(namespace + 1);
 
@@ -30,16 +29,17 @@ public final class ForbiddenCommandsEvent {
                 || root.equalsIgnoreCase("teleport")
                 || root.equalsIgnoreCase("kill");
 
-        if (!blocked && root.equalsIgnoreCase("gamerule")) {
-            blocked = nodes.stream().skip(1)
-                    .map(node -> node.getNode().getName())
-                    .anyMatch(name -> name.equalsIgnoreCase("keepInventory"));
+        if (!blocked && root.equalsIgnoreCase("gamerule") && parts.length > 1) {
+            String rule = parts[1];
+            int ruleNamespace = rule.indexOf(':');
+            if (ruleNamespace >= 0) rule = rule.substring(ruleNamespace + 1);
+            blocked = rule.equalsIgnoreCase("keepInventory");
         }
 
         if (!blocked) return;
 
         event.setCanceled(true);
-        if (context.getSource().getEntity() instanceof ServerPlayer player) {
+        if (event.getParseResults().getContext().getSource().getEntity() instanceof ServerPlayer player) {
             player.sendSystemMessage(Component.literal("Но...ничего не произошло")
                     .withStyle(ChatFormatting.RED));
             player.playNotifySound(FieldOfMemories.NOT_TRY_COMMAND_SOUND.get(),
