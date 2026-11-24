@@ -17,6 +17,7 @@ public class HorrorWorldData extends SavedData {
     private static final String NEXT_EVENT_KEY = "NextAmbientEvent";
     private static final String SPIRIT_DISC_FAILURES_KEY = "SpiritDiscFailures";
     private static final String EVENT_RAMP_START_DAY_KEY = "EventRampStartDay";
+    private static final String HORROR_ACTIVE_BONUS_KEY = "HorrorActiveBonus";
 
     private int activityMultiplier = 100;
     private int scarecrowChance = 10;
@@ -28,6 +29,7 @@ public class HorrorWorldData extends SavedData {
     private long nextAmbientEvent;
     private int spiritDiscFailures;
     private int eventRampStartDay = -1;
+    private int horrorActiveBonus = 0;
 
     public static HorrorWorldData get(ServerLevel level) {
         ServerLevel overworld = level.getServer().overworld();
@@ -68,8 +70,23 @@ public class HorrorWorldData extends SavedData {
                                           double baseChancePercent) {
         if (baseChancePercent <= 0.0D) return false;
         double scaledChance = Math.min(100.0D, baseChancePercent)
-                * getEventChanceScalePercent(level) / 100.0D;
+                * getEventChanceScalePercent(level) / 100.0D
+                + get(level).horrorActiveBonus;
         return random.nextDouble() * 100.0D < scaledChance;
+    }
+
+    public static int getHorrorActiveBonus(ServerLevel level) {
+        return get(level).horrorActiveBonus;
+    }
+
+    public static int changeHorrorActive(ServerLevel level, int amount) {
+        HorrorWorldData data = get(level);
+        int updated = clamp(data.horrorActiveBonus + amount, -100, 100);
+        if (updated != data.horrorActiveBonus) {
+            data.horrorActiveBonus = updated;
+            data.setDirty();
+        }
+        return updated;
     }
 
     public static int getScarecrowChance(ServerLevel level) {
@@ -173,6 +190,7 @@ public class HorrorWorldData extends SavedData {
         int savedRampStartDay = tag.getInt(EVENT_RAMP_START_DAY_KEY);
         data.eventRampStartDay = savedRampStartDay >= 2
                 ? clamp(savedRampStartDay, 2, 4) : -1;
+        data.horrorActiveBonus = clamp(tag.getInt(HORROR_ACTIVE_BONUS_KEY), -100, 100);
         return data;
     }
 
@@ -188,6 +206,7 @@ public class HorrorWorldData extends SavedData {
         tag.putLong(NEXT_EVENT_KEY, nextAmbientEvent);
         tag.putInt(SPIRIT_DISC_FAILURES_KEY, spiritDiscFailures);
         tag.putInt(EVENT_RAMP_START_DAY_KEY, eventRampStartDay);
+        tag.putInt(HORROR_ACTIVE_BONUS_KEY, horrorActiveBonus);
         return tag;
     }
 }
