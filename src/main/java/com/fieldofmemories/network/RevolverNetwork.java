@@ -86,6 +86,10 @@ public final class RevolverNetwork {
     public static void tickReload(Player player) {
         if (!(player instanceof ServerPlayer serverPlayer)) return;
         var data = player.getPersistentData();
+
+        int cooldown = data.getInt(ACTION_COOLDOWN);
+        if (cooldown > 0) data.putInt(ACTION_COOLDOWN, cooldown - 1);
+
         int ticks = data.getInt(RELOAD_TICKS);
         if (ticks <= 0) return;
         if (ticks > 1) {
@@ -102,11 +106,11 @@ public final class RevolverNetwork {
         if (revolver.is(FieldOfMemories.REVOLVER.get()) && RevolverItem.getAmmoCount(revolver) < 4) {
             RevolverItem.addRound(revolver, holy);
             serverPlayer.getInventory().setChanged();
+            data.putInt(ACTION_COOLDOWN, RELOAD_COOLDOWN_TICKS);
         } else {
             ItemStack refund = new ItemStack(holy ? FieldOfMemories.HOLY_BULLET.get() : FieldOfMemories.BULLET.get());
             if (!serverPlayer.getInventory().add(refund)) serverPlayer.drop(refund, false);
         }
-        serverPlayer.getPersistentData().putInt(ACTION_COOLDOWN, RELOAD_COOLDOWN_TICKS);
         serverPlayer.level().playSound(null, serverPlayer.blockPosition(), FieldOfMemories.CLOSE_BARABAN_RV_SOUND.get(),
                 SoundSource.PLAYERS, 0.9F, 1.0F);
     }
