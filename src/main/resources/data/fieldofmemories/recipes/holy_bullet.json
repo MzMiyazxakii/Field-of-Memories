@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "fieldofmemories:bullet"
+    },
+    {
+      "item": "fieldofmemories:bullet"
+    },
+    {
+      "item": "fieldofmemories:bullet"
+    },
+    {
+      "item": "fieldofmemories:bullet"
+    },
+    {
+      "item": "fieldofmemories:holy_water"
+    }
+  ],
+  "result": {
+    "item": "fieldofmemories:holy_bullet",
+    "count": 4
+  }
+}
