@@ -33,6 +33,7 @@ import com.fieldofmemories.network.HorrorNetwork;
 import com.fieldofmemories.entity.ScarecrowEntity;
 import com.fieldofmemories.entity.SmileFaceEntity;
 import com.fieldofmemories.entity.PlayerEchoEntity;
+import com.fieldofmemories.entity.RunningShadowEntity;
 import com.fieldofmemories.entity.SpiritEntity;
 import com.fieldofmemories.entity.RiftEntity;
 import com.fieldofmemories.entity.WindowStalkerEntity;
@@ -52,6 +53,9 @@ public class FieldOfMemories {
     public static final RegistryObject<EntityType<SmileFaceEntity>> SMILE_FACE_ENTITY = ENTITY_TYPES.register(
             "smile_face", () -> EntityType.Builder.of(SmileFaceEntity::new, MobCategory.MISC)
                     .sized(1.0F, 1.2F).clientTrackingRange(64).updateInterval(2).build("smile_face"));
+    public static final RegistryObject<EntityType<RunningShadowEntity>> RUNNING_SHADOW_ENTITY = ENTITY_TYPES.register(
+            "running_shadow", () -> EntityType.Builder.of(RunningShadowEntity::new, MobCategory.MISC)
+                    .sized(0.6F, 1.8F).clientTrackingRange(48).updateInterval(1).build("running_shadow"));
     public static final RegistryObject<EntityType<PlayerEchoEntity>> PLAYER_ECHO_ENTITY = ENTITY_TYPES.register(
             "player_echo", () -> EntityType.Builder.of(PlayerEchoEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.8F).clientTrackingRange(64).updateInterval(2).build("player_echo"));
