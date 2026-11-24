@@ -135,5 +135,37 @@
         "stream": true
       }
     ]
+  },
+  "bullet_load": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:bullet_load",
+        "stream": false
+      }
+    ]
+  },
+  "close_baraban_rv": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:close_baraban_rv",
+        "stream": false
+      }
+    ]
+  },
+  "fire_rv": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:fire_rv",
+        "stream": false
+      }
+    ]
+  },
+  "not_bullets": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:not_bullets",
+        "stream": false
+      }
+    ]
   }
 }

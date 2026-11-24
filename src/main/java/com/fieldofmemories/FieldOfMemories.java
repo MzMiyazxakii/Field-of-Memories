@@ -24,6 +24,9 @@ import com.fieldofmemories.item.OldCameraItem;
 import com.fieldofmemories.item.BatteryItem;
 import com.fieldofmemories.item.CrossItem;
 import com.fieldofmemories.item.OldBookItem;
+import com.fieldofmemories.item.RevolverItem;
+import com.fieldofmemories.item.HolyWaterItem;
+import com.fieldofmemories.entity.HolyWaterProjectile;
 import com.fieldofmemories.network.BookNetwork;
 import com.fieldofmemories.network.NetworkHandler;
 import com.fieldofmemories.network.HorrorNetwork;
@@ -61,6 +64,9 @@ public class FieldOfMemories {
     public static final RegistryObject<EntityType<WindowStalkerEntity>> WINDOW_STALKER_ENTITY = ENTITY_TYPES.register(
             "window_stalker", () -> EntityType.Builder.of(WindowStalkerEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.8F).clientTrackingRange(64).updateInterval(2).build("window_stalker"));
+    public static final RegistryObject<EntityType<HolyWaterProjectile>> HOLY_WATER_PROJECTILE = ENTITY_TYPES.register(
+            "holy_water_projectile", () -> EntityType.Builder.<HolyWaterProjectile>of(HolyWaterProjectile::new, MobCategory.MISC)
+                    .sized(0.25F, 0.25F).clientTrackingRange(4).updateInterval(10).build("holy_water_projectile"));
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
     public static final RegistryObject<Block> BACKPACK_BLOCK = BLOCKS.register("backpack", () -> new LootContainerBlock(true));
     public static final RegistryObject<Block> CARDBOARD_BOX_BLOCK = BLOCKS.register("cardboard_box", () -> new LootContainerBlock(false));
@@ -74,6 +80,10 @@ public class FieldOfMemories {
     public static final RegistryObject<Item> OLD_CAMERA = ITEMS.register("old_camera", () -> new OldCameraItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> OLD_BOOK = ITEMS.register("old_book", () -> new OldBookItem(new Item.Properties()));
     public static final RegistryObject<Item> ADMIN_TOOL = ITEMS.register("admin_tool", () -> new AdminToolItem(new Item.Properties()));
+    public static final RegistryObject<Item> REVOLVER = ITEMS.register("gotya_revolver", () -> new RevolverItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> BULLET = ITEMS.register("bullet", () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> HOLY_BULLET = ITEMS.register("holy_bullet", () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> HOLY_WATER = ITEMS.register("holy_water", () -> new HolyWaterItem(new Item.Properties().stacksTo(16)));
     public static final RegistryObject<Item> MEMORY_DISC_1 = registerMemoryDisc("memory_disc_1", 0);
     public static final RegistryObject<Item> MEMORY_DISC_2 = registerMemoryDisc("memory_disc_2", 1);
     public static final RegistryObject<Item> MEMORY_DISC_3 = registerMemoryDisc("memory_disc_3", 2);
@@ -151,6 +161,14 @@ public class FieldOfMemories {
             "night_ambient_2", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "night_ambient_2")));
     public static final RegistryObject<SoundEvent> NIGHT_AMBIENT_4 = SOUND_EVENTS.register(
             "night_ambient_4", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "night_ambient_4")));
+    public static final RegistryObject<SoundEvent> BULLET_LOAD_SOUND = SOUND_EVENTS.register(
+            "bullet_load", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "bullet_load")));
+    public static final RegistryObject<SoundEvent> CLOSE_BARABAN_RV_SOUND = SOUND_EVENTS.register(
+            "close_baraban_rv", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "close_baraban_rv")));
+    public static final RegistryObject<SoundEvent> FIRE_RV_SOUND = SOUND_EVENTS.register(
+            "fire_rv", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "fire_rv")));
+    public static final RegistryObject<SoundEvent> NOT_BULLETS_SOUND = SOUND_EVENTS.register(
+            "not_bullets", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "not_bullets")));
 
     public static final DeferredRegister<Feature<?>> FEATURES =
             DeferredRegister.create(ForgeRegistries.FEATURES, MOD_ID);
@@ -170,5 +188,6 @@ public class FieldOfMemories {
         BookNetwork.register();
         HorrorNetwork.register();
         com.fieldofmemories.network.AmbientHorrorNetwork.register();
+        com.fieldofmemories.network.RevolverNetwork.register();
     }
 }

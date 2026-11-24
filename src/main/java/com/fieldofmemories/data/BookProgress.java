@@ -43,11 +43,17 @@ public final class BookProgress {
     public static final int FACE_SHARDS = 16;
     public static final int BOX_CLUE = 17;
     public static final int RIFT_CROSS_CLUE = 18;
+    public static final int HOLY_WATER = 19;
 
     private BookProgress() {}
 
+    private static void unlockRecipe(ServerPlayer player, String path) {
+        ResourceLocation id = new ResourceLocation(FieldOfMemories.MOD_ID, path);
+        player.server.getRecipeManager().byKey(id).ifPresent(recipe -> player.awardRecipes(java.util.List.of(recipe)));
+    }
+
     public static void discover(ServerPlayer player, int entry) {
-        if (entry < 0 || entry >= 19) return;
+        if (entry < 0 || entry >= 21) return;
         int mask = player.getPersistentData().getInt(ENTRIES_TAG);
         int updated = mask | (1 << entry);
         if (updated == mask) return;
@@ -77,22 +83,42 @@ public final class BookProgress {
         if (stack.is(FieldOfMemories.CROSS.get()) && CrossItem.getState(stack) == CrossItem.EMPTY) {
             discover(player, EMPTY_CROSS);
         }
+        if (stack.is(FieldOfMemories.REVOLVER.get())) {
+            if ((getMask(player) & (1 << 20)) == 0) {
+                discover(player, 20);
+                unlockRecipe(player, "bullet");
+            }
+        }
+        if (stack.is(FieldOfMemories.HOLY_WATER.get())) {
+            if ((getMask(player) & (1 << HOLY_WATER)) == 0) {
+                discover(player, HOLY_WATER);
+                unlockRecipe(player, "holy_bullet");
+            }
+        }
     }
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
+        boolean hasDisc = false, hasRevolver = false, hasHolyWater = false;
         for (ItemStack stack : player.getInventory().items) {
-            if (stack.getItem() instanceof MemoryDiscItem) {
-                discover(player, MEMORY_DISCS);
-                return;
-            }
+            hasDisc |= stack.getItem() instanceof MemoryDiscItem;
+            hasRevolver |= stack.is(FieldOfMemories.REVOLVER.get());
+            hasHolyWater |= stack.is(FieldOfMemories.HOLY_WATER.get());
         }
         for (ItemStack stack : player.getInventory().offhand) {
-            if (stack.getItem() instanceof MemoryDiscItem) {
-                discover(player, MEMORY_DISCS);
-                return;
-            }
+            hasDisc |= stack.getItem() instanceof MemoryDiscItem;
+            hasRevolver |= stack.is(FieldOfMemories.REVOLVER.get());
+            hasHolyWater |= stack.is(FieldOfMemories.HOLY_WATER.get());
+        }
+        if (hasDisc) discover(player, MEMORY_DISCS);
+        if (hasRevolver && (getMask(player) & (1 << 20)) == 0) {
+            discover(player, 20);
+            unlockRecipe(player, "bullet");
+        }
+        if (hasHolyWater && (getMask(player) & (1 << HOLY_WATER)) == 0) {
+            discover(player, HOLY_WATER);
+            unlockRecipe(player, "holy_bullet");
         }
     }
 
