@@ -93,6 +93,10 @@ public class FieldOfMemories {
 
     public static final DeferredRegister<SoundEvent> SOUND_EVENTS =
             DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MOD_ID);
+    public static final RegistryObject<SoundEvent> NOT_TRY_COMMAND_SOUND = SOUND_EVENTS.register(
+            "nottrycommand",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "nottrycommand"))
+    );
     public static final RegistryObject<SoundEvent> DEATH_SCREEN_SOUND = SOUND_EVENTS.register(
             "death_screen",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MOD_ID, "death_screen"))
