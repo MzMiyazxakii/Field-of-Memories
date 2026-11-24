@@ -76,7 +76,7 @@ public final class AmbientHorrorEvents {
         if (!com.fieldofmemories.data.HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
-        switch (random.nextInt(12)) {
+        switch (random.nextInt(13)) {
             case 0 -> playKidLaugh(level, target, random);
             case 1 -> {
                 if (level.isNight()) playClock(level, target, random);
@@ -99,6 +99,7 @@ public final class AmbientHorrorEvents {
                 }
             }
             case 11 -> startBloodRain(level);
+            case 12 -> playCaveSound(level, target, random);
         }
     }
 
@@ -107,6 +108,7 @@ public final class AmbientHorrorEvents {
         var random = level.random;
         switch (event) {
             case "laugh" -> playKidLaugh(level, target, random);
+            case "cave" -> playCaveSound(level, target, random);
             case "pipi" -> playHorrorPipi(level, target, random);
             case "clock" -> playClock(level, target, random);
             case "steps" -> playRunningSteps(level, target, random);
@@ -186,6 +188,13 @@ public final class AmbientHorrorEvents {
             default -> { return false; }
         }
         return true;
+    }
+
+    private static void playCaveSound(ServerLevel level, ServerPlayer target,
+                                       net.minecraft.util.RandomSource random) {
+        // Play the vanilla cave ambience at a distant point around the selected player.
+        playSomewhereNearby(level, target, random, SoundEvents.AMBIENT_CAVE,
+                1.8F, 0.75F + random.nextFloat() * 0.5F);
     }
 
     private static void playKidLaugh(ServerLevel level, ServerPlayer target,
