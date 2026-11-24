@@ -47,23 +47,25 @@ public class ScarecrowModel<T extends Entity> extends HierarchicalModel<T> {
         PartDefinition Head = Waist.addOrReplaceChild("Head", CubeListBuilder.create(),
                 PartPose.offsetAndRotation(0.0F, -12.0F, 0.0F, 0.0F, 0.0F, 0.0F));
 
+        // Give the paper-thin hat brim a tiny thickness so its faces have stable normals.
         Head.addOrReplaceChild("Head_r1", CubeListBuilder.create()
                 .texOffs(28, 31).addBox(-4.0F, -9.0F, -3.0F, 8.0F, 1.0F, 7.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 0).addBox(-7.0F, -8.0F, -7.0F, 14.0F, 0.0F, 15.0F, new CubeDeformation(0.0F)),
+                .texOffs(0, 0).addBox(-7.0F, -8.0F, -7.0F, 14.0F, 0.05F, 15.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(0.0F, -3.0F, -0.5F, 0.2618F, 0.0F, 0.0F));
 
+        // Thin side panels are given minimal depth to prevent angle-dependent flicker.
         Head.addOrReplaceChild("Head_r2", CubeListBuilder.create()
-                .texOffs(46, 40).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 0.0F, new CubeDeformation(0.0F)),
+                .texOffs(46, 40).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 0.05F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(0.0F, -3.0F, -0.25F, 0.2618F, 0.0F, 0.0F));
 
         Head.addOrReplaceChild("Head_r3", CubeListBuilder.create()
-                .texOffs(48, 41).addBox(5.0F, -8.0F, -4.0F, 0.0F, 8.0F, 8.0F, new CubeDeformation(0.0F))
-                .texOffs(48, 41).addBox(13.225F, -8.0F, -4.0F, 0.0F, 8.0F, 8.0F, new CubeDeformation(0.0F))
+                .texOffs(48, 41).addBox(5.0F, -8.0F, -4.0F, 0.05F, 8.0F, 8.0F, new CubeDeformation(0.0F))
+                .texOffs(48, 41).addBox(13.225F, -8.0F, -4.0F, 0.05F, 8.0F, 8.0F, new CubeDeformation(0.0F))
                 .texOffs(4, 15).addBox(5.1F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(-9.1F, -3.0F, 0.0F, 0.2618F, 0.0F, 0.0F));
 
         Head.addOrReplaceChild("Head_r4", CubeListBuilder.create()
-                .texOffs(31, 49).addBox(-4.0F, -8.0F, 5.0F, 8.0F, 8.0F, 0.0F, new CubeDeformation(0.0F)),
+                .texOffs(31, 49).addBox(-4.0F, -8.0F, 5.0F, 8.0F, 8.0F, 0.05F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(0.0F, -2.75F, -0.875F, 0.2618F, 0.0F, 0.0F));
 
         PartDefinition Body = Waist.addOrReplaceChild("Body", CubeListBuilder.create()
