@@ -160,6 +160,14 @@
       }
     ]
   },
+  "nottrycommand": {
+    "sounds": [
+      {
+        "name": "fieldofmemories:nottrycommand",
+        "stream": false
+      }
+    ]
+  },
   "not_bullets": {
     "sounds": [
       {
