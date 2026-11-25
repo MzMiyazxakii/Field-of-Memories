@@ -34,10 +34,10 @@ public class AbandonedSettlementFeature extends Feature<NoneFeatureConfiguration
         int x=ch.getMinBlockX()+8,z=ch.getMinBlockZ()+8; BlockPos g=surface(l,x,z); if(g==null)return false;
         boolean forest=l.getBiome(g).is(FOREST), edge=l.getBiome(g).is(EDGE), valid=forest||l.getBiome(g).is(FIELD)||edge;
         if (valid && r.nextFloat() < 0.08F && placeLootContainer(l, x, z, com.fieldofmemories.FieldOfMemories.CARDBOARD_BOX_BLOCK.get())) return true;
-        if(valid&&r.nextFloat()<(edge?0.003F:0.006F)){ if(!forest&&r.nextFloat()<0.30F) village(l,x,z,r); else house(l,x,z,r.nextInt(3),r); return true; }
-        if(valid&&r.nextFloat()<(edge?0.006F:0.012F)){ if(forest||r.nextBoolean())stable(l,x,z,r); else well(l,x,z); return true; }
-        if(valid&&r.nextFloat()<(edge?0.007F:0.018F)){cart(l,x,z,r);return true;}
-        if(forest&&r.nextFloat()<0.018F)lamp(l,x,z);
+        if(valid&&r.nextFloat()<(forest?0.012F:(edge?0.004F:0.007F))){ if(!forest&&r.nextFloat()<0.30F) village(l,x,z,r); else house(l,x,z,r.nextInt(3),r); return true; }
+        if(valid&&r.nextFloat()<(forest?0.020F:(edge?0.008F:0.014F))){ if(forest||r.nextBoolean())stable(l,x,z,r); else well(l,x,z); return true; }
+        if(valid&&r.nextFloat()<(forest?0.025F:(edge?0.009F:0.020F))){cart(l,x,z,r);return true;}
+        if(forest&&r.nextFloat()<0.03F)lamp(l,x,z);
         else if(r.nextFloat()<(edge?0.0015F:0.006F))pillar(l,x,z,r);
         else if(!forest&&r.nextFloat()<(edge?0.004F:0.012F))garden(l,x,z,r);
         else if(!forest&&r.nextFloat()<(edge?0.003F:0.008F))market(l,x,z,r);
