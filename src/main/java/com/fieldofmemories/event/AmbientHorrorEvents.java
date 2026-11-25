@@ -72,11 +72,11 @@ public final class AmbientHorrorEvents {
 
     public static void tryTrigger(ServerLevel level, List<ServerPlayer> players,
                                   net.minecraft.util.RandomSource random, int danger, int activity) {
-        int chance = Math.min(42, 12 + danger / 5 + activity / 20);
+        int chance = Math.min(82, 48 + danger / 4 + activity / 12);
         if (!com.fieldofmemories.data.HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
-        switch (random.nextInt(13)) {
+        switch (random.nextInt(14)) {
             case 0 -> playKidLaugh(level, target, random);
             case 1 -> {
                 if (level.isNight()) playClock(level, target, random);
@@ -98,8 +98,11 @@ public final class AmbientHorrorEvents {
                     else playHorrorPipi(level, target, random);
                 }
             }
-            case 11 -> startBloodRain(level);
+            case 11 -> playSomewhereNearby(level, target, random,
+                    random.nextBoolean() ? SoundEvents.COW_DEATH : SoundEvents.VILLAGER_DEATH,
+                    2.0F, 0.85F + random.nextFloat() * 0.3F);
             case 12 -> playCaveSound(level, target, random);
+            case 13 -> playRunningSteps(level, target, random);
         }
     }
 
@@ -113,7 +116,6 @@ public final class AmbientHorrorEvents {
             case "clock" -> playClock(level, target, random);
             case "steps" -> playRunningSteps(level, target, random);
             case "dark" -> startDarkPeriod(level);
-            case "blood_rain" -> startBloodRain(level);
             case "blackout" -> AmbientHorrorNetwork.sendToLevel(level,
                     com.fieldofmemories.client.AmbientHorrorClient.EFFECT_BLACKOUT, 80);
             case "silence" -> AmbientHorrorNetwork.sendToLevel(level,
@@ -245,13 +247,6 @@ public final class AmbientHorrorEvents {
             sequence.add(new PendingFootstep(startTick + i * 3L, pos, step,
                     0.78F + random.nextFloat() * 0.22F));
         }
-    }
-
-    private static void startBloodRain(ServerLevel level) {
-        // A world-wide weather event: ordinary rain, with a blood-red client-side appearance.
-        level.setWeatherParameters(0, 20 * 60 * 3, true, false);
-        AmbientHorrorNetwork.sendToLevel(level,
-                com.fieldofmemories.client.AmbientHorrorClient.EFFECT_BLOOD_RAIN, 20 * 60 * 3);
     }
 
     private static void startDarkPeriod(ServerLevel level) {
