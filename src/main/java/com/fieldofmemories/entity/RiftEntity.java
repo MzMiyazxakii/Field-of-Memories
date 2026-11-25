@@ -321,7 +321,7 @@ public class RiftEntity extends Entity {
     }
 
     @Override protected void readAdditionalSaveData(CompoundTag tag) {
-        lifetime = Math.max(1, tag.getInt("Lifetime"));
+        lifetime = Math.max(12000, tag.getInt("Lifetime"));
         setBlackRift(tag.getBoolean("Black"));
         setPinkRift(tag.getBoolean("Pink"));
         if (tag.contains("Examining")) examining = ItemStack.of(tag.getCompound("Examining"));
