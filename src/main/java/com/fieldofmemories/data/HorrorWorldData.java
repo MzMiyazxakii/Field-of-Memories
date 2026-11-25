@@ -62,7 +62,7 @@ public class HorrorWorldData extends SavedData {
         }
 
         long worldDays = Math.max(0L, overworld.getGameTime()) / 24000L;
-        if (worldDays < data.eventRampStartDay) return 5;
+        if (worldDays < data.eventRampStartDay) return 10;
         return Math.min(100, 10 + (int) (worldDays - data.eventRampStartDay) * 12);
     }
 
