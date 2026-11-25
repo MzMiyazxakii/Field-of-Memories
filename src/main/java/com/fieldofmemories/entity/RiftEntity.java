@@ -33,7 +33,7 @@ public class RiftEntity extends Entity {
             SynchedEntityData.defineId(RiftEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> PINK =
             SynchedEntityData.defineId(RiftEntity.class, EntityDataSerializers.BOOLEAN);
-    private int lifetime = 400;
+    private int lifetime = 12000;
     private ItemStack examining = ItemStack.EMPTY;
     private int examineTicks;
     private ItemEntity heldVisual;
@@ -51,7 +51,7 @@ public class RiftEntity extends Entity {
     public boolean isBlackRift() { return entityData.get(BLACK); }
     public void setPinkRift(boolean value) { entityData.set(PINK, value); }
     public boolean isPinkRift() { return entityData.get(PINK); }
-    public void setLifetime(int ticks) { lifetime = Math.max(40, ticks); }
+    public void setLifetime(int ticks) { lifetime = Math.max(12000, ticks); }
 
     @Override public void tick() {
         super.tick();
