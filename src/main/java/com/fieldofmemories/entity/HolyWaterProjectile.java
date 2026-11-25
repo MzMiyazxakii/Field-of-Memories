@@ -1,6 +1,7 @@
 package com.fieldofmemories.entity;
 
 import com.fieldofmemories.FieldOfMemories;
+import com.fieldofmemories.event.FakeItemEvent;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -27,6 +28,7 @@ public class HolyWaterProjectile extends ThrowableItemProjectile {
                     SoundEvents.SPLASH_POTION_BREAK, SoundSource.NEUTRAL, 1.0F,
                     0.8F + level().getRandom().nextFloat() * 0.4F);
             if (level() instanceof ServerLevel serverLevel) {
+                FakeItemEvent.purgeNearby(serverLevel, position(), 3.5D);
                 serverLevel.sendParticles(new DustParticleOptions(new Vector3f(0.12F, 0.55F, 1.0F), 1.15F),
                         getX(), getY(), getZ(), 24, 0.24D, 0.18D, 0.24D, 0.025D);
             }
