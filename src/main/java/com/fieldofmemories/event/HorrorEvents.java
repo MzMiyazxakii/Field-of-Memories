@@ -69,7 +69,8 @@ public final class HorrorEvents {
         maybeSpawnSpirit(level, players, random, danger, activity);
         maybeSpawnFace(level, players, random, danger, activity);
         maybeSpawnPlayerEcho(level, players, random, danger, activity);
-        maybeSpawnRunningShadow(level, players, random);\n        maybeTriggerGaze(level, players, random);
+        maybeSpawnRunningShadow(level, players, random);
+        maybeTriggerGaze(level, players, random);
         maybeSpawnRift(level, players, random, danger, activity);
         maybePlayDistantDeath(level, players, random);
         maybeTriggerHomeEvent(level, players, random);
