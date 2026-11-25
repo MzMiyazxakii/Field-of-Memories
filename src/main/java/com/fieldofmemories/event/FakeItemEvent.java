@@ -29,7 +29,7 @@ import java.util.List;
 
 @Mod.EventBusSubscriber(modid = FieldOfMemories.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class FakeItemEvent {
-    private static final String FAKE_TAG = "FieldOfMemoriesFakeItem";
+    public static final String FAKE_TAG = "FieldOfMemoriesFakeItem";
     private static final String CHEST_CHECKED_TAG = "FieldOfMemoriesFakeItemChecked";
     private static final String[] GLYPHS = {
             "⟊⍜⟟⟒ ⌖⍜⟟⟒", "⸸⟟⍜⟒ ⌇⍜⟟⟒", "⍜⟒⌖⟊ ⟟⸸⍜", "⌇⟒⸸⍜ ⌖⟟⟊",
@@ -45,7 +45,7 @@ public final class FakeItemEvent {
         // Check loaded chest inventories independently from the ground-spawn roll.
         tryPopulateNearbyChests(level, players, random, danger, activity);
 
-        int chance = Math.min(4, 1 + danger / 50 + Math.max(0, activity - 100) / 150);
+        double chance = Math.min(1.0D, 0.35D + danger / 250.0D + Math.max(0, activity - 100) / 500.0D);
         if (!com.fieldofmemories.data.HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
@@ -69,7 +69,7 @@ public final class FakeItemEvent {
 
     private static void tryPopulateNearbyChests(ServerLevel level, List<ServerPlayer> players,
                                                 RandomSource random, int danger, int activity) {
-        int chance = Math.min(5, 2 + danger / 50 + Math.max(0, activity - 100) / 150);
+        double chance = Math.min(1.0D, 0.45D + danger / 250.0D + Math.max(0, activity - 100) / 500.0D);
         for (ServerPlayer player : players) {
             ChunkPos center = new ChunkPos(player.blockPosition());
             // Only inspect already-loaded chunks around active players; never force-load terrain.
@@ -149,6 +149,42 @@ public final class FakeItemEvent {
         lore.add(StringTag.valueOf(Component.Serializer.toJson(Component.literal(glyphs))));
         display.put("Lore", lore);
         return stack;
+    }
+
+    public static boolean isFakeItem(ItemStack stack) {
+        return !stack.isEmpty() && stack.hasTag() && stack.getTag().getBoolean(FAKE_TAG);
+    }
+
+    public static int purgeNearby(ServerLevel level, net.minecraft.world.phys.Vec3 center, double radius) {
+        int removed = 0;
+        net.minecraft.world.phys.AABB area = new net.minecraft.world.phys.AABB(
+                center.x - radius, center.y - radius, center.z - radius,
+                center.x + radius, center.y + radius, center.z + radius);
+        for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, area)) {
+            if (isFakeItem(item.getItem())) {
+                item.discard();
+                removed++;
+            }
+        }
+        net.minecraft.core.BlockPos min = net.minecraft.core.BlockPos.containing(
+                center.x - radius, center.y - radius, center.z - radius);
+        net.minecraft.core.BlockPos max = net.minecraft.core.BlockPos.containing(
+                center.x + radius, center.y + radius, center.z + radius);
+        for (net.minecraft.core.BlockPos pos : net.minecraft.core.BlockPos.betweenClosed(min, max)) {
+            if (!level.isLoaded(pos)) continue;
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (!(blockEntity instanceof ChestBlockEntity chest)) continue;
+            boolean changed = false;
+            for (int slot = 0; slot < chest.getContainerSize(); slot++) {
+                if (isFakeItem(chest.getItem(slot))) {
+                    chest.setItem(slot, ItemStack.EMPTY);
+                    removed++;
+                    changed = true;
+                }
+            }
+            if (changed) chest.setChanged();
+        }
+        return removed;
     }
 
     @SubscribeEvent
