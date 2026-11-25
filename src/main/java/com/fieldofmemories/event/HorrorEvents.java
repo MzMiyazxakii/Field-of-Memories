@@ -69,7 +69,7 @@ public final class HorrorEvents {
         maybeSpawnSpirit(level, players, random, danger, activity);
         maybeSpawnFace(level, players, random, danger, activity);
         maybeSpawnPlayerEcho(level, players, random, danger, activity);
-        maybeSpawnRunningShadow(level, players, random);
+        maybeSpawnRunningShadow(level, players, random);\n        maybeTriggerGaze(level, players, random);
         maybeSpawnRift(level, players, random, danger, activity);
         maybePlayDistantDeath(level, players, random);
         maybeTriggerHomeEvent(level, players, random);
@@ -372,6 +372,14 @@ public final class HorrorEvents {
         echo.setSkinOwner(skinOwner.getUUID());
         echo.moveTo(x + 0.5D, y, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
         if (level.noCollision(echo)) level.addFreshEntity(echo);
+    }
+
+    private static void maybeTriggerGaze(ServerLevel level, List<ServerPlayer> players,
+                                         RandomSource random) {
+        // The apparition is rare and targeted: only the selected player sees and hears it.
+        if (!HorrorWorldData.rollEventChance(level, random, 12.0D)) return;
+        ServerPlayer target = players.get(random.nextInt(players.size()));
+        com.fieldofmemories.network.HorrorNetwork.triggerGaze(target);
     }
 
     private static void maybeSpawnRunningShadow(ServerLevel level, List<ServerPlayer> players,
