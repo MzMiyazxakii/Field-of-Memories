@@ -366,7 +366,11 @@ public final class HorrorNetwork {
         }
     }
 
-    public static void triggerGaze(ServerPlayer target) {\n        CHANNEL.send(PacketDistributor.PLAYER.with(() -> target), new GazePacket());\n    }\n\n    public static void requestScream(UUID target) {
+    public static void triggerGaze(ServerPlayer target) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> target), new GazePacket());
+    }
+
+    public static void requestScream(UUID target) {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForceScreamRequestPacket(target));
     }
 
@@ -449,7 +453,8 @@ public final class HorrorNetwork {
     private record AdjustPacket(int setting, int amount) {}
     private record SyncDataPacket(int danger, int activity, int scarecrowChance, int faceChance,
                                   int spiritChance, int mimicChance, int treeDiscChance, int houseCameraChance) {}
-    private record ScreamPacket() {}\n    private record GazePacket() {}
+    private record ScreamPacket() {}
+    private record GazePacket() {}
     private record ForceScreamRequestPacket(UUID target) {}
     private record GiveAdminItemPacket(String itemId) {}
     private record BatteryInsertPacket(boolean video, boolean offHand) {}
