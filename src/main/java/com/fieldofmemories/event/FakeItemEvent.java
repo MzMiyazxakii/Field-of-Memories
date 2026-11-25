@@ -45,7 +45,7 @@ public final class FakeItemEvent {
         // Check loaded chest inventories independently from the ground-spawn roll.
         tryPopulateNearbyChests(level, players, random, danger, activity);
 
-        double chance = Math.min(1.0D, 0.35D + danger / 250.0D + Math.max(0, activity - 100) / 500.0D);
+        double chance = Math.min(0.5D, 0.15D + danger / 500.0D + Math.max(0, activity - 100) / 1000.0D);
         if (!com.fieldofmemories.data.HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
@@ -69,7 +69,7 @@ public final class FakeItemEvent {
 
     private static void tryPopulateNearbyChests(ServerLevel level, List<ServerPlayer> players,
                                                 RandomSource random, int danger, int activity) {
-        double chance = Math.min(1.0D, 0.45D + danger / 250.0D + Math.max(0, activity - 100) / 500.0D);
+        double chance = Math.min(0.6D, 0.20D + danger / 500.0D + Math.max(0, activity - 100) / 1000.0D);
         for (ServerPlayer player : players) {
             ChunkPos center = new ChunkPos(player.blockPosition());
             // Only inspect already-loaded chunks around active players; never force-load terrain.
