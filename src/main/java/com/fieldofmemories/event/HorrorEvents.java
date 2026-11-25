@@ -167,7 +167,7 @@ public final class HorrorEvents {
                     if (rift == null) return false;
                     rift.setPinkRift("pink_rift".equals(kind));
                     rift.setBlackRift("black_rift".equals(kind));
-                    rift.setLifetime(600);
+                    rift.setLifetime(12000);
                     rift.moveTo(x + 0.5D, y + 0.1D, z + 0.5D, random.nextFloat() * 360.0F, 0.0F);
                     return level.addFreshEntity(rift);
                 }
