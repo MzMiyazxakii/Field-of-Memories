@@ -20,10 +20,10 @@ public class HorrorWorldData extends SavedData {
     private static final String HORROR_ACTIVE_BONUS_KEY = "HorrorActiveBonus";
 
     private int activityMultiplier = 100;
-    private int scarecrowChance = 10;
-    private int faceChance = 10;
+    private int scarecrowChance = 22;
+    private int faceChance = 22;
     private int spiritChance = 2;
-    private int mimicChance = 3;
+    private int mimicChance = 1;
     private int treeDiscChance = 25;
     private int houseCameraChance = 32;
     private long nextAmbientEvent;
@@ -179,10 +179,10 @@ public class HorrorWorldData extends SavedData {
     private static HorrorWorldData load(CompoundTag tag) {
         HorrorWorldData data = new HorrorWorldData();
         data.activityMultiplier = clamp(tag.getInt(ACTIVITY_KEY) == 0 ? 100 : tag.getInt(ACTIVITY_KEY), 10, 300);
-        data.scarecrowChance = clamp(tag.contains(SCARECROW_CHANCE_KEY) ? tag.getInt(SCARECROW_CHANCE_KEY) : 10, 0, 100);
+        data.scarecrowChance = clamp(tag.contains(SCARECROW_CHANCE_KEY) ? tag.getInt(SCARECROW_CHANCE_KEY) : 22, 0, 100);
         data.faceChance = clamp(tag.contains(FACE_CHANCE_KEY) ? tag.getInt(FACE_CHANCE_KEY) : 10, 0, 100);
         data.spiritChance = clamp(tag.contains(SPIRIT_CHANCE_KEY) ? tag.getInt(SPIRIT_CHANCE_KEY) : 2, 0, 100);
-        data.mimicChance = clamp(tag.contains(MIMIC_CHANCE_KEY) ? tag.getInt(MIMIC_CHANCE_KEY) : 3, 0, 100);
+        data.mimicChance = clamp(tag.contains(MIMIC_CHANCE_KEY) ? tag.getInt(MIMIC_CHANCE_KEY) : 1, 0, 100);
         data.treeDiscChance = clamp(tag.contains(TREE_DISC_CHANCE_KEY) ? tag.getInt(TREE_DISC_CHANCE_KEY) : 25, 0, 1000);
         data.houseCameraChance = clamp(tag.contains(HOUSE_CAMERA_CHANCE_KEY) ? tag.getInt(HOUSE_CAMERA_CHANCE_KEY) : 32, 0, 100);
         data.nextAmbientEvent = Math.max(0L, tag.getLong(NEXT_EVENT_KEY));
