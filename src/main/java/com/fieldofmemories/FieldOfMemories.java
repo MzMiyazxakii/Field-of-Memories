@@ -39,6 +39,9 @@ import com.fieldofmemories.entity.RiftEntity;
 import com.fieldofmemories.entity.WindowStalkerEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import com.fieldofmemories.worldgen.FieldDecorFeature;
 import com.fieldofmemories.worldgen.AbandonedSettlementFeature;
 
@@ -183,6 +186,13 @@ public class FieldOfMemories {
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> ABANDONED_SETTLEMENT =
             FEATURES.register("abandoned_settlement", () -> new AbandonedSettlementFeature(NoneFeatureConfiguration.CODEC));
 
+    private void entityAttributeCreation(EntityAttributeCreationEvent event) {
+        event.put(RUNNING_SHADOW_ENTITY.get(), Mob.createMobAttributes()
+                .add(Attributes.MAX_HEALTH, 1.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.0D)
+                .build());
+    }
+
     public FieldOfMemories() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ITEMS.register(modBus);
@@ -190,6 +200,7 @@ public class FieldOfMemories {
         BLOCKS.register(modBus);
         SOUND_EVENTS.register(modBus);
         FEATURES.register(modBus);
+        modBus.addListener(this::entityAttributeCreation);
         NetworkHandler.register();
         BookNetwork.register();
         HorrorNetwork.register();
