@@ -186,13 +186,6 @@ public class FieldOfMemories {
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> ABANDONED_SETTLEMENT =
             FEATURES.register("abandoned_settlement", () -> new AbandonedSettlementFeature(NoneFeatureConfiguration.CODEC));
 
-    private void entityAttributeCreation(EntityAttributeCreationEvent event) {
-        event.put(RUNNING_SHADOW_ENTITY.get(), Mob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 1.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.0D)
-                .build());
-    }
-
     public FieldOfMemories() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ITEMS.register(modBus);
