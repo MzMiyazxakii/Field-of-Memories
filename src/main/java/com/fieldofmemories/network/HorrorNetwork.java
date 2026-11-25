@@ -68,6 +68,15 @@ public final class HorrorNetwork {
                     context.get().setPacketHandled(true);
                 }).add();
 
+        CHANNEL.messageBuilder(GazePacket.class, 15)
+                .encoder((packet, buffer) -> {})
+                .decoder(buffer -> new GazePacket())
+                .consumerMainThread((packet, context) -> {
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
+                            com.fieldofmemories.client.GazeClient.start());
+                    context.get().setPacketHandled(true);
+                }).add();
+
         CHANNEL.messageBuilder(ScreamPacket.class, 3)
                 .encoder((packet, buffer) -> {})
                 .decoder(buffer -> new ScreamPacket())
@@ -357,7 +366,7 @@ public final class HorrorNetwork {
         }
     }
 
-    public static void requestScream(UUID target) {
+    public static void triggerGaze(ServerPlayer target) {\n        CHANNEL.send(PacketDistributor.PLAYER.with(() -> target), new GazePacket());\n    }\n\n    public static void requestScream(UUID target) {
         CHANNEL.send(PacketDistributor.SERVER.noArg(), new ForceScreamRequestPacket(target));
     }
 
@@ -440,7 +449,7 @@ public final class HorrorNetwork {
     private record AdjustPacket(int setting, int amount) {}
     private record SyncDataPacket(int danger, int activity, int scarecrowChance, int faceChance,
                                   int spiritChance, int mimicChance, int treeDiscChance, int houseCameraChance) {}
-    private record ScreamPacket() {}
+    private record ScreamPacket() {}\n    private record GazePacket() {}
     private record ForceScreamRequestPacket(UUID target) {}
     private record GiveAdminItemPacket(String itemId) {}
     private record BatteryInsertPacket(boolean video, boolean offHand) {}
