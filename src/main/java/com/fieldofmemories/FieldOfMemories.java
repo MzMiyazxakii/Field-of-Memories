@@ -193,7 +193,6 @@ public class FieldOfMemories {
         BLOCKS.register(modBus);
         SOUND_EVENTS.register(modBus);
         FEATURES.register(modBus);
-        modBus.addListener(this::entityAttributeCreation);
         NetworkHandler.register();
         BookNetwork.register();
         HorrorNetwork.register();
