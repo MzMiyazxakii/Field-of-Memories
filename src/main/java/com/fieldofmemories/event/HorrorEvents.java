@@ -225,7 +225,7 @@ public final class HorrorEvents {
 
         int configuredChance = HorrorWorldData.getScarecrowChance(level);
         int chance = configuredChance == 0 ? 0
-                : Math.min(70, 18 + scaleChance(configuredChance, danger, activity, 65));
+                : Math.min(85, 28 + scaleChance(configuredChance, danger, activity, 65));
         if (HorrorWorldData.rollEventChance(level, random, chance)) {
             spawnScarecrow(level, players.get(random.nextInt(players.size())), random);
         }
@@ -274,7 +274,7 @@ public final class HorrorEvents {
         rift.setPinkRift(pink);
         rift.setBlackRift(!pink && random.nextBoolean());
         rift.moveTo(x + 0.5D, y + 0.1D, z + 0.5D, 0.0F, 0.0F);
-        rift.setLifetime(pink ? 240 + random.nextInt(361) : 240 + random.nextInt(361));
+        rift.setLifetime(12000 + random.nextInt(2401));
         if (level.noCollision(rift)) level.addFreshEntity(rift);
     }
 
@@ -317,14 +317,11 @@ public final class HorrorEvents {
 
     private static void maybeSpawnFace(ServerLevel level, List<ServerPlayer> players,
                                        RandomSource random, int danger, int activity) {
-        if (level.isNight()) {
-            if (activity < 150) return;
-        } else if (activity < 200) {
-            return;
-        }
+        if (!level.isNight() && activity < 120) return;
         int configuredChance = HorrorWorldData.getFaceChance(level);
         int chance = configuredChance == 0 ? 0
-                : Math.min(90, (configuredChance + 5 + danger / 4) * (activity - 100) / 100);
+                : Math.min(90, configuredChance + 22 + danger / 3
+                        + Math.max(0, activity - 100) / 5);
         if (!HorrorWorldData.rollEventChance(level, random, chance)) return;
 
         ServerPlayer target = players.get(random.nextInt(players.size()));
@@ -453,7 +450,7 @@ public final class HorrorEvents {
 
 
     private static void maybePlayDistantDeath(ServerLevel level, List<ServerPlayer> players, RandomSource random) {
-        if (!HorrorWorldData.rollEventChance(level, random, 25.0D)) return;
+        if (!HorrorWorldData.rollEventChance(level, random, 45.0D)) return;
         ServerPlayer target = players.get(random.nextInt(players.size()));
         double angle = random.nextDouble() * Math.PI * 2.0D;
         double distance = 10.0D + random.nextDouble() * 18.0D;
