@@ -33,5 +33,10 @@ public final class EntityAttributes {
                 .add(Attributes.MOVEMENT_SPEED, 0.42D)
                 .add(Attributes.FOLLOW_RANGE, 40.0D);
         event.put(FieldOfMemories.WINDOW_STALKER_ENTITY.get(), stalkerAttributes.build());
+
+        AttributeSupplier.Builder shadowAttributes = Monster.createMonsterAttributes()
+                .add(Attributes.MAX_HEALTH, 1.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.0D);
+        event.put(FieldOfMemories.RUNNING_SHADOW_ENTITY.get(), shadowAttributes.build());
     }
 }
